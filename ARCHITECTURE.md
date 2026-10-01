@@ -12,12 +12,13 @@ Laravel dev — keep it updated as decisions get made.
 - [x] Real Header + Footer built (see "Header & Footer" below) — verified in a real browser (Playwright), not just build success
 - [x] 404 page built (`Glitchy404` canvas + framer-motion effect) — see "404 page" below, verified rendering real canvas content in a real browser
 - [x] FAQ page built (`Accordion` UI primitive + real content) — see "Accordion & FAQ" below, verified interaction behavior in a real browser
-- [x] `TestimonialBook` UI primitive built (3D page-flip "Client Notes" carousel) + wired into the Home page — see "Testimonial book (Client Notes)" below, verified real forward/backward flip animation in a real browser
+- [x] `TestimonialBook` UI primitive built (3D page-flip "Client Notes" carousel) — see "Testimonial book (Client Notes)" below, verified real forward/backward flip animation in a real browser. Built but deliberately not wired into the Home page yet (removed from `page.tsx` per request, 2026-09-30) — Home page itself isn't built out otherwise, so the carousel would be the only real section on an otherwise-placeholder page
 - [x] Real favicon (`src/app/favicon.ico` replaced with the real Giada one from the Astro source's `public/favicon.ico` — byte-for-byte identical, confirmed by diffing the actually-served file, not just copying and assuming)
+- [x] Contact page built in full (title/lead, `EnquiryForm`, showroom section with map embeds, `/contact/success`) — see "Contact page" below, verified in a real browser including the GSAP field-stagger animation and mobile stacking
 - [ ] Page-transition crossfade — attempted (Framer Motion), pulled back out, see "Page transitions" below for why and what's known so far
 - [ ] Laravel API contract agreed (endpoints/response shapes)
 - [ ] Real content ported page by page
-- [ ] Enquiry form wired to Laravel
+- [ ] Enquiry form wired to Laravel (still posts to a guessed `/enquiries` path, see "Contact page" below)
 - [ ] SEO parity check (metadata, sitemap, 301s from old URLs — legacy redirect table found in the Astro source, needs porting)
 - [ ] Staging deploy / client UAT
 - [ ] Launch
@@ -644,40 +645,58 @@ page title, zero unexpected console errors.
 
 ## Accordion & FAQ
 
-`components/ui/Accordion` + `app/faq/page.tsx` + `data/faq.ts`. Verified
-in a real browser: default-open first item, single-open-at-a-time
-switching (opening one closes any other), toggle-off, zero console
-errors — not just a successful build.
+`components/ui/Accordion` (generic primitive) +
+`components/sections/faq/FaqHeroSection` +
+`components/sections/faq/FaqListSection` + `app/faq/page.tsx` (thin
+composition) + `lib/api/faq.ts` (page data). Verified in a real browser:
+default-open first item, single-open-at-a-time switching (opening one
+closes any other), toggle-off, all 8 accordion rows and all 8
+`FAQPage` schema entries present, zero console errors — not just a
+successful build.
 
+- **Retrofitted to the same API-ready architecture as Contact**
+  (2026-10-01, standing rule — see [[feedback_api_ready_page_architecture]]
+  in memory). First built with the hero markup and the
+  `Accordion`+container both directly in `page.tsx`, reading
+  `data/faq.ts` straight in; that predated the Contact-page refactor
+  that established the pattern as a rule, not a one-off. `page.tsx` now
+  just `await getFaqPage()`s and renders `<FaqHeroSection {...hero} />`
+  + `<FaqListSection items={items} />`. `data/faq.ts` removed — its
+  content folded directly into `lib/api/faq.ts`, same as Contact's copy
+  living in `lib/api/contact.ts` rather than a separate `data/contact.ts`
+  (neither file was ever consumed anywhere except its own page).
 - **`Accordion` is a generic primitive, not FAQ-specific** — its own
   `AccordionItem` shape (`id?`, `title`, `content`), decoupled from
-  `FaqItem`. The FAQ page maps its data into that shape when rendering;
-  reusable later for legal-page sections or product specs without
-  pulling in the FAQ domain.
+  `FaqItem`. `FaqListSection` maps the FAQ domain shape into that generic
+  shape when rendering; reusable later for legal-page sections or
+  product specs without pulling in the FAQ domain.
 - **One deliberate improvement over a straight port**: the real source
   animates the expand/collapse via a hardcoded `max-height: 500px` —
   clips anything longer. Since this component is meant to be reused (not
   every future use case is guaranteed to fit under 500px), it uses the
   CSS grid-rows trick (`grid-template-rows: 0fr -> 1fr`) instead — same
   visual result, no arbitrary length ceiling, no JS height measurement.
-- Real content (`data/faq.ts`): the 8 real Q&As, confirmed from
-  `pages/faq.astro` — currently hardcoded there too, not CMS-driven.
-  Typed against the existing `FaqItem` (`question`/`answer`, not the
+- Real content (now in `lib/api/faq.ts`): the 8 real Q&As, confirmed
+  from `pages/faq.astro` — currently hardcoded there too, not
+  CMS-driven. Typed against `FaqItem` (`question`/`answer`, not the
   source's `q`/`a`) — kept consistent with the rest of this project
   rather than matching the source's field names.
-- `FAQPage` JSON-LD included, generated directly from `data/faq.ts` (one
-  source of truth, can't drift out of sync with the visible content).
+- `FAQPage` JSON-LD still built in `page.tsx` directly from the `items`
+  `getFaqPage()` returns (one source of truth, can't drift out of sync
+  with the visible content) — same split Contact's `LocalBusiness`
+  schema uses, SEO schema-building stays page-level, not a component prop.
 - **Not included yet**: the real source ends with a `ContactCTA` strip
   ("Still Have Questions?") — that shared component doesn't exist yet,
-  noted as a TODO in the page rather than built as a one-off here.
+  noted as a TODO in `FaqListSection` rather than built as a one-off here.
 
 ## Testimonial book (Client Notes)
 
 `components/ui/TestimonialBook` (reusable primitive) +
-`components/sections/home/Testimonials` (Home page section shell) +
-`data/testimonials.ts`. Ported from the real source's
-`components/home/Testimonials.astro` — a genuine 3D CSS page-flip
-"book," not a plain slider. Verified in a real browser (Playwright):
+`components/sections/home/Testimonials` (Home page section shell,
+prop-driven) + `lib/api/home.ts` (page data). Ported from the real
+source's `components/home/Testimonials.astro` — a genuine 3D CSS
+page-flip "book," not a plain slider. Verified in a real browser
+(Playwright):
 forward flip animation mid-transition (logo correctly sweeps into view
 on the turning page's back face), landing on the right testimonial
 after each flip, `Next`/`Prev` disabled correctly at both ends, and
@@ -727,6 +746,147 @@ stepping all the way back to the first page — zero console errors.
   `avatar` in the source; real fields are `quote, name, company, logo,
   logoInvert`). Not used anywhere else in the codebase yet, safe to
   replace rather than extend.
+- **`Testimonials` retrofitted to the same API-ready architecture as
+  Contact and FAQ** (2026-10-01, standing rule — see
+  [[feedback_api_ready_page_architecture]]). It took zero props at
+  first (imported `data/testimonials.ts` and hardcoded the "What
+  Designers Say"/"Client Notes" copy directly) — predated the rule.
+  Now takes `eyebrow`/`heading`/`testimonials` via
+  `TestimonialsSectionProps`; `data/testimonials.ts` removed, its
+  content folded into `lib/api/home.ts`'s `getHomePage()`. `TestimonialBook`
+  itself was already correctly prop-driven from the start and needed no
+  changes. Home page itself still isn't composed (`app/page.tsx` is
+  still a placeholder, doesn't call `getHomePage()` or render
+  `Testimonials` — that's a separate, not-yet-made decision), but the
+  section is now fully ready for whenever it is, same as every other
+  section in this project.
+
+## Contact page
+
+`app/contact/page.tsx` (thin composition) + `app/contact/success/page.tsx`
++ `lib/api/contact.ts` (page data) + two section components —
+`components/sections/contact/ContactHeroSection` (title/lead + the
+`EnquiryForm` grid) and `components/sections/contact/ShowroomSection`
+("Visit & Enquiries": intro, general contact row, showroom cards) — plus
+the pre-existing `components/sections/contact/EnquiryForm`. Ported from
+the real source's `components/contact/ContactMain.astro` +
+`pages/contact/success.astro`. Verified in a real browser: page renders
+with no console errors, both `LocalBusiness` JSON-LD blocks present and
+correctly populated, GSAP field-stagger animation, and mobile stacking
+(single column, showroom cards still readable) all confirmed — including
+catching and correcting a false-positive first screenshot (title/lead
+looked blank at a 300ms wait, turned out to just be the `[data-reveal]`
+fade still mid-transition, not a real bug — confirmed by re-shooting at
+1500ms).
+
+- **Refactored into section components + a data layer, matching the
+  Torque Pharma project's architecture** (2026-10-01, explicit request —
+  the page was first built with every section's markup directly in
+  `page.tsx`). `page.tsx` is now just composition: it awaits
+  `getContactPage()` and spreads each returned slice into its section
+  component (`<ContactHeroSection {...hero} />`,
+  `<ShowroomSection {...visit} />`), same shape as Torque's
+  `const { info, enquiry, cta } = await getContactPage(); ...
+  <ContactInfoSection {...info} />`. `lib/api/contact.ts` exports an
+  `async getContactPage(): Promise<ContactPageData>` that currently just
+  returns static data (real copy, not placeholder) instead of calling
+  Laravel — but the function is already `async`, already the single
+  place that assembles the page's props, and already returns the exact
+  shape the components expect. Swapping its body for
+  `apiFetch<...>("/pages/contact")` (the fetcher already exists,
+  `lib/api/fetcher.ts`, ported from Torque earlier but unused until now)
+  should be the only change needed later — `page.tsx` and both section
+  components stay untouched.
+- **`lib/api/contact.ts` declares its own `ContactHeroData`/
+  `ShowroomSectionData`/etc. types — it does not import the section
+  components' prop types.** First pass did import them directly
+  (`ContactPageData = { hero: ContactHeroSectionProps; ... }`), which
+  felt safer against drift but actually had the dependency pointing the
+  wrong way — the data layer depending on the UI layer, backwards from
+  Torque's actual pattern (its `lib/api/contact.ts` defines `ContactPageData`
+  independently; components declare their own separate props). Fixed
+  2026-10-01: the two shapes are now declared separately and only need to
+  stay structurally compatible — TypeScript still catches any mismatch at
+  the `<ContactHeroSection {...hero} />` spread call site in `page.tsx`,
+  confirmed by a clean build after the change, so nothing was actually
+  lost by not sharing the type.
+- **`EnquiryForm` deliberately left alone, not folded into a section
+  component** — it's interactive and self-contained (its own state,
+  submit handler, field markup), not page content to pass as props, same
+  treatment Torque gives `ManufacturingForm`/`ExportForm` inside
+  `EnquirySupportSection` (rendered as a plain child, not prop-driven).
+  `ContactHeroSection` renders it directly.
+- **No generic `Section`/`Container` layout wrapper introduced** —
+  Torque's `contact-us/page.tsx` wraps each section in its own
+  `<Section><Container>` layout primitives, but this project has never
+  used that pattern (every real page here matches the Astro source's
+  actual wrapper classes directly, e.g. Footer, FAQ). Adding a generic
+  Section/Container layer now would be a bigger architectural change
+  than what was asked (component boundaries + a data layer) and wasn't
+  requested — the outer `<section className="bg-white px-5 pb-0
+  pt-24...">` + `max-w-6xl` wrapper stays directly in `page.tsx`, same as
+  every other real page in this project.
+- **Studio Hours kept as `{ days, hours }`, not one string** — the real
+  design renders a different separator between them per breakpoint (a
+  `<br>` on mobile, `" · "` from `sm:` up). A single combined string prop
+  would lose that distinction without `ShowroomSection` special-casing
+  its own content, so the two pieces stay separate in
+  `GeneralContactInfo` — still a clean, CMS-shaped prop, just not
+  artificially flattened.
+- **`region`/`postalCode` stay out of `ShowroomSection`'s props** — those
+  two fields exist on `siteConfig.locations` only for the `LocalBusiness`
+  JSON-LD schema; `ShowroomSection` never renders them, so they're not
+  part of its `ShowroomLocation` prop shape. `page.tsx` builds the schema
+  straight from `siteConfig.locations` instead of from the trimmed
+  `visit.locations` prop — same split FAQ's page already uses (`faqSchema`
+  built directly from `data/faq.ts`, not routed through a component prop).
+- **`ContactHero.astro` confirmed dead code, not ported** — exists in the
+  real source's `components/contact/` folder but isn't imported by
+  `contact.astro` or anywhere else (grepped the whole source). Real
+  source's actual hero content is inline in `ContactMain.astro` instead.
+- **`siteConfig.locations` extended, not duplicated into a new file** —
+  the showroom cards and `LocalBusiness` schema need `type`, `region`,
+  `postalCode`, `mapUrl`, `geo` that Footer never needed. Added as extra
+  fields on the existing `siteConfig.locations` (Footer only reads
+  `city`/`lines`/`phone`/`phoneHref`, unaffected) rather than a second,
+  overlapping data source that could drift from the Footer's copy.
+- **City-slug quirk kept, not "fixed"**: the real source's
+  `LocalBusiness` `@id` slugifies via `.replace(/[^a-z]/g, "")` — an
+  ASCII-only pattern that strips the accented "é" in "Montréal" too,
+  producing `montral` rather than `montreal`. Kept exactly as the real
+  source does it; it's an internal schema id, not user-visible, and
+  matching the real behavior beats guessing a "nicer" slug.
+- **`EnquiryForm` updated to actually redirect on success** — it
+  previously showed an inline "Thanks" message with a TODO noting the
+  real source navigates to a dedicated `/contact/success` page that
+  didn't exist yet in this project. That page now exists, so the form
+  uses `useRouter().push("/contact/success")` on a successful submit,
+  matching the real source's `navigate('/contact/success')` (Astro's
+  View Transitions client nav — the direct Next.js equivalent, no
+  transition system of our own since the page-transition attempt was
+  dropped, see "Page transitions" below).
+- **GSAP field-stagger animation ported into `EnquiryForm` directly**,
+  not left out — the real source's inline `<script>` in `contact.astro`
+  staggers every input/select/textarea/submit-button in from the left
+  (`x: -20 → 0`, 0.08s stagger, ScrollTrigger `top 80%`, once) on top of
+  the generic `[data-reveal]` fade already wrapping the form section.
+  Scoped to a `useEffect` + `formRef` inside the component instead of a
+  global page script, same pattern as `TestimonialBook`'s self-contained
+  animation.
+- **Cloudflare Turnstile not wired up** — same as before this page was
+  built out: the real source gates submission on a Turnstile token, but
+  its site key is empty even in the live site (non-functional there
+  too). Anti-spam approach is still an open decision, noted as a TODO in
+  the form rather than faked.
+- **`/contact/success`'s "Explore the Collection" link points to
+  `/products`, not `/rugs`** — the real source links `/rugs` (the live
+  site's actual product-listing URL), but this project's established
+  route for that page is `/products` (see `data/nav.config.ts`,
+  decided earlier in the project). Kept internally consistent with the
+  rest of this codebase rather than matching the real source's literal
+  href.
+- `noindex` set via Next's `metadata.robots` on the success page,
+  equivalent to the real source's `<Layout noindex={true}>` prop.
 
 ## CMS
 

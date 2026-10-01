@@ -1,7 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
+import { gsap } from "@/lib/gsap-init";
 import { submitEnquiry } from "@/lib/actions/enquiry";
 import type { EnquiryPayload, EnquiryType } from "@/types/enquiry";
 
@@ -22,9 +24,38 @@ const underlineField =
   "border-b border-stone-300 bg-transparent pb-3 pt-1 text-[15px] text-stone-900 outline-none transition-colors duration-200 placeholder:text-stone-400 focus:border-stone-900";
 
 export default function EnquiryForm() {
+  const router = useRouter();
+  const formRef = useRef<HTMLFormElement>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isSuccess, setIsSuccess] = useState(false);
   const [serverError, setServerError] = useState("");
+
+  // Real source GSAP field stagger (contact.astro's inline <script>),
+  // ported to a scoped effect instead of a global scroll-triggered script.
+  useEffect(() => {
+    const form = formRef.current;
+    if (!form) return;
+
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const fields = [...form.querySelectorAll<HTMLElement>('input, select, textarea, button[type="submit"]')];
+
+    const tween = gsap.fromTo(
+      fields,
+      { opacity: 0, x: -20 },
+      {
+        opacity: 1,
+        x: 0,
+        duration: reduced ? 0.01 : 0.6,
+        stagger: reduced ? 0 : 0.08,
+        ease: "expo.out",
+        scrollTrigger: { trigger: form, start: "top 80%", once: true },
+      }
+    );
+
+    return () => {
+      tween.scrollTrigger?.kill();
+      tween.kill();
+    };
+  }, []);
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -40,21 +71,14 @@ export default function EnquiryForm() {
     setIsSubmitting(true);
     setServerError("");
     const result = await submitEnquiry(payload);
+
+    if (result.success) {
+      router.push("/contact/success");
+      return;
+    }
+
     setIsSubmitting(false);
-
-    if (result.success) setIsSuccess(true);
-    else setServerError(result.error ?? "Something went wrong. Please try again.");
-  }
-
-  if (isSuccess) {
-    // Real source navigates to a dedicated /contact/success page instead —
-    // that page doesn't exist in this project yet. Inline message for now,
-    // swap for a redirect once /contact/success is built.
-    return (
-      <p className="rounded-lg bg-stone-50 px-4 py-6 text-center text-stone-700">
-        Thanks — we&apos;ll be in touch.
-      </p>
-    );
+    setServerError(result.error ?? "Something went wrong. Please try again.");
   }
 
   return (
@@ -63,7 +87,7 @@ export default function EnquiryForm() {
         Send an Enquiry
       </p>
 
-      <form onSubmit={handleSubmit} className="flex flex-col gap-8">
+      <form ref={formRef} onSubmit={handleSubmit} className="flex flex-col gap-8">
         <div className="grid grid-cols-1 gap-8 sm:grid-cols-2">
           <div className="flex flex-col gap-2">
             <label htmlFor="first-name" className={fieldLabel}>
