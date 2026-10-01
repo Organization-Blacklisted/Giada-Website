@@ -1,0 +1,23 @@
+/*
+ * Fonts — real licensed files, confirmed weight/style mapping copied
+ * verbatim from the Astro source (astro.config.mjs `fonts:` block), not
+ * guessed. See src/fonts/index.ts for the next/font/local setup and
+ * ARCHITECTURE.md "Design tokens" for the full breakdown.
+ *
+ * next/font/local injects the real value via a className on <html>
+ * (see layout.tsx); `@theme inline` tells Tailwind to keep the var()
+ * reference live rather than inlining a literal at build time — this
+ * looks self-referential but isn't, same technique as Torque Pharma.
+ */
+@theme inline {
+  --font-avenir: var(--font-avenir), ui-sans-serif, system-ui, sans-serif;
+  --font-didot: var(--font-didot), Georgia, "Times New Roman", serif;
+
+  /*
+   * Semantic aliases (Torque Pharma convention) — components use these,
+   * not the literal family names above. One place to repoint if the
+   * heading/body font ever changes without touching every component.
+   */
+  --font-heading: var(--font-didot);
+  --font-body: var(--font-avenir);
+}

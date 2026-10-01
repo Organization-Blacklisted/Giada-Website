@@ -1,0 +1,17 @@
+/*
+ * Only genuine custom brand colors go here. The neutral palette is
+ * Tailwind's default `stone` scale, confirmed from both the live site AND
+ * the real Astro source (src/styles/global.css has zero custom color
+ * tokens) — no need to redefine it, just use stone-* utilities directly.
+ */
+@theme {
+  /*
+   * --color-cream does NOT appear anywhere in the real Astro source
+   * (checked global.css + every component) despite being reverse-
+   * engineered from the live site's compiled CSS originally. Kept
+   * deliberately for now (team decision, 2026-09-29) rather than
+   * confirmed real — reconsider once we know where it actually renders
+   * on the live page (likely an image background, not a CSS color).
+   */
+  --color-cream: #f5f0e6; /* rgb(245 240 230) — warm off-white section/hero bg */
+}

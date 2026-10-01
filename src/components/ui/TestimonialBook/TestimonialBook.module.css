@@ -1,0 +1,381 @@
+/*
+  Ported near-verbatim from the real Astro source's Testimonials.astro
+  scoped <style> block (3D page-flip "book"). Kept as a CSS Module rather
+  than Tailwind utilities — this is genuinely bespoke (precise gradients,
+  spine shadows, a preserve-3d flip transform, clamp() type sizing) and
+  would be unreadable forced into utility classes. First CSS Module in
+  this codebase; everything else so far is Tailwind.
+*/
+
+/* ── Wrap ─────────────────────────────────────────── */
+.wrap {
+  position: relative;
+  width: min(920px, 100%);
+  margin: 0 auto;
+}
+
+/* ── Book ─────────────────────────────────────────── */
+.book {
+  position: relative;
+  width: 100%;
+  height: 500px;
+  perspective: 1800px;
+}
+
+/* ── All pages: shared base ───────────────────────── */
+.page {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  width: 50%;
+}
+
+/* ── Static left page ─────────────────────────────── */
+/*
+  z-index: 0 keeps it permanently below all flipped pages (z-index 1+).
+  It's only visible before the first flip; after that the back face
+  of page 0 covers it.
+*/
+.pageLeft {
+  left: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.faceCover {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  background: linear-gradient(108deg, #d9d4cf 0%, #e3dedb 20%, #ece8e4 52%, #f2efeb 100%);
+  border-right: 1px solid #c6c2be;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Spine shadow: right edge of left page */
+.coverSpine {
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 52px;
+  background: linear-gradient(to left, rgba(28, 25, 23, 0.13), transparent);
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* ── Right pages (stacked, flippable) ─────────────── */
+.pageRight {
+  right: 0;
+  transform-origin: left center;
+  transform-style: preserve-3d;
+  transition: transform 0.96s cubic-bezier(0.645, 0.045, 0.355, 1);
+}
+
+.pageRight.isFlipped {
+  transform: rotateY(-180deg);
+}
+
+.pageRight.isTurning {
+  z-index: 500 !important;
+}
+
+/* ── Faces ────────────────────────────────────────── */
+.face {
+  position: absolute;
+  inset: 0;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+/* Front face: testimonial content */
+.faceFront {
+  display: flex;
+  flex-direction: column;
+  padding: 46px 50px 46px 48px;
+  background: #ffffff;
+  border-left: 1px solid #e7e5e4;
+  overflow: hidden;
+  box-shadow:
+    4px 0 18px rgba(28, 25, 23, 0.08),
+    0 6px 24px rgba(28, 25, 23, 0.07);
+}
+
+/*
+  Back face: pre-rotated 180deg so it faces the viewer when the parent
+  is at -180deg. Net rotation = 0 so content is NOT mirrored.
+  Same warm stone as the static left page for visual continuity.
+*/
+.faceBack {
+  transform: rotateY(180deg);
+  background: linear-gradient(108deg, #d9d4cf 0%, #e3dedb 20%, #ece8e4 52%, #f2efeb 100%);
+  border-right: 1px solid #c6c2be;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+/* Spine shadow on back face: right edge (closest to book centre) */
+.backSpine {
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 52px;
+  background: linear-gradient(to left, rgba(28, 25, 23, 0.13), transparent);
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* ── Shared logo content (left page + back face) ──── */
+.backContent {
+  position: relative;
+  z-index: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  padding: 48px 44px;
+  width: 100%;
+  height: 100%;
+}
+
+.logoImg {
+  max-width: 68%;
+  max-height: 110px;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  filter: grayscale(1) contrast(0.85);
+}
+
+/* White/light logos need inversion on the stone background */
+.logoImgInvert {
+  filter: grayscale(1) invert(1) contrast(0.9);
+}
+
+.logoName {
+  font-size: 9.5px;
+  font-weight: 600;
+  letter-spacing: 0.34em;
+  text-transform: uppercase;
+  color: #a8a29e;
+  margin: 0;
+  text-align: center;
+}
+
+/* ── Spine shadow on front face ───────────────────── */
+.frontSpine {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 42px;
+  background: linear-gradient(to right, rgba(28, 25, 23, 0.07), transparent);
+  pointer-events: none;
+}
+
+/* ── Dog-ear corner fold ──────────────────────────── */
+.dogEar {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 52px;
+  height: 52px;
+  background: linear-gradient(225deg, #edeae6 50%, transparent 50%);
+}
+
+.dogEar::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    225deg,
+    transparent 47%,
+    rgba(28, 25, 23, 0.07) 48%,
+    rgba(28, 25, 23, 0.03) 50%,
+    transparent 51%
+  );
+}
+
+/* ── Monogram ─────────────────────────────────────── */
+.monogram {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 46px;
+  height: 54px;
+  border: 1px solid #e7e5e4;
+  font-family: var(--font-didot), serif;
+  font-size: 18px;
+  color: #a8a29e;
+  flex-shrink: 0;
+}
+
+/* ── Quote ────────────────────────────────────────── */
+.quote {
+  margin: 28px 0 0 0;
+  font-family: var(--font-didot), serif;
+  font-style: italic;
+  font-size: clamp(1.06rem, 1.7vw, 1.38rem);
+  font-weight: 400;
+  line-height: 1.82;
+  color: #1c1917;
+  flex: 1;
+}
+
+.quote p {
+  margin: 0;
+}
+
+/* ── Attribution ──────────────────────────────────── */
+.attribution {
+  margin-top: auto;
+  padding-top: 28px;
+}
+
+.attrName {
+  display: block;
+  font-style: normal;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: #1c1917;
+  margin: 0 0 5px 0;
+}
+
+.attrCompany {
+  font-size: 12px;
+  color: #a8a29e;
+  margin: 0;
+}
+
+/* ── Page number ──────────────────────────────────── */
+.pagenum {
+  position: absolute;
+  bottom: 36px;
+  right: 50px;
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  color: #d6d3d1;
+  margin: 0;
+}
+
+/* ── Controls ─────────────────────────────────────── */
+.controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  margin-top: 32px;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  border: 1px solid #d6d3d1;
+  padding: 10px 18px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.26em;
+  text-transform: uppercase;
+  color: #44403c;
+  background: transparent;
+  cursor: pointer;
+  transition:
+    background-color 180ms ease,
+    border-color 180ms ease,
+    opacity 180ms ease;
+}
+
+.btn:hover:not(:disabled) {
+  background: #f5f5f4;
+  border-color: #a8a29e;
+}
+
+.btn:disabled {
+  opacity: 0.32;
+  cursor: not-allowed;
+}
+
+/* ── Progress dots ────────────────────────────────── */
+.dots {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #d6d3d1;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  transition:
+    background-color 280ms ease,
+    transform 280ms ease;
+}
+
+.dotActive {
+  background: #1c1917;
+  transform: scale(1.5);
+}
+
+/* ── Mobile: full-width 3D flip (same as desktop) ─── */
+@media (max-width: 768px) {
+  .book {
+    height: 520px;
+  }
+
+  .pageLeft {
+    display: none;
+  }
+
+  /* Full-width page — inherits the same rotateY transition from desktop */
+  .pageRight {
+    width: 100%;
+    right: 0;
+  }
+
+  .faceFront {
+    padding: 36px 28px 44px;
+    border-left: none;
+  }
+
+  .frontSpine {
+    display: none;
+  }
+
+  .pagenum {
+    right: 28px;
+    bottom: 28px;
+  }
+}
+
+@media (max-width: 480px) {
+  .book {
+    height: 500px;
+  }
+  .faceFront {
+    padding: 30px 24px 40px;
+  }
+}
+
+/* ── Reduced motion ───────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .pageRight {
+    transition: opacity 200ms ease;
+  }
+  .pageRight.isFlipped {
+    transform: none;
+    opacity: 0;
+    pointer-events: none;
+  }
+}

@@ -1,0 +1,74 @@
+@import "tailwindcss";
+@import "../styles/typography.css";
+@import "../styles/colors.css";
+
+/*
+ * :root here is deliberately minimal — confirmed from the live site's
+ * compiled CSS: no dark mode (zero `prefers-color-scheme` rules anywhere),
+ * background defaults to white, body text is stone-900 (#1c1917).
+ */
+:root {
+  --background: #ffffff;
+  --foreground: #1c1917;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-body);
+}
+
+/*
+ * Font-family/weight for h1/h2 is deliberately NOT set here — the real
+ * source did it via a blanket `h1, h2 {...}` rule, but a plain-element
+ * selector loses to any Tailwind utility class on specificity (bit us
+ * once already: font-semibold silently beat font-weight: 400 here).
+ * Apply `font-heading` explicitly per component instead — same font,
+ * managed as a token (Torque Pharma convention) instead of an invisible
+ * global cascade rule. text-wrap:balance has no such conflict, so it
+ * stays global (merged from the source's separate h1/h2 + h3 rules —
+ * same effect, one rule).
+ */
+h1,
+h2,
+h3 {
+  text-wrap: balance;
+}
+
+/* Confirmed from the real Astro source's global.css — stone-500 at 15% */
+::selection {
+  background-color: rgb(120 113 108 / 0.15);
+}
+
+/*
+ * Scroll reveal — pairs with components/ui/ScrollReveal (sets
+ * .is-visible + the --reveal-delay custom property via
+ * IntersectionObserver). Base opacity rule confirmed from the real
+ * source; transition-delay is a restoration — see ScrollReveal.tsx for
+ * why (the real source authors data-reveal-delay on ~every element but
+ * never actually reads it anywhere).
+ */
+[data-reveal] {
+  opacity: 0;
+  transition: opacity 0.45s ease;
+  transition-delay: var(--reveal-delay, 0ms);
+}
+[data-reveal].is-visible {
+  opacity: 1;
+}
+
+/* Confirmed from the real Astro source's global.css */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
