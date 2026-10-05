@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { Link } from "next-view-transitions";
 import Glitchy404 from "@/components/sections/not-found/Glitchy404";
 
 export const metadata = {
@@ -20,7 +20,7 @@ export default function NotFound() {
         <Glitchy404 width={860} height={232} color="#1c1917" />
       </div>
 
-      <div className="mx-auto mt-10 max-w-md" data-reveal data-reveal-delay="150">
+      <div className="mx-auto mt-10 max-w-md" data-reveal>
         <p className="font-heading text-xl leading-relaxed text-stone-700">
           The page you&apos;re looking for has wandered off.
         </p>
@@ -29,7 +29,7 @@ export default function NotFound() {
         </p>
       </div>
 
-      <div className="mt-10" data-reveal data-reveal-delay="300">
+      <div className="mt-10" data-reveal>
         <Link
           href="/"
           className="font-heading inline-block border-b border-stone-300 pb-0.5 text-sm tracking-[0.1em] text-stone-600 transition-colors duration-200 hover:border-stone-900 hover:text-stone-900"

@@ -1,8 +1,7 @@
 "use client";
 
-import Link from "next/link";
+import { Link, useTransitionRouter } from "next-view-transitions";
 import { useEffect, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
 import { gsap } from "@/lib/gsap-init";
 import { submitEnquiry } from "@/lib/actions/enquiry";
 import type { EnquiryPayload, EnquiryType } from "@/types/enquiry";
@@ -24,7 +23,11 @@ const underlineField =
   "border-b border-stone-300 bg-transparent pb-3 pt-1 text-[15px] text-stone-900 outline-none transition-colors duration-200 placeholder:text-stone-400 focus:border-stone-900";
 
 export default function EnquiryForm() {
-  const router = useRouter();
+  // next-view-transitions's router, not next/navigation's — a plain
+  // useRouter().push() doesn't trigger startViewTransition(), so this
+  // redirect would silently skip the crossfade every other navigation
+  // on the site gets (found during a later audit, fixed 2026-10-05).
+  const router = useTransitionRouter();
   const formRef = useRef<HTMLFormElement>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [serverError, setServerError] = useState("");

@@ -20,13 +20,12 @@ export default function ContactHeroSection({ eyebrow, heading, description, clas
 
         <h1
           data-reveal
-          data-reveal-delay="100"
           className="mb-6 font-didot text-4xl font-normal leading-tight tracking-tight text-stone-900 sm:text-5xl"
         >
           {heading}
         </h1>
 
-        <p data-reveal data-reveal-delay="200" className="text-[14px] leading-[1.85] text-stone-500">
+        <p data-reveal className="text-[14px] leading-[1.85] text-stone-500">
           {description}
         </p>
       </div>

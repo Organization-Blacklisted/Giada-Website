@@ -1,17 +1,28 @@
-import Container from "@/components/layouts/Container";
+import CategoryGridSection from "@/components/sections/home/CategoryGridSection";
+import ClosingCtaSection from "@/components/sections/home/ClosingCtaSection";
+import HeroSlideshowSection from "@/components/sections/home/HeroSlideshowSection";
+import ImageReelSection from "@/components/sections/home/ImageReelSection";
+import PressFeatureSection from "@/components/sections/home/PressFeatureSection";
+import TestimonialsSection from "@/components/sections/home/TestimonialsSection";
+import { getHomePage } from "@/lib/api/home";
 
-// TestimonialBook + the Testimonials section (components/sections/home/Testimonials)
-// are built and verified, just not wired in here yet — kept out of the
-// page per request until the rest of the Home page is ready to go live
-// alongside it.
-export default function Home() {
+// Real source's home page (pages/index.astro) order: HeroSlideshow,
+// Collection, CategoryGrid, ProcessStrip, PressFeature, WhyGiada,
+// Testimonials, ClosingCTA, ImageBar (last). Of those, HeroSlideshow,
+// CategoryGrid, PressFeature, Testimonials, ClosingCTA, and ImageBar (as
+// ImageReelSection) are built so far — kept in their real relative order
+// even though everything between them is still missing.
+export default async function Home() {
+  const { hero, categoryGrid, pressFeature, testimonials, closingCta, imageReel } = await getHomePage();
+
   return (
-    <Container className="py-24">
-      <h1 className="text-3xl font-semibold tracking-tight">Giada</h1>
-      <p className="mt-4 max-w-xl text-stone-600">
-        Home page — awaiting the rest of its real sections (hero,
-        collection feature, press, image bar, etc.).
-      </p>
-    </Container>
+    <>
+      <HeroSlideshowSection {...hero} />
+      <CategoryGridSection {...categoryGrid} />
+      <PressFeatureSection {...pressFeature} />
+      <TestimonialsSection {...testimonials} />
+      <ClosingCtaSection {...closingCta} />
+      <ImageReelSection {...imageReel} />
+    </>
   );
 }

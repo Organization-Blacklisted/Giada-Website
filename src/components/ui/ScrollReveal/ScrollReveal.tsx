@@ -17,13 +17,21 @@ import { ScrollTrigger } from "@/lib/gsap-init";
  * ScrollTriggers) fires right before that re-run, same shape as the
  * Astro page-load/before-swap pair.
  *
- * Stagger delay: the real Astro source authors `data-reveal-delay="150"`
- * (numeric ms) on ~every [data-reveal] element, but never actually reads
- * it anywhere (confirmed — grepped the whole source, no CSS/JS consumes
- * it). Restored here since the values are concrete and unambiguous —
- * read once at observe-time, applied as a CSS custom property so the
- * actual timing stays declared in CSS (globals.css), not scattered
- * across JS.
+ * No stagger delay. The real Astro source authors `data-reveal-delay="150"`
+ * (numeric ms) on ~every [data-reveal] element, but its own reveal script
+ * (layouts/Layout.astro's `initFadeReveal()`) never reads it — confirmed
+ * by reading that script directly, not just grepping for absence: every
+ * `[data-reveal]` element gets its own independent IntersectionObserver
+ * entry and fades in the instant *that* element crosses the 0.12
+ * threshold, full stop. A past version of this component "restored" the
+ * delay as a real `transition-delay` since the authored values looked
+ * concrete and intentional — that diverged from live (confirmed
+ * 2026-10-05 when the user caught the FAQ closing-CTA band staggering
+ * item-by-item instead of fading as one cluster, the way it does live).
+ * Elements that are visually close together already read as "fading
+ * together" under plain independent observation, since they cross the
+ * 12% threshold within the same frame or two during a normal scroll —
+ * no delay needed to produce that effect.
  *
  * NOT restored: the `data-reveal="fade"/"left"/"scale"` variant values.
  * Those names imply distinct transform treatments (slide, scale-up) but
@@ -38,10 +46,6 @@ export default function ScrollReveal() {
 
   useEffect(() => {
     const els = document.querySelectorAll<HTMLElement>("[data-reveal]");
-    els.forEach((el) => {
-      const delay = el.dataset.revealDelay;
-      if (delay) el.style.setProperty("--reveal-delay", `${delay}ms`);
-    });
 
     const io = new IntersectionObserver(
       (entries) => {

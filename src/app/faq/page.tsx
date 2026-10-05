@@ -1,3 +1,4 @@
+import ContactCtaBanner from "@/components/ui/ContactCtaBanner";
 import FaqHeroSection from "@/components/sections/faq/FaqHeroSection";
 import FaqListSection from "@/components/sections/faq/FaqListSection";
 import { getFaqPage } from "@/lib/api/faq";
@@ -9,7 +10,7 @@ export const metadata = {
 };
 
 export default async function FaqPage() {
-  const { hero, items } = await getFaqPage();
+  const { hero, items, closingCta } = await getFaqPage();
 
   const faqSchema = {
     "@context": "https://schema.org",
@@ -27,6 +28,7 @@ export default async function FaqPage() {
 
       <FaqHeroSection {...hero} />
       <FaqListSection items={items} />
+      <ContactCtaBanner {...closingCta} />
     </>
   );
 }

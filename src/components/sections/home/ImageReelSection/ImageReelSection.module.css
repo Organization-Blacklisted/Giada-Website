@@ -1,0 +1,38 @@
+/*
+  Structural styles only — the scroll animation itself is driven by GSAP
+  (see ImageReelSection.tsx), not CSS @keyframes. Ported from the real
+  Astro source's ImageBar.astro, same reasoning as before on what stays
+  Tailwind vs what needs a CSS Module: the full-bleed negative-margin
+  trick and the clamp()-based responsive item sizing still need real CSS.
+*/
+
+/* Breaks out of any parent max-width container to span the full viewport,
+   regardless of where this section sits in the page. */
+.wrap {
+  width: 100vw;
+  margin-left: calc(50% - 50vw);
+}
+
+.reel {
+  width: 100%;
+  overflow: hidden;
+}
+
+.track {
+  display: flex;
+  width: max-content;
+  will-change: transform;
+}
+
+.item {
+  position: relative; /* required for next/image fill */
+  flex: 0 0 clamp(180px, 22vw, 360px);
+  aspect-ratio: 1 / 1;
+  overflow: hidden;
+}
+
+@media (max-width: 768px) {
+  .item {
+    flex-basis: 68vw;
+  }
+}

@@ -1,15 +1,20 @@
-import Container from "@/components/layouts/Container";
+import ProductCategoriesSection from "@/components/sections/products/ProductCategoriesSection";
+import { getProductsPage } from "@/lib/api/products";
 
-export const metadata = { title: "Products" };
+export const metadata = {
+  title: "Products",
+  description: "Explore Giada's handcrafted rugs and art glass, each made to order.",
+};
 
-export default function ProductsPage() {
+export default async function ProductsPage() {
+  const { hero, categories, galleryCta } = await getProductsPage();
+
   return (
-    <Container className="py-24">
-      <h1 className="text-3xl font-semibold tracking-tight">Products</h1>
-      <p className="mt-4 text-stone-600">
-        TODO: rugs / glass catalog, fed from the Laravel products API once
-        the contract is defined.
-      </p>
-    </Container>
+    <ProductCategoriesSection
+      {...hero}
+      categories={categories}
+      galleryCtaLabel={galleryCta.label}
+      galleryCtaHref={galleryCta.href}
+    />
   );
 }

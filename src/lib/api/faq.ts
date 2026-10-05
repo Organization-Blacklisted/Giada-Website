@@ -10,9 +10,18 @@ export type FaqHeroData = {
   heading: string;
 };
 
+export type FaqClosingCtaData = {
+  eyebrow: string;
+  heading: string;
+  description: string;
+  linkText: string;
+  href: string;
+};
+
 export type FaqPageData = {
   hero: FaqHeroData;
   items: FaqItem[];
+  closingCta: FaqClosingCtaData;
 };
 
 // Mirrors the Contact page's lib/api/contact.ts pattern — page.tsx and
@@ -22,6 +31,14 @@ export type FaqPageData = {
 // ever consumed. Static for now; swapping the body for
 // `apiFetch<...>("/pages/faq")` later shouldn't require touching
 // page.tsx or either section component.
+//
+// closingCta: real content confirmed from the Astro source's
+// pages/faq.astro own <ContactCTA> usage (the generic, prop-driven
+// component — not Home's hardcoded ClosingCTA.astro). Rendered via the
+// shared ContactCtaBanner primitive directly in page.tsx, not through a
+// dedicated section wrapper — there's no page-specific composition
+// around it here, just a straight prop spread, so a wrapper folder would
+// be pure pass-through.
 export async function getFaqPage(): Promise<FaqPageData> {
   return {
     hero: {
@@ -78,5 +95,13 @@ export async function getFaqPage(): Promise<FaqPageData> {
           "Walk-ins are welcome during business hours, but appointments are strongly recommended. Private showings allow our team to prepare samples specific to your project and provide personalised attention.",
       },
     ],
+    closingCta: {
+      eyebrow: "Still Have Questions?",
+      heading: "We're here to help.",
+      description:
+        "Every enquiry is handled personally by one of our founders. Reach out and we'll respond within one business day.",
+      linkText: "Get in Touch",
+      href: "/contact",
+    },
   };
 }

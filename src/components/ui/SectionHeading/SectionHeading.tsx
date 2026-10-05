@@ -36,7 +36,6 @@ export default function SectionHeading({
 
       <h2
         data-reveal
-        data-reveal-delay="150"
         className="font-heading text-4xl font-normal tracking-tight text-stone-900 md:text-5xl"
       >
         {title}
@@ -45,7 +44,6 @@ export default function SectionHeading({
       {description && (
         <p
           data-reveal
-          data-reveal-delay="300"
           className={`mt-6 text-[15px] leading-[1.8] text-stone-500 ${descriptionWidth[align]}`}
         >
           {description}

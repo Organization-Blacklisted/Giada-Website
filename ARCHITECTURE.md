@@ -12,14 +12,19 @@ Laravel dev — keep it updated as decisions get made.
 - [x] Real Header + Footer built (see "Header & Footer" below) — verified in a real browser (Playwright), not just build success
 - [x] 404 page built (`Glitchy404` canvas + framer-motion effect) — see "404 page" below, verified rendering real canvas content in a real browser
 - [x] FAQ page built (`Accordion` UI primitive + real content) — see "Accordion & FAQ" below, verified interaction behavior in a real browser
-- [x] `TestimonialBook` UI primitive built (3D page-flip "Client Notes" carousel) — see "Testimonial book (Client Notes)" below, verified real forward/backward flip animation in a real browser. Built but deliberately not wired into the Home page yet (removed from `page.tsx` per request, 2026-09-30) — Home page itself isn't built out otherwise, so the carousel would be the only real section on an otherwise-placeholder page
+- [x] `TestimonialBook` UI primitive built (3D page-flip "Client Notes" carousel) — see "Testimonial book (Client Notes)" below, verified real forward/backward flip animation in a real browser. Wired into the real Home page 2026-10-05
 - [x] Real favicon (`src/app/favicon.ico` replaced with the real Giada one from the Astro source's `public/favicon.ico` — byte-for-byte identical, confirmed by diffing the actually-served file, not just copying and assuming)
 - [x] Contact page built in full (title/lead, `EnquiryForm`, showroom section with map embeds, `/contact/success`) — see "Contact page" below, verified in a real browser including the GSAP field-stagger animation and mobile stacking
-- [ ] Page-transition crossfade — attempted (Framer Motion), pulled back out, see "Page transitions" below for why and what's known so far
+- [x] Contact/FAQ/Home retrofitted to a consistent API-ready architecture — `lib/api/<page>.ts` mock-data layer + thin `page.tsx` + prop-driven section components, standing rule for every page from now on (2026-10-01)
+- [x] Image reel (craftsmanship photo strip) built, GSAP-driven infinite scroll — see "Image reel (craftsmanship strip)" below. Home page now has two real sections (Testimonials + Image reel), rest still placeholder
+- [x] Category grid (Rugs/Glass) built — `CategoryCard` reusable primitive + Home's `CategoryGridSection` + the Products page built out for real (`ProductCategoriesSection`) — see "Category grid (Rugs / Glass)" below. Products page is no longer a placeholder (though full catalog/filtering by category isn't built yet)
+- [x] Hero slideshow built (`HeroSlideshowSection`) — GSAP entrance timeline, character-split title, Ken Burns, scroll parallax, full carousel machinery (currently one real slide, matching the real source) — see "Hero slideshow" below.
+- [x] Press feature built (`ZoomCard` reusable primitive + `PressFeatureSection`) — cursor-tracked magnifying zoom, verified via measured `transform`/`transform-origin`, not just visual — see "Press feature (zoom cards)" below. Home now has five real sections, in real page order
+- [x] Page-transition crossfade shipped (`next-view-transitions`, real browser View Transitions API) — see "Page transitions" below. Two prior Framer Motion attempts failed for a confirmed structural reason (App Router's single `children` slot isn't a stable snapshot); switching to the real browser API the live site itself uses resolved it
 - [ ] Laravel API contract agreed (endpoints/response shapes)
 - [ ] Real content ported page by page
 - [ ] Enquiry form wired to Laravel (still posts to a guessed `/enquiries` path, see "Contact page" below)
-- [ ] SEO parity check (metadata, sitemap, 301s from old URLs — legacy redirect table found in the Astro source, needs porting)
+- [ ] SEO parity check (metadata, sitemap, 301s from old URLs — legacy redirect table found in the Astro source, needs porting) — see "SEO" section below for the current audit (what's real vs. gaps), deferred by explicit request
 - [ ] Staging deploy / client UAT
 - [ ] Launch
 
@@ -315,22 +320,44 @@ foundation in place before we do).
 - `[data-reveal]` CSS (opacity 0 → 1 on `.is-visible`) and the global
   `prefers-reduced-motion` override are both in `globals.css`, confirmed
   from the real source.
-- **Stagger delay — restored, deliberately.** The real source authors
-  `data-reveal-delay="150"` (concrete ms values) on ~every `[data-reveal]`
-  element across the whole site, but — confirmed by grepping the entire
-  source — never actually reads it anywhere. No CSS attribute selector,
-  no JS. Same for the `data-reveal="fade"/"left"/"scale"` variant values.
-  Team decision (2026-09-29): the delay is unambiguous and cheap, so
-  `ScrollReveal` now reads `data-reveal-delay` and applies it via a
-  `--reveal-delay` CSS custom property (`globals.css`:
-  `transition-delay: var(--reveal-delay, 0ms)`). **The `fade`/`left`/
-  `scale` variants were NOT restored** — those names imply distinct
-  transform treatments, but no actual transform values exist anywhere in
-  the source to restore; inventing pixel/scale amounts now would be a
-  new design decision, not a restoration. All variants still render as
-  the same opacity-only fade until real values are supplied. Flag to the
-  client during QA either way, since this is a real, visible behavior
-  change vs. the live site (for the better, but still worth a heads-up).
+- **Stagger delay — restored 2026-09-29, reverted 2026-10-05.** The real
+  source authors `data-reveal-delay="150"` (concrete ms values) on
+  ~every `[data-reveal]` element across the whole site, but — confirmed
+  by grepping the entire source at the time — never actually reads it
+  anywhere. No CSS attribute selector, no JS. Team decision (2026-09-29):
+  the delay values are unambiguous and cheap, so `ScrollReveal` was given
+  a `--reveal-delay` CSS custom property (`globals.css`:
+  `transition-delay: var(--reveal-delay, 0ms)`) reading each element's
+  `data-reveal-delay` and applying it as a real stagger — framed as a
+  deliberate enhancement over source fidelity.
+  **Reverted after user feedback (2026-10-05):** caught the FAQ closing
+  CTA band fading in item-by-item on this site while the live FAQ page
+  fades the whole band in together. Re-investigated by reading the real
+  reveal script directly this time, not just grepping for absence of a
+  consumer — `layouts/Layout.astro`'s `initFadeReveal()` observes every
+  `[data-reveal]` element with its own independent `IntersectionObserver`
+  entry and adds `.is-visible` the instant *that* element crosses the
+  0.12 threshold, full stop. There is no grouping and no delay concept
+  anywhere in the real mechanism. Elements that are visually close
+  together (an eyebrow + heading + description block, a tight card grid)
+  already read as "fading together" under this plain model, since they
+  cross the threshold within the same frame or two during a normal
+  scroll — the delay was never needed to produce that effect, and in
+  practice it actively fought it. Reverted project-wide: removed the
+  `--reveal-delay`-reading code from `ScrollReveal.tsx`, removed
+  `transition-delay` from `globals.css`'s `[data-reveal]` rule, and
+  stripped the now-dead `data-reveal-delay` attributes from every
+  consumer (`SectionHeading`, `PressFeatureSection`, `CategoryGridSection`,
+  `ContactHeroSection`, `ContactCtaBanner`, the 404 page, and the
+  contact-success page). Verified in a real browser across Home, FAQ,
+  Contact, Contact Success, and 404: zero `data-reveal-delay` attributes
+  or `--reveal-delay` custom properties remain anywhere, and every
+  section still fades in correctly.
+  **The `fade`/`left`/`scale` variants were never restored** — those
+  names imply distinct transform treatments, but no actual transform
+  values exist anywhere in the source to restore; inventing pixel/scale
+  amounts now would be a new design decision, not a restoration. All
+  variants still render as the same opacity-only fade.
 - **Explicitly not ported yet**: the `kenBurns` keyframe (hero-specific,
   will come with the Hero section), the magnetic-cursor effect
   (`Cursor.astro` — already flagged as orphaned/unused in the real
@@ -338,7 +365,7 @@ foundation in place before we do).
   `Header` was built — see "Header & Footer" below, turned out to be
   dead code too, same as `data-reveal-delay`.
 
-## Page transitions — attempted, pulled back out (2026-09-30)
+## Page transitions (2026-09-30 attempted, 2026-10-05 shipped)
 
 The real source's `<ClientRouter />` (`astro:transitions`) wraps the
 browser's native View Transitions API. Confirmed via grep: zero
@@ -378,14 +405,104 @@ explanations before giving up for now:
   investigation was cut off here by a deliberate decision to stop
   chasing it rather than a resolution.
 
-Whoever picks this back up: start from the full-style-dump approach
-(compare exiting vs entering element's computed style, everything, not
-just opacity) with real page content rather than placeholder pages —
-worth first checking whether this is specific to Next.js dev mode
-(Fast Refresh / RSC payload streaming timing) vs a production build,
-which wasn't tested. Given the user's own read on it: likely easier to
-get right once there's more real content and the placeholder-page
-churn has settled down, rather than a good use of time right now.
+### Second attempt (2026-10-05) — root cause actually found this time
+
+Picked back up once there was enough real content to test against (per
+the note above). Confirmed first that it's **not a dev-mode artifact**:
+rebuilt with `next build && next start` and the exact same symptom
+reproduced in production.
+
+Went further than computed-style sampling this time — looked at actual
+screenshots across the full transition, not just opacity numbers. That's
+what cracked it: **at every single sampled frame, both the "exiting" and
+"entering" layers showed the destination page's content. Home never
+appeared once, at any opacity, in any frame.** The "exiting" element's
+opacity genuinely was animating 1→0 exactly as `getComputedStyle` always
+said — it just happened to be animating the wrong *content* out, not the
+wrong *opacity*. Cross-fading two copies of the same page is visually
+indistinguishable from not cross-fading at all, which is exactly what
+"opacity correct, no visible blend" looks like from outside.
+
+**Root cause**: Next.js App Router's root layout only ever exposes one
+`children` slot. `usePathname()` and `children` update together,
+atomically, in the same commit when a route changes — there is no
+intermediate render where you can observe "old pathname paired with old
+content" separately from "new pathname paired with new content". Tried
+the obvious fix — manually snapshot `children` into local React state
+the instant the route changes (same "adjust state during render"
+pattern `Header.tsx` already uses, verified via console tracing that the
+**pathname** side of this was captured correctly: `state.prev.pathname`
+genuinely held `/` right after navigating to `/contact`) — but the
+*content* resolved to Contact anyway, even though the React reference
+was captured before the navigation. That means the problem is one level
+deeper than application code can reach: Next.js's `children` reference
+for a Server Component route isn't an inert, frozen value the way a
+plain client-side React element is — it's tied to the App Router's
+internal cache in a way that can change what a previously-captured
+reference resolves to, not just what the live prop currently holds.
+This is consistent with why `AnimatePresence`-style libraries are widely
+documented as unreliable for this specific combination (App Router +
+Server Components) without special handling.
+
+**Conclusion, not just another dead end**: this isn't fixable with
+React state patterns alone, at the application-code layer, full stop —
+confirmed across two independent implementations (`AnimatePresence`'s
+own exit-caching, and a manual snapshot specifically designed to route
+around it) hitting the identical wall. The real source doesn't have this
+problem because it isn't using a JS animation library to fake a
+crossfade at all — it's using the actual browser View Transitions API
+(`document.startViewTransition()`), which operates on rendered pixels at
+the browser/compositor level, entirely outside of React's tree — so it
+has no "stale reference" problem to have in the first place.
+
+### Third attempt (2026-10-05, same session) — shipped
+
+Stopped trying to reproduce the effect with Framer Motion and switched
+to the real browser API directly — same technique the live site already
+uses — via `next-view-transitions` (the Next.js team's own package for
+wiring `document.startViewTransition()` into App Router navigation
+correctly). One new dependency, added with explicit sign-off first given
+the "no unnecessary dependencies" default on this project and how much
+had already been sunk into the Framer Motion approach.
+
+**Implementation**: `<ViewTransitions>` wraps `<html>` in
+`app/layout.tsx` (outside it, not inside — it's a context provider, not
+a DOM element). Every internal `<Link>` across the app (`Header`,
+`Footer`, `EnquiryForm`, `CategoryCard`, `ProductCategoriesSection`,
+`/contact/success`, `/not-found` — 7 files, confirmed via grep, not
+guessed) now imports `Link` from `next-view-transitions` instead of
+`next/link` — its `Link` is what actually triggers the transition on
+navigation; a plain `next/link` click wouldn't. No custom
+`::view-transition-*` CSS added — same as the real source (zero
+`transition:animate`/`name`/`persist` directives there either), so both
+use the browser's unstyled default crossfade.
+
+**Verified this one for real, not just "it compiled"**: instrumented
+`document.startViewTransition` directly (wrapped it in an init script
+before any page code ran) to get actual lifecycle timing rather than
+guessed delays — confirmed it's genuinely invoked on navigation, with
+`ready` firing ~40ms in and `finished` ~275ms later, matching the real
+site's measured ~250ms almost exactly. Screenshots timed against that
+real lifecycle (not fixed waits) showed the old page's actual content
+present in at least one captured frame before the new page appeared —
+something that **never happened once**, in any frame, across either
+Framer Motion attempt. That's the real, meaningful difference: the
+browser is compositing genuine pixel snapshots of both pages, which is
+exactly the mechanism the old React-based approaches structurally
+couldn't reach (see the second attempt above for why).
+
+**Found in a later audit, fixed same day**: `EnquiryForm`'s
+post-submit redirect (`router.push("/contact/success")`) was still
+using `next/navigation`'s `useRouter`, not `next-view-transitions`'s —
+only the latter's router (or its `Link`) actually calls
+`startViewTransition()`. Every click-based navigation on the site got
+the crossfade; this one programmatic redirect silently didn't. Fixed by
+swapping to `useTransitionRouter` from `next-view-transitions` — same
+`push`/`replace` API, confirmed via a clean build (TypeScript treats it
+as a valid drop-in). Not yet verified end-to-end with a real successful
+submission, since that requires the Laravel endpoint `submitEnquiry`
+posts to, which doesn't exist yet — worth a real click-through once
+that's live.
 
 ## Header & Footer
 
@@ -692,8 +809,12 @@ successful build.
 ## Testimonial book (Client Notes)
 
 `components/ui/TestimonialBook` (reusable primitive) +
-`components/sections/home/Testimonials` (Home page section shell,
-prop-driven) + `lib/api/home.ts` (page data). Ported from the real
+`components/sections/home/TestimonialsSection` (Home page section
+shell, prop-driven — renamed from `Testimonials` 2026-10-05 for
+consistency with every other section's `*Section` naming, e.g.
+`ContactHeroSection`/`CategoryGridSection`; it predated that convention
+and was never renamed during its own retrofit) + `lib/api/home.ts`
+(page data). Ported from the real
 source's `components/home/Testimonials.astro` — a genuine 3D CSS
 page-flip "book," not a plain slider. Verified in a real browser
 (Playwright):
@@ -705,8 +826,8 @@ stepping all the way back to the first page — zero console errors.
 - **`TestimonialBook` is a generic primitive, same philosophy as
   `Accordion`** — takes a plain `testimonials: Testimonial[]` prop, no
   page/section knowledge (heading, border, padding all live in the Home
-  page's `Testimonials` wrapper instead). Reusable wherever else a
-  testimonial carousel is needed later without dragging that chrome
+  page's `TestimonialsSection` wrapper instead). Reusable wherever else
+  a testimonial carousel is needed later without dragging that chrome
   along.
 - **First CSS Module in this codebase** (`TestimonialBook.module.css`),
   everything else so far is Tailwind. Deliberate exception: the real
@@ -755,11 +876,448 @@ stepping all the way back to the first page — zero console errors.
   `TestimonialsSectionProps`; `data/testimonials.ts` removed, its
   content folded into `lib/api/home.ts`'s `getHomePage()`. `TestimonialBook`
   itself was already correctly prop-driven from the start and needed no
-  changes. Home page itself still isn't composed (`app/page.tsx` is
-  still a placeholder, doesn't call `getHomePage()` or render
-  `Testimonials` — that's a separate, not-yet-made decision), but the
-  section is now fully ready for whenever it is, same as every other
-  section in this project.
+  changes.
+- **Wired into `app/page.tsx` for real** (2026-10-05, explicit request —
+  "we will use thing directly now"). Home page now renders `<Testimonials
+  {...testimonials} />` + `<ImageReelSection {...imageReel} />` (see
+  "Image reel" below), in the real source's relative order (Testimonials
+  before ImageBar — confirmed from `pages/index.astro`), even though
+  everything else from the real Home page (collection feature, process
+  strip, press, why-Giada, closing CTA) is still missing. No placeholder
+  text left on the page now that it has real sections — the gap is
+  tracked in the Status checklist instead.
+
+## Hero slideshow
+
+`components/sections/home/HeroSlideshowSection`. Ported from the real
+source's `components/home/HeroSlideshow.astro` — full-bleed image
+carousel with a GSAP entrance timeline (eyebrow fade, character-split
+title stagger, divider line scale, tagline fade, scroll indicator fade),
+a looping scroll-progress bar, a scroll-driven parallax on the whole
+text overlay, and per-slide Ken Burns zoom. Verified in a real browser:
+zero console errors, title opacity reaches 1 after the timeline
+completes, character-split produced exactly 27 `span > span` elements
+(matching "A Legacy Woven Over Generations"'s 27 non-space characters —
+counted, not assumed), and the hero image's computed `transform` showed
+a genuine in-progress scale (`matrix(1.042...)`, between the keyframes'
+1.0 and 1.08) partway through the 10s Ken Burns animation, confirming
+it's actually running, not just present in a stylesheet.
+
+- **Full carousel machinery built even though only one slide exists.**
+  The real source's own `slides` array has exactly one entry
+  (`hero-living-room.webp`) — three other images
+  (`hero-bedroom`/`hero-showroom`/`hero-texture`) sit in its assets
+  folder completely unused, never wired into the config. Not fabricated
+  into extra slides here, matching the real source exactly. The dots,
+  keyboard-arrow navigation, touch swipe, autoplay timer, and hover
+  pause/resume are all real, working code, ported faithfully — with one
+  slide, `activate()` always normalizes back to the same index and
+  early-returns (identical to the real source's own behavior), so
+  nothing currently visibly cycles, but it needs zero changes the moment
+  a second slide is added to the `hero.slides` array in `lib/api/home.ts`.
+- **Prev/next arrow buttons not rendered** — the real source has them
+  literally commented out in its markup (dead code, never shipped to the
+  live site). Not restored here either; only dot navigation, keyboard,
+  and swipe are real, live interactions on the actual site.
+- **Ken Burns ported as a real named `@keyframes` in `globals.css`**,
+  not a Tailwind utility — it has to be a genuine CSS animation because
+  the retrigger mechanism (`style.animation = 'none'; void
+  img.offsetWidth; style.animation = 'kenBurns 10s...'`) relies on the
+  browser's own animation-restart-on-reflow behavior, which only works
+  with `animation`, not a class toggle. Applied via direct DOM
+  manipulation through a `next/image`-forwarded ref (confirmed
+  `next/image` forwards its ref to the underlying `<img>` — this is the
+  first place in the project that relies on that), matching the real
+  source's imperative approach exactly rather than trying to force it
+  into React state.
+- **`font-heading` used for the `<h1>`, not `font-didot`** — both exist
+  in this codebase and resolve to the same font (`--font-heading: var(--font-didot)`
+  in `typography.css`), but `font-heading` is the documented, preferred
+  semantic token going forward (see `globals.css`'s own comment on this);
+  `font-didot` usages elsewhere (e.g. `ContactHeroSection`) predate that
+  being settled as the convention.
+- Real image copied in (`public/images/home/slideshow/hero-living-room.webp`),
+  byte-diffed identical against the source file.
+- **Title char-stagger flicker fix (2026-10-05).** User caught it on the
+  live dev site: the title flashed in fully, then visibly snapped/bounced
+  before the real stagger animation ran. Root cause confirmed by sampling
+  `getComputedStyle` on the char spans every frame in a real browser:
+  `tl.from(chars, {...}, 0.3)` was a timeline child, and GSAP defaults
+  `immediateRender: false` for `.from()` tweens inside a timeline — so the
+  chars' starting state (`y: 60, opacity: 0`) wasn't applied until the
+  playhead actually reached position 0.3 (0.2s timeline delay + 0.3s
+  offset, ~0.5s after mount). In that window the chars sat at their
+  natural DOM state (visible, `y: 0`, since `splitChars()` just wraps
+  text in fresh spans with no inline style), while `gsap.set(title,
+  {opacity: 1})` had already made the container visible synchronously —
+  so the full title flashed in at rest, then jumped to hidden/offset and
+  staggered back up.
+  First fix attempt was wrong and is worth recording so it isn't
+  retried: added `gsap.set(chars, {y: 60, opacity: 0})` synchronously
+  right after `splitChars()`, before revealing the title. This does stop
+  the flash, but it also breaks the animation outright — confirmed via
+  the same frame-sampling, chars stayed permanently invisible for the
+  full 2.5s sample. Cause: `.from()`'s implicit "to" value (when none is
+  given) is inferred from GSAP's own tracked current value for that
+  element/property, and the `gsap.set()` call had just overwritten that
+  tracked value to `y: 60, opacity: 0` — so the tween animated from
+  `y:60` to `y:60`, a zero-delta no-op.
+  Shipped fix: keep the synchronous `gsap.set(chars, {...})` (still
+  needed to prevent the flash), but swap `tl.from()` for
+  `tl.fromTo(chars, { y: 60, opacity: 0 }, { y: 0, opacity: 1, ... },
+  0.3)` — explicit start **and** end values sidestep GSAP's inference
+  entirely, so the pre-positioning gsap.set() can no longer corrupt the
+  implicit target. Re-verified via the same per-frame sampling: chars
+  sit correctly hidden from mount to ~280ms (timeline delay), then
+  animate monotonically and continuously to `opacity: 1, y: 0` with no
+  jump — plus a visual screenshot sequence at 300ms/900ms/1800ms
+  confirming no flash frame and a clean left-to-right stagger.
+
+## Press feature (zoom cards)
+
+`components/ui/ZoomCard` (reusable primitive) +
+`components/sections/home/PressFeatureSection` + `lib/api/home.ts`'s
+`pressFeature`. Ported from the real source's
+`components/home/PressFeature.astro`. User spotted this one directly on
+the live site and asked to discuss the approach before building — same
+pattern as Category grid: confirmed the header (eyebrow + h2 + centered
+description) is structurally identical to what `SectionHeading` already
+handles, and the "zoom card" is a real, specific interaction (not a
+lightbox): a cursor-tracked magnifying zoom, `transform-origin`
+following the mouse position within the card, not a static hover-scale.
+Verified in a real browser: hovering produces exactly `scale(1.72)`
+(matching the real source's value, not approximated), and moving the
+cursor to a different point on the card measurably shifts
+`transform-origin` to follow it — confirmed via `getComputedStyle`, not
+just "it looked right."
+
+- **`ZoomCard` built as a genuine reusable primitive**, same philosophy
+  as `CategoryCard`/`Accordion` — owns its complete visual identity
+  (shadow, ring, `cursor-zoom-in`, overflow-hidden) and the zoom
+  interaction, no page/section knowledge. Only one confirmed usage site
+  in the real source so far (unlike `CategoryCard`, which had two
+  independently confirmed usages before being extracted) — built as a
+  primitive anyway since it's a complete, self-contained interactive
+  unit on its own merits, matching how `Accordion`/`TestimonialBook`
+  were also built as primitives from the start rather than waiting for a
+  second confirmed usage.
+- **Direct DOM style mutation on `mousemove`, not React state** — same
+  technique the real source's own script uses, and deliberately not
+  reimplemented with state: a cursor-tracked zoom fires on every
+  pixel of mouse movement, and routing that through `setState` would
+  mean a React re-render per mousemove event instead of a single
+  imperative style write. Matches the pattern already established by
+  `HeroSlideshowSection`'s Ken Burns and `ImageReelSection`'s GSAP
+  track — animation-heavy, high-frequency DOM work stays imperative
+  even inside otherwise-declarative components.
+- **Real fourth image found, not used** — `press-feature-tv.webp` sits
+  in the real source's assets folder but is never wired into
+  `PressFeature.astro`'s own image list (same "orphaned asset" pattern
+  already seen with `ImageBar`'s extra hero photos and the Hero
+  slideshow's other three images). Not fabricated into a fourth card.
+- **`SectionHeading`'s `eyebrowColor="stone-500"` got a second real
+  instance** — its type comment previously described `stone-500` as
+  probably a one-off authoring slip, seen only in `OurClients` (not yet
+  built). `PressFeature` uses the same value independently, which makes
+  "accidental" a weaker explanation than it looked before. Comment
+  updated to reflect the new evidence rather than left stale.
+- Real images copied in (`public/images/home/press/press-magazine-spread.webp`,
+  `-1.webp`, `-2.webp`), byte-diffed identical against the source files.
+- **Wider `max-w-7xl` container kept, not normalized** to the `max-w-6xl`
+  most other Home sections use — confirmed real in the source, not a typo.
+- **Equal card heights — a deliberate deviation from the real source,
+  not a port.** The real source lets each card's height follow its own
+  image's native aspect ratio, so the three images (different
+  proportions) render at visibly uneven heights — confirmed in the real
+  source itself, not assumed, and the user independently caught the same
+  unevenness on the live site via screenshot and asked for it fixed:
+  "DONT FOLLOW ASTRO BLINLDY WE ARE IMPROVING THINGS HERE ON NEXTJS."
+  First approach considered was `h-full` + CSS Grid `align-items:
+  stretch`, rejected before implementing it: every `ZoomCard` uses
+  `next/image`'s `fill` mode (`position: absolute`), so none of the
+  three siblings contributes real intrinsic height for the grid row to
+  stretch against — the row would collapse instead. Shipped a fixed
+  `aspect-[6/7]` (≈0.857) on `ZoomCard`'s container instead — equal-width
+  grid columns + the same ratio on every card is already equal height,
+  deterministically, with no such dependency. The ratio itself is
+  grounded in the three real images' own measured dimensions
+  (1164×1351, 1189×1323, 1333×1600 → ratios 0.862, 0.899, 0.833,
+  averaging 0.864), not picked arbitrarily. `imageWidth`/`imageHeight`
+  dropped from `ZoomCardProps` and `lib/api/home.ts`'s `PressImageData`
+  as part of this change — no longer needed once sizing is `fill`-driven
+  (`CategoryItem`'s identical-looking fields were left alone; `CategoryCard`
+  doesn't use `fill` and still needs real dimensions). Verified in a real
+  browser post-change: all three cards measured at identical
+  `getBoundingClientRect()` dimensions (416×485 at 1600px viewport), the
+  cursor-tracked zoom still produces `scale(1.72)` with `transform-origin`
+  correctly following the cursor, and the screenshot shows no cropping
+  or distortion artifacts from the `object-cover` crop.
+- **`unoptimized` on ZoomCard's `<Image>` (2026-10-05) — not a quality
+  bump.** User caught these specific images looking visibly softer on
+  this site than on the live one. First attempt raised `next/image`'s
+  `quality` (default 75 → 90 → 100 on explicit request, requiring a
+  matching `images.qualities` entry in `next.config.ts` — Next 16 400s
+  any quality value not explicitly allow-listed there), which helped but
+  didn't fully close the gap — user confirmed it was "still blurry" even
+  after a hard refresh with `quality={100}` live.
+  Re-investigated properly rather than guessing again: navigated an
+  actual browser to the real production site and intercepted its network
+  responses directly. The live site serves these exact files completely
+  **unprocessed**, at their real original dimensions (1189×1323,
+  1333×1600, 1164×1351 — confirmed matching this project's own `public/`
+  source files exactly). `next/image`'s optimizer, even at quality 100,
+  was still downsizing to its nearest `deviceSizes` bucket (1080px wide —
+  comfortably enough resolution on paper, but still less than the real
+  1164-1600px originals) and re-encoding through its own WebP pass on top
+  of whatever encoding the source file already had — two lossy passes
+  plus a resize, compounding softness that shows up worst here
+  specifically because these are dense magazine scans (small text, fine
+  photo grain), unlike the simpler interior/product shots used elsewhere
+  on the site.
+  Fixed by adding `unoptimized` to the `<Image>` and dropping `sizes`/
+  `quality` (meaningless once unoptimized) — this serves the exact
+  original file, byte-for-byte, with zero resize and zero re-encode, the
+  only way to genuinely match live rather than approximate it with a
+  higher quality number. Reverted the now-unneeded `images.qualities`
+  entry in `next.config.ts` back out. Verified two ways: (1) intercepted
+  the actual browser request and confirmed it now hits
+  `/images/home/press/*.webp` directly (bypassing `/_next/image`
+  entirely), with response bytes binary-identical (`cmp`) to the
+  `public/` source file; (2) re-confirmed the cursor-tracked zoom still
+  produces `scale(1.72)` on hover — `unoptimized` only changes how the
+  image is fetched, not `fill`/`object-cover` sizing behavior.
+  Acceptable tradeoff: these 3 files are already small (187-244KB) and
+  don't need Next's responsive-srcset machinery the way a hero image
+  would — this is a deliberate, scoped exception for this specific case,
+  not a project-wide default.
+  Both `next.config.ts` changes in this fix (`images.qualities` added,
+  then removed) required a dev-server restart each time to take effect —
+  **Next.config changes aren't hot-reloaded.**
+
+## Image reel (craftsmanship strip)
+
+`components/sections/home/ImageReelSection`. Ported from the real
+source's `components/home/ImageBar.astro` — five real craftsmanship
+photos, tripled and scrolling infinitely, full-bleed edge-to-edge
+regardless of where the section sits in the page. Verified in a real
+browser: transform genuinely changes over time (confirmed by sampling
+computed `transform` a few seconds apart, not just "it compiled"), zero
+console errors, correct on both desktop and mobile (`68vw` wide items on
+mobile vs the `clamp(180px, 22vw, 360px)` desktop sizing).
+
+- **Animation driven by GSAP, not CSS `@keyframes`** — real source uses
+  a pure CSS animation. First port matched that exactly (a CSS Module
+  `@keyframes scroll` + `animation: scroll 34s linear infinite`), but it
+  silently never applied under this project's Turbopack dev build —
+  `transform` stayed `none` indefinitely, confirmed by direct
+  measurement, not assumed. Rather than keep chasing why, switched to
+  GSAP (explicit request — "we have free hand to make the project
+  optimized in nextjs," and GSAP is already this project's established
+  animation library: `gsap-init.ts`, `ScrollReveal`, EnquiryForm's field
+  stagger). `gsap.to(track, { xPercent: -33.333, duration, ease: "none",
+  repeat: -1 })` — `xPercent` is relative to the element's own box width,
+  same as CSS `translateX(%)`, so the `-33.333%` (exactly one of the
+  three tripled copies) carries over directly.
+- **`gsap.matchMedia().add()` tried first for the responsive duration
+  switch, dropped after direct testing showed its callback never
+  fires** in this setup — confirmed by adding console logging inside the
+  callback and inside a bare `gsap.to()` call side by side: the bare
+  tween animated correctly (verified via sampled `transform` values),
+  the `matchMedia().add()` callback never logged once. Not investigated
+  further given a simpler, already-proven pattern exists in this exact
+  codebase. Replaced with plain `window.matchMedia("(max-width: 768px)")`
+  + a `change` event listener that kills and recreates the tween at the
+  new duration, preserving playback position (`tween.progress()` read
+  before kill, reapplied after) — same style of direct `matchMedia`
+  check EnquiryForm already uses for reduced-motion.
+- **Only the genuinely bespoke CSS stayed in a CSS Module** —
+  `ImageReelSection.module.css` has just the full-bleed negative-margin
+  trick, the flex track, and the `clamp()`-based responsive item sizing.
+  Everything else (border, background, padding) is Tailwind classes
+  directly on the JSX — matching how the real source itself mixes a
+  scoped `<style>` class with inline Tailwind classes on the very same
+  `<section>` element, not a stylistic choice invented here.
+- **Real quirk found and deliberately NOT carried forward**: the real
+  source's CSS has a
+  `.image-reel:hover .image-reel-track { animation-play-state: running }`
+  rule. Checked carefully — this is dead code, not a "pause on hover"
+  feature: the track's animation has no `animation-play-state` set by
+  default (so it's already `running`), and the hover rule sets the exact
+  same value. A no-op rule isn't "real behavior" worth preserving the
+  way the TestimonialBook dot-click quirk or the Montréal slug-stripping
+  are — those have an observable effect, this doesn't. The per-image
+  hover scale-up (`hover:scale-[1.06]` on each individual photo) IS real
+  and working, and is kept.
+- Real images copied in (`public/images/home/image-bar-1.webp` through
+  `-5.webp`), byte-diffed identical against the source files. Reorder
+  `[1, 3, 5, 4, 2]` matches the real source's own reordering of the five
+  files — not arbitrary, kept exactly as authored there.
+- `loading={i < images.length ? "eager" : "lazy"}` on each `next/image`
+  — only the first (non-duplicated) copy of each photo loads eagerly,
+  the two duplicate copies used for the seamless loop lazy-load, same
+  split the real source's `loading={i < 5 ? "eager" : "lazy"}` makes.
+- **Real bug found and fixed in `globals.css`, not scoped to this
+  component**: `ImageReelSection`'s full-bleed `width: 100vw` doesn't
+  account for the vertical scrollbar's own width, so the page gained a
+  horizontal scrollbar — a well-known side effect of that technique.
+  Verified the real source already guards against exactly this with
+  `overflow-x: hidden` on both `html` and `body` in its global.css — a
+  rule this project's `globals.css` had simply never needed until this
+  was the first genuinely full-bleed section. Added both rules; confirmed
+  fixed via `document.documentElement.scrollWidth === clientWidth` in a
+  real browser, not just visually.
+
+## Category grid (Rugs / Glass)
+
+`components/ui/CategoryCard` (reusable primitive) +
+`components/sections/home/CategoryGridSection` (Home) +
+`components/sections/products/ProductCategoriesSection` (the Products
+page, built out for real past its placeholder for the first time) +
+`lib/api/home.ts`'s `categoryGrid` + new `lib/api/products.ts`. User
+spotted via the real live site that the same two-card grid appears both
+on Home and on `/products` and asked to discuss making it reusable
+before building — confirmed via the real source (grepped for
+`CategoryGrid` usage, read both files in full) that it's real, but more
+precisely scoped than it first looked.
+
+- **Only the card itself is actually shared** — `CategoryCard.astro` in
+  the real source, ported as `components/ui/CategoryCard`. The
+  surrounding chrome is genuinely different in each usage, not just
+  styled differently: Home wraps the grid in a centered eyebrow+heading
+  section (`CategoryGridSection`, reuses `SectionHeading` — this is
+  exactly the pattern it was built for); the Products page has no
+  eyebrow+heading section at all, "Products" is literally the page's own
+  `<h1>`, followed by an `sr-only` `<h2>All Products</h2>` and a
+  "View the Gallery" CTA link that Home's version doesn't have. Built as
+  two separate section components composing the one shared primitive,
+  not one component trying to serve both — same split already used for
+  `Accordion`/`FaqListSection` and `TestimonialBook`/`Testimonials`.
+- **`data-magnetic="0.2"` on the real source's cards is dead markup, not
+  a real feature — verified, not assumed.** `magneticHover()` already
+  exists in `lib/animations.ts` (ported early in the project) and looked
+  like a natural fit, but grepping the entire real source turned up
+  zero calls to it anywhere — nothing ever reads `[data-magnetic]` and
+  invokes it. Not implemented here; matching real *behavior* beats
+  wiring up an attribute that doesn't actually do anything on the live
+  site. (Said the opposite before verifying, while just discussing this
+  from the screenshots — corrected once the real source was actually
+  checked.) Likewise `data-reveal="scale"` on each card: this project's
+  own `ScrollReveal` already renders every reveal variant identically
+  (plain opacity fade, documented in `ScrollReveal.tsx` — no distinct
+  transform values exist anywhere in the real source to restore), so
+  plain `data-reveal` + the real source's own stagger delay (`200` on
+  the second card only) is the faithful port, not a missing feature.
+- **hrefs point to `/products?category=rugs`/`glass`, not the real
+  source's separate `/rugs`/`/glass` routes.** This project already
+  consolidated product categories into one `/products` listing with a
+  `category` field (`types/product.ts`, decided earlier in the project,
+  confirmed via `nav.config.ts` only ever having one "Products" link) —
+  matching the real source's literal hrefs would just 404 here. The
+  query-param shape is ready for whenever `/products` actually filters
+  by it; that filtering isn't built yet (page is still just the
+  category-picker intro, matching the real source's own current scope
+  for this route — it doesn't have a full filterable catalog either).
+- Real images copied in (`public/images/categories/category-rugs.webp`,
+  `category-glass.webp` — renamed from the source's
+  `glass-detail-3.webp` for clarity, same image), byte-diffed identical.
+- `lib/api/home.ts` and `lib/api/products.ts` both define their own
+  independent `CategoryItem`/`ProductCategoryData` types rather than
+  importing `CategoryCardProps` — same data-layer-independence reasoning
+  as `lib/api/contact.ts` (see "Contact page" below). `CategoryGridSection`
+  and `ProductCategoriesSection`'s own `.types.ts` files DO import
+  `CategoryCardProps` from `components/ui/CategoryCard` — that's a
+  UI-to-UI composition (one component reusing another's prop shape), not
+  the data-layer-depends-on-UI-layer pattern that was the actual problem
+  before; components depending on other components is normal.
+
+## Contact CTA banner (merged, two real source variants)
+
+`components/ui/ContactCtaBanner` (reusable primitive), used by
+`components/sections/home/ClosingCtaSection` on Home and directly in
+`app/faq/page.tsx` on FAQ. User spotted the same closing CTA band on
+both the live Home and FAQ pages and asked whether a single component
+with conditional rendering could cover both — discussed first, then
+built on explicit go-ahead, scoped to these two pages only for now.
+
+The real source actually has **two different components**, not one
+reused everywhere — confirmed by reading both files, not assumed from
+the screenshots alone:
+
+- `components/home/ClosingCTA.astro` — zero props, fully hardcoded
+  ("Every Great Space Begins with a Conversation." / "Connect With Us"),
+  simpler markup (no eyebrow row, no description paragraph). Only ever
+  used once, on Home.
+- `components/global/ContactCTA.astro` — the generic, prop-driven one
+  (`eyebrow`, `heading`, `description`, `linkText?`, `href?`, defaulting
+  to `"Start a Conversation"` / `/contact`). Confirmed real usage on 6
+  pages: FAQ, Our Story, Blog index, Collaborations index,
+  `CollaborationDetail.astro` (per-collaboration detail), and the old
+  standalone `rugs.astro` page (no current Next.js equivalent route —
+  `/products` doesn't have a slot for it; flagged, not silently dropped).
+  Of those 6, only FAQ is built out for real in this project today — Our
+  Story, Blog, and Collaborations are still TODO stubs, so this primitive
+  will extend to them naturally as each page gets built for real.
+
+Merging them into one component required getting 2 real conditional
+deltas right, not just "render eyebrow/description if present" — these
+came directly from diffing the two Astro files, not guessed:
+
+- **`mt-10` on the link is conditional on `description`** — it exists in
+  the real source purely to compensate for the extra paragraph's
+  spacing; Home's variant (no description) relies solely on the
+  divider's own `my-8` and would get visibly more gap than the real site
+  if `mt-10` always applied.
+- **Defaults match the real generic component exactly**
+  (`linkText = "Start a Conversation"`, `href = "/contact"`) — confirmed
+  3 of the 6 real usages (Blog, Collaborations index, CollaborationDetail)
+  omit `linkText` entirely and rely on this default, not a per-page
+  override every time.
+
+**Reveal-timing correction (2026-10-05).** First built with each
+element on its own `data-reveal-delay` (`0`/`150` on the heading, `300`
+on the divider, `400`/`500` on the description/link — the real source's
+own authored values). User caught on the live FAQ page that the real
+site fades the whole block in together, not item-by-item, and that
+matched this project's own earlier documented finding (see
+`ScrollReveal.tsx`'s comment): the real source authors
+`data-reveal-delay` on nearly every element, but its own JS never
+reads that attribute anywhere — the delay is dead markup on the actual
+live site. A past session chose to "restore" it as a real
+`transition-delay` (`globals.css`'s `[data-reveal]` rule) since the
+values looked concrete and intentional; that restoration is what caused
+this component's visible item-by-item stagger to diverge from live.
+Fixed by moving `data-reveal` to the single outer content wrapper
+instead of five individual children, with no delay — the whole eyebrow
++ heading + divider + description + link block now fades as one unit,
+driven by one `IntersectionObserver` trigger.
+Initially scoped to `ContactCtaBanner` only, but re-investigating by
+reading the real reveal script directly (not just grepping for absence
+of a consumer) showed the root cause was sitewide: `data-reveal-delay`
+is dead markup everywhere on the real site, not just here. Taken project-
+wide the same day — see "Animations" above for the full reversal (every
+`data-reveal-delay` attribute removed, `ScrollReveal`/`globals.css`'s
+delay mechanism removed) — so this is no longer a special case, just the
+first place the divergence was caught.
+Verified in a real browser on both pages by triggering the reveal
+programmatically and sampling the wrapper's own computed `opacity`
+every animation frame: a single smooth 0→1 curve over ~0.45s with no
+per-child offset, on both Home and FAQ.
+
+- **No dedicated Section wrapper on FAQ** — `ContactCtaBanner` is
+  rendered directly in `app/faq/page.tsx` from `lib/api/faq.ts`'s
+  `closingCta` field, not through a `FaqClosingCtaSection` folder. This
+  is a deliberate, flagged deviation from this project's otherwise
+  consistent "every page section gets its own folder" convention: there
+  is no page-specific composition happening around the banner here, just
+  a straight prop spread, so a wrapper would be pure pass-through with
+  zero added logic or layout. Home's `ClosingCtaSection` still gets its
+  own section folder, since it genuinely needs to omit
+  `eyebrow`/`description` to reproduce the real hardcoded variant — that
+  omission is real, page-specific composition, not pass-through.
+- `lib/api/home.ts`'s `ClosingCtaSectionData` and `lib/api/faq.ts`'s
+  `FaqClosingCtaData` both declare their own independent types rather
+  than importing `ContactCtaBannerProps` — same data-layer-independence
+  reasoning as `lib/api/contact.ts`.
 
 ## Contact page
 
@@ -797,6 +1355,16 @@ fade still mid-transition, not a real bug — confirmed by re-shooting at
   `lib/api/fetcher.ts`, ported from Torque earlier but unused until now)
   should be the only change needed later — `page.tsx` and both section
   components stay untouched.
+- **`lib/api/fetcher.ts`'s missing-`API_URL` check moved from import
+  time to call time** (found in a later audit, fixed 2026-10-05). It
+  originally threw the moment the file was *imported*, not when
+  `apiFetch()` was actually *called* — harmless on Torque (which always
+  has a real `API_URL`), but a real landmine here: once any one of this
+  project's four `lib/api/<page>.ts` files actually imports `apiFetch`
+  before `API_URL` is configured locally, the whole app would fail to
+  start, not just that one page's data. Moved the check inside the
+  function body instead, so an unconfigured `API_URL` only breaks the
+  specific call that needs it.
 - **`lib/api/contact.ts` declares its own `ContactHeroData`/
   `ShowroomSectionData`/etc. types — it does not import the section
   components' prop types.** First pass did import them directly
@@ -952,6 +1520,62 @@ dir only). Key facts that change/confirm the plan:
 - **No analytics anywhere** in the current site (no GA/GTM/Pixel) —
   ask if the client wants it added, since it's not just "missing from
   the handover."
+
+## SEO
+
+Status as of 2026-10-05, from an explicit audit ("are we taking care of
+SEO things as well?"). Deferred — user said "we will do this later" —
+this section is the record of what's already real vs. what's an open
+gap, so the later pass starts from facts instead of re-auditing.
+
+**Already real, verified by reading the actual files, not assumed:**
+
+- [robots.ts](../src/app/robots.ts) + [sitemap.ts](../src/app/sitemap.ts)
+  exist and use the real production domain (`siteConfig.url`), not a
+  placeholder.
+- Every page **except Home** exports its own `title`/`description`,
+  resolved through the layout's `%s | Giada` template
+  (`app/layout.tsx`'s `metadata.title.template`).
+- Real `LocalBusiness` JSON-LD per showroom on the Contact page
+  (`app/contact/page.tsx`'s `buildLocalBusinessSchemas()`), including
+  real geo coordinates — ported from the Astro source's
+  `ContactMain.astro`, not fabricated. `FAQPage` JSON-LD on the FAQ page,
+  built from the same `items` the visible accordion renders (so the
+  schema can't drift out of sync with the page content).
+- Security headers in `next.config.ts` (not SEO directly, but a trust/Core
+  Web Vitals signal search engines do weight).
+- Alt-text discipline already established on every image across every
+  section built so far (see per-section notes throughout this doc).
+
+**Gaps — real, not yet addressed:**
+
+1. **No Open Graph / Twitter Card metadata anywhere.** Zero
+   `openGraph`/`twitter` fields on any page. For a luxury rug/textile
+   brand, link-preview quality (Pinterest, Instagram, WhatsApp, iMessage)
+   is a real commercial concern, not a nice-to-have — right now every
+   shared link renders a blank/generic card.
+2. **No `metadataBase`** set in `app/layout.tsx` — a prerequisite for
+   resolving relative OG image paths to absolute URLs, and also silences
+   a real Next.js build warning that will appear the moment any image
+   path is added to metadata.
+3. **No favicon beyond the bare `app/favicon.ico`** — no apple-touch-icon,
+   no `manifest.ts`/`icon.tsx` for proper mobile/PWA/bookmark icons.
+4. **No sitewide `Organization`/`WebSite` JSON-LD.** `siteConfig.social`
+   (`data/site.ts`) already has the real Instagram/LinkedIn URLs sitting
+   unused for a `sameAs` field — the data exists, just isn't wired into a
+   schema yet.
+5. **Home page has no explicit metadata export** — silently falls back to
+   the layout default. The default title is fine for Home specifically,
+   but the description is generic site copy, not written for the home
+   route.
+6. **No canonical tags** (follows from the missing `metadataBase`) — low
+   priority today, but `CategoryGridSection`'s `/products?category=rugs`
+   style hrefs (see "Category grid" above) could become a real
+   duplicate-content question once the Products page actually filters by
+   that query param instead of ignoring it.
+
+Also tracked in "Status" above ("SEO parity check") and "Astro source
+audit" (legacy redirect table, analytics — neither ported/added yet).
 
 ## Env vars
 

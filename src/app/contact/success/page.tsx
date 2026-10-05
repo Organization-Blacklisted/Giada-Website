@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { Link } from "next-view-transitions";
 
 export const metadata = {
   title: "Message Sent",
@@ -20,27 +20,26 @@ export default function ContactSuccessPage() {
         {/* Heading */}
         <h1
           data-reveal
-          data-reveal-delay="100"
           className="mb-6 font-didot text-4xl font-normal leading-tight tracking-tight text-stone-900 sm:text-5xl"
         >
           Thank You. Your Enquiry Is on Its Way.
         </h1>
 
         {/* Supporting copy */}
-        <p data-reveal data-reveal-delay="200" className="mx-auto mb-4 max-w-xl text-[14px] leading-[1.85] text-stone-500">
+        <p data-reveal className="mx-auto mb-4 max-w-xl text-[14px] leading-[1.85] text-stone-500">
           Every enquiry is handled personally by one of our founders. We will review your message and
           respond within one business day.
         </p>
 
-        <p data-reveal data-reveal-delay="250" className="text-xs italic text-stone-400">
+        <p data-reveal className="text-xs italic text-stone-400">
           A member of our team will be in touch shortly.
         </p>
 
         {/* Divider */}
-        <div data-reveal data-reveal-delay="300" className="mx-auto my-12 h-px w-16 bg-stone-200" />
+        <div data-reveal className="mx-auto my-12 h-px w-16 bg-stone-200" />
 
         {/* Actions */}
-        <div data-reveal data-reveal-delay="350" className="flex flex-col items-center justify-center gap-6 sm:flex-row">
+        <div data-reveal className="flex flex-col items-center justify-center gap-6 sm:flex-row">
           <Link
             href="/"
             className="w-full border border-stone-900 bg-stone-900 px-9 py-4 text-xs font-semibold uppercase tracking-[0.25em] text-white transition-colors duration-300 hover:border-stone-700 hover:bg-stone-700 sm:w-auto"

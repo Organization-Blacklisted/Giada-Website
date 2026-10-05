@@ -17,10 +17,24 @@
   --color-foreground: var(--foreground);
 }
 
+/*
+ * overflow-x: hidden on both html and body — confirmed from the real
+ * source's global.css. Missed when this file was first set up; the gap
+ * only became visible once a genuinely full-bleed section existed
+ * (ImageReelSection's `width: 100vw` full-bleed trick overflows by
+ * exactly the vertical scrollbar's width, since 100vw includes the
+ * scrollbar track — a well-known side effect of that technique, which
+ * is exactly why the real source has this rule in the first place).
+ */
+html {
+  overflow-x: hidden;
+}
+
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-body);
+  overflow-x: hidden;
 }
 
 /*
@@ -46,17 +60,33 @@ h3 {
 }
 
 /*
+ * Ken Burns slow-zoom, used by HeroSlideshowSection. Applied imperatively
+ * via direct style.animation (not a Tailwind/React class), matching the
+ * real source exactly — it's retriggered per-slide via the
+ * `img.style.animation = 'none'; void img.offsetWidth; img.style.animation = '...'`
+ * reflow trick, which only works with a real named CSS animation, not a
+ * Tailwind utility.
+ */
+@keyframes kenBurns {
+  from {
+    transform: scale(1);
+  }
+  to {
+    transform: scale(1.08);
+  }
+}
+
+/*
  * Scroll reveal — pairs with components/ui/ScrollReveal (sets
- * .is-visible + the --reveal-delay custom property via
- * IntersectionObserver). Base opacity rule confirmed from the real
- * source; transition-delay is a restoration — see ScrollReveal.tsx for
- * why (the real source authors data-reveal-delay on ~every element but
- * never actually reads it anywhere).
+ * .is-visible via IntersectionObserver, one entry per [data-reveal]
+ * element, no stagger). Confirmed real from the source — matches
+ * layouts/Layout.astro's own initFadeReveal() exactly, including the
+ * absence of any transition-delay; see ScrollReveal.tsx for why an
+ * earlier version of this rule had one and no longer does.
  */
 [data-reveal] {
   opacity: 0;
   transition: opacity 0.45s ease;
-  transition-delay: var(--reveal-delay, 0ms);
 }
 [data-reveal].is-visible {
   opacity: 1;

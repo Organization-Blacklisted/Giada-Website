@@ -1,9 +1,3 @@
-const API_BASE = process.env.API_URL;
-
-if (!API_BASE) {
-  throw new Error("API_URL environment variable is not set.");
-}
-
 // Shared response envelope — update once the real Laravel API contract is known.
 export type ApiResponse<T> = {
   success: boolean;
@@ -44,6 +38,18 @@ export async function apiFetch<T>(
   endpoint: string,
   { revalidate = 3600, tags }: FetchOptions = {}
 ): Promise<T> {
+  const API_BASE = process.env.API_URL;
+  // Checked here, not at module load — this file gets imported by every
+  // lib/api/<page>.ts as the "ready to swap in" fetcher, most of which
+  // don't call it yet (still static mock data). Throwing at import time
+  // would crash the whole app the moment ANY page's data layer imports
+  // this file, even ones that never actually call apiFetch() — found
+  // during an audit, not hypothetical (confirmed 4 lib/api/*.ts files
+  // already reference it in comments without a configured API_URL).
+  if (!API_BASE) {
+    throw new Error("API_URL environment variable is not set.");
+  }
+
   const url = `${API_BASE}${endpoint}`;
   let lastError: unknown;
 
