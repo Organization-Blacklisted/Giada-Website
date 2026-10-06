@@ -1,8 +1,11 @@
-# Giada — Next.js Frontend
+# Giada — Next.js + Payload
 
-Migration target for giada-studio.com (currently Astro) + a new Laravel
-backend. This doc is the shared reference for the frontend team and the
-Laravel dev — keep it updated as decisions get made.
+Migration target for giada-studio.com (currently Astro) + a Payload CMS
+backend (embedded in this same Next.js app, backed by Neon Postgres).
+Originally scoped with a separate Laravel backend — switched to Payload
+2026-10-06 after a cost/timeline pitch to the client was approved; see
+"CMS" below for the full reasoning. This doc is the shared reference for
+the project — keep it updated as decisions get made.
 
 ## Status
 
@@ -21,9 +24,16 @@ Laravel dev — keep it updated as decisions get made.
 - [x] Hero slideshow built (`HeroSlideshowSection`) — GSAP entrance timeline, character-split title, Ken Burns, scroll parallax, full carousel machinery (currently one real slide, matching the real source) — see "Hero slideshow" below.
 - [x] Press feature built (`ZoomCard` reusable primitive + `PressFeatureSection`) — cursor-tracked magnifying zoom, verified via measured `transform`/`transform-origin`, not just visual — see "Press feature (zoom cards)" below. Home now has five real sections, in real page order
 - [x] Page-transition crossfade shipped (`next-view-transitions`, real browser View Transitions API) — see "Page transitions" below. Two prior Framer Motion attempts failed for a confirmed structural reason (App Router's single `children` slot isn't a stable snapshot); switching to the real browser API the live site itself uses resolved it
-- [ ] Laravel API contract agreed (endpoints/response shapes)
+- [x] Backend switched from Laravel to Payload + Neon, approved by the client 2026-10-06 (see "CMS" below)
+- [x] Payload installed into this same Next.js app (not a separate project) — `(frontend)`/`(payload)` route-group split, `payload.config.ts`, `Users`/`Media` starter collections, admin panel reachable at `/admin` — see "Folder structure" below. Verified via a real build + server, not just "it compiled": full site still renders with zero console errors, `/api/revalidate` and Payload's own `/api/[...slug]` coexist without conflict, `robots.txt`/`sitemap.xml` both still generate correctly post-restructure
+- [x] Collection section built (`CollectionSection`, image + text, second section on Home) — see "Collection (image + text, Home second section)" below. Home now has six real sections, in real page order
+- [x] Process strip built (`ProcessStripSection`, 5-step "Crafted With Purpose", fourth section on Home) — see "Process strip (5-step "Crafted With Purpose")" below. Home now has seven real sections, in real page order
+- [x] Why Giada built (`WhyGiadaSection`, 3 pillars + closing hover-zoom image, sixth section on Home) — see "Why Giada (pillars + closing image)" below. Home page matches the real source's complete section order: HeroSlideshow, Collection, CategoryGrid, ProcessStrip, PressFeature, WhyGiada, Testimonials, ClosingCTA, ImageBar
+- [x] Values section built (`ValuesSection`, "Living Art Beyond Simple Decor") — see "Values section (\"Living Art Beyond Simple Decor\") — first client-designed section" below. **First section built from new client-provided Figma content rather than the real Astro source** — placed between CategoryGrid and ProcessStrip, built as a genuine reusable `ui/` primitive from the start per explicit client instruction (for eventual reuse on Our Story's real "Values That Endure" section)
+- [ ] Neon database created (client-owned org, per the agency's multi-project Neon plan) and `DATABASE_URL` set — `/admin` 500s until this exists, confirmed expected behavior, not a bug
+- [ ] Real content model/collections designed for Products, Collaborations, Gallery, Blog, FAQ, Testimonials, Enquiries
 - [ ] Real content ported page by page
-- [ ] Enquiry form wired to Laravel (still posts to a guessed `/enquiries` path, see "Contact page" below)
+- [ ] Enquiry form wired to Payload (still posts to a guessed `/enquiries` path against a Laravel API that no longer exists — see "Contact page" below; needs an Enquiries collection + a Local API call)
 - [ ] SEO parity check (metadata, sitemap, 301s from old URLs — legacy redirect table found in the Astro source, needs porting) — see "SEO" section below for the current audit (what's real vs. gaps), deferred by explicit request
 - [ ] Staging deploy / client UAT
 - [ ] Launch
@@ -35,43 +45,89 @@ Laravel dev — keep it updated as decisions get made.
 - GSAP — matches the real Astro source's animation library. Core setup
   ported (`lib/gsap-init.ts`, `lib/animations.ts`, scroll-reveal system)
   — not yet used by any real component (nothing built that needs it yet).
-- Backend: Laravel (separate repo, dedicated dev) — CMS + API only, no
-  cart/checkout (confirmed: the live site is inquiry-based, not
-  e-commerce)
+- Backend: Payload CMS, embedded directly in this Next.js app (not a
+  separate repo/server) — CMS + API only, no cart/checkout (confirmed:
+  the live site is inquiry-based, not e-commerce). Switched from an
+  originally-planned separate Laravel backend after a pitch comparing
+  build time (~1.5-2.5 weeks for Payload vs. ~4-6 for an equivalent
+  hand-built Laravel backend) and stack fit (TypeScript end-to-end,
+  same as the frontend) — approved by the client 2026-10-06.
+- Database: Neon (serverless Postgres), also used for file/media storage
+  (Object Storage, S3-compatible) — one vendor for both instead of a
+  separate blob-storage service. Account created under the agency's own
+  Neon organization, not the client's — see "CMS" below for why, and the
+  claimable-project plan for eventually handing ownership to the client.
+- Data fetching inside Next.js uses Payload's **Local API** (direct
+  typed function calls into the database, no HTTP round-trip) for
+  server-rendered pages, since Payload runs in-process — not REST calls
+  the way a separate Laravel backend would have required. Payload's own
+  REST/GraphQL endpoints (`/api/*`) still exist and are used only where
+  something is genuinely external (client-side fetches after page load,
+  the enquiry form submission, any future third-party/mobile consumer).
 
 ## Folder structure
 
 `src/` layout, matching the structure used on a previous Next.js project
 (Torque Pharma) — `@/*` maps to `./src/*` (see `tsconfig.json`).
 
+Two Next.js route groups split the app in two, each with its own root
+layout — required because Payload's admin panel needs full control over
+its own `<html>`/`<body>` (its own fonts/styles/providers), completely
+separate from Giada's own site shell. Route groups are just folders in
+parentheses — they don't appear in the URL, so moving every existing
+page into `(frontend)/` changed zero URLs.
+
 ```
-src/app/                   Routes (App Router)
-  layout.tsx                Root layout — Header/Footer, skip-link, metadata template
-  page.tsx                  Home
-  products/page.tsx         Product catalog (rugs / glass)
-  products/[slug]/page.tsx  Product detail
-  collaborations/page.tsx
-  gallery/page.tsx
-  our-story/page.tsx
-  blog/page.tsx             Post list
-  blog/[slug]/page.tsx      Single post
-  faq/page.tsx
-  contact/page.tsx          Enquiry form
-  privacy/, terms/, shipping/page.tsx   Legal pages (footer links here)
-  api/revalidate/route.ts   Laravel → Next ISR cache-busting webhook
-  sitemap.ts / robots.ts
-  globals.css                Imports styles/*, base :root/body only
+src/app/
+  (frontend)/               Giada's actual site — everything that existed
+                             before Payload, unchanged in content, just
+                             moved into this group
+    layout.tsx                Root layout — Header/Footer, skip-link, metadata template
+    page.tsx                  Home
+    products/page.tsx         Product catalog (rugs / glass)
+    products/[slug]/page.tsx  Product detail
+    collaborations/page.tsx
+    gallery/page.tsx
+    our-story/page.tsx
+    blog/page.tsx             Post list
+    blog/[slug]/page.tsx      Single post
+    faq/page.tsx
+    contact/page.tsx          Enquiry form
+    privacy/, terms/, shipping/page.tsx   Legal pages (footer links here)
+    api/revalidate/route.ts   Payload → Next ISR cache-busting webhook
+    globals.css                Imports styles/*, base :root/body only
+  (payload)/                Generated by installing Payload — admin panel
+                             + API, own root layout/providers, mostly
+                             "modify at your own risk" generated files
+    layout.tsx                 Payload's own RootLayout/providers
+    admin/[[...segments]]/     The actual /admin dashboard
+    api/[...slug]/route.ts     Payload's REST API (/api/*)
+    api/graphql/, api/graphql-playground/   Not used by the app yet;
+                             kept since they're free and may help
+                             exploring the schema during development
+  robots.ts / sitemap.ts /  Must live at this true app root, NOT inside
+  favicon.ico                either route group. Confirmed the hard way,
+                             twice: robots.ts silently stopped generating
+                             when nested in (frontend)/ (a known Next.js
+                             quirk — sitemap.ts works fine nested, robots.ts
+                             doesn't), and separately favicon.ico 404'd
+                             after the same move (user caught it live —
+                             "our favicon is not showing"). Both are
+                             Next.js file-convention routes resolved at
+                             the true app root regardless of route
+                             groups; moved both to the root for
+                             consistency. Worth assuming any other
+                             file-convention route (icon.tsx, apple-icon,
+                             manifest.ts, if ever added) needs the same
+                             treatment rather than re-discovering this a
+                             third time.
 
 src/components/
   layouts/                  Header, Footer, Container — one folder each:
                              ComponentName.tsx (+ .types.ts if it takes
                              props) + index.ts barrel export
   sections/{page}/          Page-specific composed sections, same
-                             per-component-folder convention. Only
-                             sections/contact/EnquiryForm exists so far —
-                             add the rest (hero, testimonial carousel,
-                             press feature, image bar, ...) once real
-                             content lands
+                             per-component-folder convention.
   ui/ScrollReveal/          Mounted once in layout.tsx. Sets up the
                              [data-reveal] IntersectionObserver +
                              ScrollTrigger.refresh() on every page — see
@@ -79,9 +135,26 @@ src/components/
   ui/SectionHeading/        Eyebrow + Didot heading + optional
                              description — confirmed repeated verbatim
                              across 5 real sections, see "Design tokens"
-                             below. Not used by any real page yet.
+                             below.
   ui/Accordion/              Generic single-open-at-a-time accordion,
                              not FAQ-specific — see "Accordion & FAQ"
+
+src/collections/           Payload collection configs — one file per
+                             content type, registered in payload.config.ts.
+  Users.ts                   Admin auth collection (required by Payload,
+                             not a Giada content type)
+  Media.ts                   Uploads collection every other collection's
+                             images will relate to. Deliberately simpler
+                             than Payload's own blank-template default —
+                             no Folders/Tags organizational layer, not
+                             needed at this content volume yet.
+  (Products.ts, Collaborations.ts, Gallery.ts, Blog.ts, Faq.ts,
+  Testimonials.ts, Enquiries.ts — not built yet, next real step)
+
+src/payload.config.ts      Registers collections, the Postgres (Neon) db
+                             adapter, the rich text editor, and the
+                             generated-types output path. `@payload-config`
+                             resolves here via a tsconfig path alias.
 
 src/data/
   nav.config.ts              Typed nav items
@@ -93,14 +166,18 @@ src/fonts/
   index.ts                   next/font/local — see "Design tokens"
 
 src/lib/
-  api/fetcher.ts             Retrying, timeout-guarded, tag-revalidating
-                             apiFetch<T>() + ApiError/isNotFoundError.
-                             Add per-resource files (products.ts, blog.ts,
-                             ...) once the real Laravel endpoints exist —
-                             none exist yet, so none are invented here
-  actions/enquiry.ts          "use server" — submitEnquiry(), posts to
-                             Laravel. Endpoint path is a guess (/enquiries)
-                             pending the real contract
+  actions/enquiry.ts          "use server" — submitEnquiry(), still posts
+                             to a guessed /enquiries path against an
+                             API_URL env var that no longer exists (left
+                             over from the Laravel plan). Never actually
+                             worked — no backend has existed to receive
+                             it yet — so nothing new broke; real fix is a
+                             Payload Local API call once an Enquiries
+                             collection exists. `lib/api/fetcher.ts` (the
+                             old retry/backoff REST client built for a
+                             Laravel API) was removed 2026-10-06 — fully
+                             unused, and Payload's Local API replaces the
+                             need for an HTTP client in the common case.
   gsap-init.ts, animations.ts Ported verbatim from the real Astro source
                              — see "Animations" below
 
@@ -113,7 +190,7 @@ src/styles/
 src/types/                  One file per content shape: product.ts,
                              gallery.ts, blog.ts, faq.ts, testimonial.ts,
                              enquiry.ts — all provisional, inferred from
-                             the live site, not the real API
+                             the live site, not the real Payload schema
 ```
 
 ## Conventions
@@ -125,8 +202,8 @@ src/types/                  One file per content shape: product.ts,
   — this mirrors Astro's islands model, just via Next's client boundary
   instead.
 - Data fetching happens in Server Components / Server Actions, calling
-  `lib/api/*` — never fetch the Laravel API directly from inside a
-  Client Component (`API_URL` is server-only, no `NEXT_PUBLIC_` prefix).
+  `lib/api/*`, which calls Payload's Local API directly (same process,
+  no HTTP) — never call Payload from inside a Client Component.
 - Component folders: `ComponentName/ComponentName.tsx` (+
   `ComponentName.types.ts` if it takes props) + `index.ts` barrel
   (`export { default } from "./ComponentName";`). Skip `.types.ts` for
@@ -161,9 +238,10 @@ real browser: fields fillable, select value confirmed via
   source**: it POSTs to its own `/api/contact` (Astro API route calling
   Resend directly, currently broken — empty API keys) then client-side
   navigates to `/contact/success`. Team decision from the Astro audit:
-  Laravel should own email sending entirely instead. This component
+  the backend should own email sending entirely instead (originally
+  planned as Laravel, now Payload — see "CMS" below). This component
   still calls the `submitEnquiry` Server Action in `lib/actions/enquiry.ts`
-  — endpoint path is a guess pending the real Laravel contract — and
+  — endpoint path is a guess pending a real Enquiries collection — and
   shows an inline success message rather than navigating, since
   `/contact/success` doesn't exist in this project yet.
 - **Not wired up, deliberately**: Cloudflare Turnstile. The real source
@@ -500,9 +578,9 @@ the crossfade; this one programmatic redirect silently didn't. Fixed by
 swapping to `useTransitionRouter` from `next-view-transitions` — same
 `push`/`replace` API, confirmed via a clean build (TypeScript treats it
 as a valid drop-in). Not yet verified end-to-end with a real successful
-submission, since that requires the Laravel endpoint `submitEnquiry`
-posts to, which doesn't exist yet — worth a real click-through once
-that's live.
+submission, since that requires the real endpoint `submitEnquiry` posts
+to, which doesn't exist yet (pending a Payload Enquiries collection) —
+worth a real click-through once that's live.
 
 ## Header & Footer
 
@@ -973,6 +1051,100 @@ it's actually running, not just present in a stylesheet.
   jump — plus a visual screenshot sequence at 300ms/900ms/1800ms
   confirming no flash frame and a clean left-to-right stagger.
 
+## Collection (image + text, Home second section)
+
+`components/sections/home/CollectionSection`. Ported from the real
+source's `Collection.astro` (imported there as `ImageWithText`) — the
+second section on Home, right after the hero. Two-column image/text
+layout: image left, eyebrow/heading/divider/description/button right,
+with an optional `reverse` prop to flip sides.
+
+- **Kept as a Home-only section, not promoted to `components/ui/`** —
+  confirmed only one real usage site across the entire source (grepped
+  every page/component for the import), despite being built with
+  reusable-looking props (optional `subheading`, optional
+  `buttonText`/`buttonLink`, `reverse`). Same reasoning as
+  `HeroSlideshowSection`: the flexibility is real (kept as genuine props,
+  not hardcoded away), just not yet exercised by a second page —
+  promoting this later if one shows up is a non-event since the props
+  already exist.
+- **`reverse` implemented correctly, not ported as-is.** The real
+  source applies `md:order-1` to *both* the image and text wrapper when
+  `reverse` is true — they'd tie at the same order value and nothing
+  would actually flip. This is a dormant bug, not a confirmed-live
+  behavior to preserve: `reverse` is never set to `true` anywhere in the
+  real source, so there's no real site behavior being deviated from
+  here, just an unexercised code path implemented sensibly (`md:order-2`
+  on the image, `md:order-1` on the text, when reversed) rather than
+  copying a bug nobody has ever seen trigger.
+- **`subheading` duplicating the Hero's own eyebrow text** ("From Our
+  Atelier to Your Vision") is confirmed real, not a copy-paste mistake —
+  the real site shows the identical line twice in a row, by design.
+- Real image copied in (`public/images/home/collection-feature.webp`,
+  4000×4000 source), byte-diffed identical against the source file.
+  Rendered via standard `next/image` optimization (not `unoptimized`,
+  unlike `ZoomCard`) — confirmed sharp via a real-browser crop screenshot
+  at 2x DPR; this image doesn't have the dense-text/fine-grain content
+  that made Press Feature's magazine scans visibly sensitive to
+  compression, so the default optimization pipeline is fine here.
+- `buttonLink` points at `/collaborations`, matching the real source
+  exactly — not a guess, and not normalized to `/products` despite the
+  section being about rugs/collections generally.
+- Uses a single `data-reveal` per column (image, text), not per
+  individual element inside the text column — consistent with the
+  project's settled no-stagger reveal timing (see "Animations" above).
+- **Image rendered as a flat square instead of tall portrait (2026-10-06
+  fix) — a genuinely layered root cause, not a simple styling miss.**
+  User caught the live image looking squished/short compared to the
+  real site. Three separate, compounding issues, found and fixed in
+  sequence:
+  1. **`fill` mode doesn't contribute intrinsic size to CSS Grid's
+     `items-stretch` row-sizing.** The real source uses a plain `<img
+     width={1200} height={1400} class="h-full w-full object-cover">` —
+     not absolutely positioned — so the browser's Grid auto-sizing
+     algorithm can read its intrinsic aspect ratio when computing the
+     row's height. `fill` sets `position: absolute` on the underlying
+     `<img>`, removing it from that calculation entirely. Confirmed by
+     measuring: both builds' two grid columns matched *each other*
+     (proving `items-stretch` itself worked in both), and the text
+     content/wrapping was byte-identical between builds — so the real
+     row-height difference had to be coming from the image side.
+     Fixed by switching from `fill` to real `width={1200} height={1400}`
+     props + `h-full w-full object-cover` CSS, matching the real
+     source's actual approach instead of the `fill`-based pattern used
+     elsewhere in this project (which is fine for sections like
+     `ZoomCard`/`WhyGiadaSection` precisely because they don't need
+     their container's height to be *derived from* the image).
+  2. **Our source image file was the wrong shape.** Fix #1 alone
+     produced a perfect square, not the expected tall portrait. Turned
+     out `public/images/home/collection-feature.webp` was the original
+     4000×4000 *square* photo — real, byte-diffed identical to the Astro
+     handover ZIP's source asset, but not what the live site actually
+     *serves*. Astro's own build pipeline crops this square original
+     down to a non-square 1200×1400 before deploying. Confirmed by
+     capturing the real live site's actual served file directly
+     (network response, not inferred): genuinely 1200×1400, same photo,
+     same framing. Replaced our project's file with this exact
+     byte-identical crop rather than deriving one ourselves.
+  3. **Next's dev-mode image cache persisted across both a config-free
+     file swap and a full dev-server restart.** After fixing the source
+     file, the page kept rendering the stale square version. Traced to
+     `.next/dev/cache/images/` — a disk cache Next 16's dev server uses
+     for optimized image output, keyed partly by `Accept` header (a
+     bare `curl` with no `Accept` header hit a different, already-stale
+     cache bucket than a real browser's request would, which is why an
+     early check looked like it had "cleared" when it hadn't). Confirmed
+     by directly fetching with a browser-matching `Accept` header, which
+     still returned square — and confirmed a plain server restart alone
+     doesn't clear it, since the cache lives on disk, not in process
+     memory. Fixed by deleting `.next/dev/cache/images/` specifically,
+     then restarting. Worth remembering for any future "I changed the
+     file but the image still looks wrong" case on this project — check
+     this cache before assuming the code fix didn't work.
+  Re-verified post-fix: rendered dimensions (541×631.67px, ratio 0.857)
+  match the live site's measured dimensions exactly, both desktop and
+  mobile screenshots confirmed correct, zero console errors.
+
 ## Press feature (zoom cards)
 
 `components/ui/ZoomCard` (reusable primitive) +
@@ -1010,11 +1182,14 @@ just "it looked right."
   `HeroSlideshowSection`'s Ken Burns and `ImageReelSection`'s GSAP
   track — animation-heavy, high-frequency DOM work stays imperative
   even inside otherwise-declarative components.
-- **Real fourth image found, not used** — `press-feature-tv.webp` sits
-  in the real source's assets folder but is never wired into
-  `PressFeature.astro`'s own image list (same "orphaned asset" pattern
-  already seen with `ImageBar`'s extra hero photos and the Hero
-  slideshow's other three images). Not fabricated into a fourth card.
+- **Real fourth image found, not used *here*** — `press-feature-tv.webp`
+  sits in the real source's assets folder but is never wired into
+  `PressFeature.astro`'s own image list. **Correction (2026-10-06):**
+  this isn't actually an orphaned asset — it's wired into `WhyGiada.astro`
+  instead (the section right after this one), confirmed when that
+  section was built. Not a fourth Press Feature card either way, just
+  not "unused" in the way this originally implied — see "Why Giada
+  (pillars + closing image)" below.
 - **`SectionHeading`'s `eyebrowColor="stone-500"` got a second real
   instance** — its type comment previously described `stone-500` as
   probably a one-off authoring slip, seen only in `OurClients` (not yet
@@ -1230,6 +1405,172 @@ precisely scoped than it first looked.
   the data-layer-depends-on-UI-layer pattern that was the actual problem
   before; components depending on other components is normal.
 
+## Values section ("Living Art Beyond Simple Decor") — first client-designed section
+
+`components/ui/ValuesSection` (reusable primitive, not a Home-only
+section) + `lib/api/home.ts`'s `values`, placed between Category grid
+and Process strip on Home. **First section in this project not sourced
+from the real Astro site** — everything else has been a faithful port
+(or a deliberate, flagged deviation) from the real live site; this is
+genuinely new content the client designed in Figma (2026-10-06) and
+asked to be built reusable from the start, explicitly for eventual reuse
+on Our Story's "Values That Endure" section too.
+
+- **Checked the real source's closest relative before building** —
+  `components/our_story/StoryBeliefs.astro` ("Values That Endure").
+  Confirmed related but genuinely different: its image sits *after* the
+  item list with a quote-caption overlay and no button, not *before*
+  with no caption and a button, the way the new Figma design has it.
+  The bordered index/title/text row layout, though, is carried over
+  directly from `StoryBeliefs`' real grid pattern — confirmed similar
+  enough to reuse as-is (`md:grid-cols-[2.5rem_minmax(13rem,0.42fr)_1fr]`).
+- **Built as a genuine `ui/` primitive immediately**, not a Home-only
+  section promoted later — different from every other section-reuse
+  decision in this project, which waited for a second *confirmed* real
+  usage before extracting anything. Here the reuse is explicit, upfront
+  client instruction for new content with no "real source" to grep for
+  usage counts, so the usual wait-and-see heuristic doesn't apply.
+- **Our Story's eventual build keeps its own real content** (the
+  existing "Authenticity"/"Excellence"/"Partnership" copy from
+  `StoryBeliefs.astro`), per explicit instruction — the Figma redesign's
+  new copy ("Expressive Artistry" etc.) is Home-only. The image-position
+  (before vs. after the list) and caption-vs-button structural
+  difference between the two real usages is **not resolved yet** —
+  deliberately deferred until Our Story is actually built for real,
+  rather than over-engineering this primitive's props today for a
+  usage that doesn't exist yet.
+- **Image proactively built `unoptimized`**, not discovered as a bug
+  after the fact this time — this is the third dense/high-contrast,
+  fine-texture photo in this project (after Press Feature's magazine
+  scans and WhyGiada's textured interior), and the same
+  `next/image`-recompresses-even-at-matching-dimensions issue was
+  already confirmed twice. Applied proactively here instead of waiting
+  for a third blur report.
+- `buttonLink` set to `/our-story` — an assumption (the Figma mockup
+  doesn't specify a destination), flagged to the user, not silently
+  guessed and left undocumented.
+- Real image copied in (`public/images/home/simple-decor.webp`,
+  1280×520) — provided directly by the user into `public/images/home/`,
+  not sourced from the Astro handover ZIP (this is new client content).
+- **Verified against the actual Figma file directly (2026-10-06)**, via
+  the Figma MCP's `get_design_context` on the real node URL the user
+  shared — not just the earlier screenshot transcription. This caught
+  four real, precise value mismatches across three separate passes (two
+  found together initially, then the width, then the font-size — the
+  last two only after the user caught them live), which is why
+  `SectionHeading` ends up with four separate new opt-in props on it,
+  not one:
+  - The description needs `stone-600` (`#57534d` exactly), `16px`, and
+    `max-w-[985px]` (nearly edge-to-edge with its `1005px` container) —
+    not `SectionHeading`'s shared `stone-500`/`15px`/`max-w-xl` (576px)
+    defaults. Added as three separate opt-in props
+    (`descriptionColor`, `descriptionFontSize`, `descriptionMaxWidth`)
+    rather than changed as the defaults — the other 5 real sections
+    using `SectionHeading` are independently confirmed correct at the
+    smaller/narrower originals from the live Astro site and must not
+    silently change. Re-verified post-fix each time: `PressFeatureSection`
+    stayed at `stone-500`/15px throughout (sampled computed style
+    directly, not assumed).
+  - The item index ("01"/"02"/"03") needs `text-base` (16px) +
+    `stone-600`, not the `text-sm` (14px) + `stone-400` first carried
+    over from `StoryBeliefs.astro`'s real index styling — this
+    component's Figma design uses different index styling than its
+    real-source relative, confirmed directly rather than assumed to
+    match just because the rest of the row layout is similar.
+  - **The font-size miss was self-inflicted, not a data gap** — 16px was
+    already visible in the very first `get_design_context` pull, but got
+    judged "close enough" to the existing 15px and left unfixed instead
+    of applied, a tolerance call nobody asked for. The width was missed
+    outright the first pass (only color/size were checked that time).
+    Both only got caught because the user looked closely at the live
+    page, not because a second Figma check turned up new information.
+    Lesson going forward: apply exact design-source values when they're
+    available, don't round differences away as a judgment call.
+  - Heading size/color, eyebrow size/tracking/color, item title
+    size/color/italic, item text size/color, and the image container
+    dimensions all matched exactly from the first pass — only the
+    description's three values and the item index needed correcting.
+
+## Process strip (5-step "Crafted With Purpose")
+
+`components/sections/home/ProcessStripSection`. Ported from the real
+source's `ProcessStrip.astro` — fourth section on Home, right after
+Category grid. Confirmed used exactly once across the whole source
+(grepped every page/component for the import) and fully hardcoded there
+(the 5 steps are a literal array inside the component — `Astro.props`
+isn't even referenced). Kept as a Home-only section, not a `ui/`
+primitive, same reasoning as every other single-usage Home section.
+
+- **Header reuses `SectionHeading`** — eyebrow/heading/description
+  matches that established pattern exactly (same as
+  `PressFeatureSection`/`CategoryGridSection`), default `eyebrowColor`
+  (`stone-400`) and description width both already correct with no
+  overrides needed.
+- The 5-card step grid itself is unique Home content, not abstracted
+  into a separate primitive — single real usage, no second instance
+  anywhere in the source to justify it.
+- Real content (steps, copy) confirmed from the Astro source, not
+  placeholder.
+- Each step card uses a single `data-reveal`, no per-card delay —
+  consistent with the project's settled no-stagger reveal timing (the
+  real source authors `data-reveal-delay={String(i * 100)}` per card,
+  but that attribute is dead markup on the real site too — see
+  "Animations" above for the full reasoning).
+
+## Why Giada (pillars + closing image)
+
+`components/sections/home/WhyGiadaSection`. Ported from the real
+source's `WhyGiada.astro` — sixth section on Home, right after Press
+feature. Confirmed used exactly once across the whole source and fully
+hardcoded there (the 3 pillars are a literal array, zero `Astro.props`)
+— kept as a Home-only section, not a `ui/` primitive, same reasoning as
+every other single-usage Home section this session.
+
+- **Header doesn't reuse `SectionHeading`** — unlike `PressFeatureSection`/
+  `CategoryGridSection`/`ProcessStripSection`, which all do. Here it's
+  eyebrow + heading with no description, and `SectionHeading`'s own
+  `mb-12 lg:mb-16` wrapper spacing already matches what's needed, so it's
+  still used as-is (not hand-rolled) — just noting explicitly it's the
+  no-description case rather than a deviation.
+- **Corrects an earlier claim**: the closing image
+  (`press-feature-tv.webp`) was previously documented under "Press
+  feature (zoom cards)" as a real-but-orphaned asset, never wired into
+  anything. That was true relative to `PressFeature.astro` specifically
+  — it turns out to be wired into `WhyGiada.astro` instead, confirmed
+  once this section was actually built. Not fabricated into a fourth
+  Press Feature card; genuinely used here, just not where first assumed.
+- **Hover zoom verified via the correct CSS property** — the image uses
+  Tailwind's `group-hover:scale-[1.03]`, which Tailwind v4 compiles to
+  the native CSS `scale` property, not `transform`. First verification
+  attempt checked `getComputedStyle(img).transform` and saw `"none"`,
+  which looked like a bug — rechecking `getComputedStyle(img).scale`
+  showed the real applied value (`1.03`) immediately. Worth remembering
+  for any future Tailwind v4 hover/scale verification: check `scale`,
+  not `transform`.
+- Real image copied in (`public/images/home/press-feature-tv.webp`,
+  3600×2403 source, matching the real `aspect-[3600/2403]` exactly),
+  byte-diffed identical against the source file.
+- **`unoptimized` added 2026-10-06** — initially shipped with standard
+  `next/image` optimization, assumed fine since it's a plain interior
+  photo rather than Press Feature's dense text scans. Wrong: user caught
+  it looking blurry on the real dev server. Confirmed by capturing the
+  actual served bytes — dimensions matched the real 3600×2403 source
+  exactly (no under-sizing at all), but the served file was smaller
+  (242KB vs. the original 378KB) because `next/image` still re-encodes
+  at quality 75 even when it doesn't need to resize anything. This image
+  does have dense, repeating fine detail after all (patterned rug, book
+  spines, shelf texture) — different content than first assumed, same
+  compression sensitivity as Press Feature. Fixed with `unoptimized`,
+  same as `ZoomCard`; re-verified the served bytes are now byte-for-byte
+  identical to the source file.
+- A visible overlap between this section's heading and the fixed header
+  showed up in one mobile screenshot during verification — confirmed to
+  be a `scrollIntoViewIfNeeded()` test artifact (it snaps content flush
+  to the viewport top, directly under the site's `position: fixed`
+  80px-tall header), not a real layout bug. Re-verified with a natural
+  incremental scroll (mouse wheel, leaving a buffer above the fixed
+  header) and the overlap doesn't occur under realistic conditions.
+
 ## Contact CTA banner (merged, two real source variants)
 
 `components/ui/ContactCtaBanner` (reusable primitive), used by
@@ -1347,24 +1688,23 @@ fade still mid-transition, not a real bug — confirmed by re-shooting at
   `const { info, enquiry, cta } = await getContactPage(); ...
   <ContactInfoSection {...info} />`. `lib/api/contact.ts` exports an
   `async getContactPage(): Promise<ContactPageData>` that currently just
-  returns static data (real copy, not placeholder) instead of calling
-  Laravel — but the function is already `async`, already the single
+  returns static data (real copy, not placeholder) instead of calling a
+  real backend — but the function is already `async`, already the single
   place that assembles the page's props, and already returns the exact
-  shape the components expect. Swapping its body for
-  `apiFetch<...>("/pages/contact")` (the fetcher already exists,
-  `lib/api/fetcher.ts`, ported from Torque earlier but unused until now)
-  should be the only change needed later — `page.tsx` and both section
-  components stay untouched.
+  shape the components expect. Swapping its body for a Payload Local API
+  call should be the only change needed later — `page.tsx` and both
+  section components stay untouched.
 - **`lib/api/fetcher.ts`'s missing-`API_URL` check moved from import
-  time to call time** (found in a later audit, fixed 2026-10-05). It
+  time to call time** (found in a later audit, fixed 2026-10-05) — since
+  superseded. This fixed a real landmine at the time (the check
   originally threw the moment the file was *imported*, not when
-  `apiFetch()` was actually *called* — harmless on Torque (which always
-  has a real `API_URL`), but a real landmine here: once any one of this
-  project's four `lib/api/<page>.ts` files actually imports `apiFetch`
-  before `API_URL` is configured locally, the whole app would fail to
-  start, not just that one page's data. Moved the check inside the
-  function body instead, so an unconfigured `API_URL` only breaks the
-  specific call that needs it.
+  `apiFetch()` was actually *called*, meaning the whole app would fail to
+  start the moment any `lib/api/<page>.ts` imported it before `API_URL`
+  was configured). `fetcher.ts` itself was removed entirely 2026-10-06
+  once the backend moved to Payload — it was a REST client built for a
+  Laravel API that no longer exists, and Payload's Local API removes the
+  need for an HTTP client in the common case. Keeping this entry for the
+  historical reasoning, not because the file still exists.
 - **`lib/api/contact.ts` declares its own `ContactHeroData`/
   `ShowroomSectionData`/etc. types — it does not import the section
   components' prop types.** First pass did import them directly
@@ -1459,10 +1799,45 @@ fade still mid-transition, not a real bug — confirmed by re-shooting at
 ## CMS
 
 Confirmed: no headless CMS on the current site (plain Astro, static
-build, content hardcoded/local). Laravel is introducing a CMS for the
-first time — no data export/migration from a third-party CMS needed,
-but all current content has to be manually extracted from the Astro
-source and re-entered once the Laravel admin exists.
+build, content hardcoded/local). The new backend introduces a CMS for
+the first time — no data export/migration from a third-party CMS
+needed, but all current content has to be manually extracted from the
+Astro source and re-entered once the admin exists.
+
+**Backend platform: Payload instead of the originally-planned Laravel
+(decided and approved 2026-10-06).** Backend work hadn't started yet, so
+this was pitched to the client before any was built — zero rework cost
+either way. Reasoning:
+- **Faster to build**: ~1.5-2.5 weeks for Payload vs. ~4-6 weeks for an
+  equivalent hand-built Laravel backend, because Payload's collections
+  are declarative TypeScript config that auto-generates the admin UI +
+  API, rather than each being hand-built (even with Filament
+  accelerating Laravel's admin panel).
+- **Same stack as the frontend** — TypeScript/Node, not a second
+  language (PHP) and a second codebase.
+- **Runs embedded in this same Next.js app** — one deployment, not a
+  separate backend server to host/maintain.
+- **Free and open source** (MIT) — no licensing cost either way;
+  infrastructure (Neon + Vercel) realistically runs ~$20-40/month once
+  live.
+- **Payments stay open either way** if the client wants them later —
+  Payload has an official Stripe plugin; Laravel has Cashier. Not a
+  deciding factor, just confirmed neither path is a dead end.
+- **One real tradeoff**: Laravel has a longer-established ecosystem and
+  larger talent pool. Payload is newer but production-proven and a
+  common choice for exactly this kind of project.
+
+**Database/storage: Neon**, chosen over a plain self-hosted Postgres
+instance for the free tier (1GB storage + 100 compute-hours per project,
+100 projects per organization, no credit card) and because its Object
+Storage (S3-compatible) covers file/media storage too — one vendor
+instead of Neon + a separate blob-storage service. Created under the
+**agency's own Neon organization**, not the client's, specifically so
+future projects don't each require a new client email/account up front;
+Neon's "claimable project" feature (private preview as of this writing,
+falls back to standard org-to-org transfer otherwise) lets ownership
+move to a client later without changing the connection string or
+touching deployed code.
 
 ## Astro source audit (`giada-studio.com-handover.zip`, extracted 2026-09-29)
 
@@ -1478,8 +1853,8 @@ dir only). Key facts that change/confirm the plan:
   (Zod schema, MDX files: `title, description, pubDate, image, author`).
   Products (75 files, all `category: "Rug"` — zero Glass product data
   exists yet), collaborations (2 files), gallery (1 JSON, 16 images) are
-  all ad-hoc JSON with **no schema validation anywhere** — Laravel is
-  designing these from scratch.
+  all ad-hoc JSON with **no schema validation anywhere** — Payload is
+  designing these from scratch, as real collections.
 - **`/glass` is a hardcoded "coming soon" marketing page**, not
   data-driven. `/rugs` is the real filterable product listing. `/products`
   is just a 2-tile hub linking to both.
@@ -1497,9 +1872,10 @@ dir only). Key facts that change/confirm the plan:
   during migration rather than port as-is):
   1. Contact form (`pages/api/contact.ts`) has hardcoded **empty**
      Resend API key + Turnstile secret/site keys — cannot send email as
-     shipped. Recommend Laravel owns email sending entirely instead
-     (Next Server Action → Laravel validates + emails + stores), rather
-     than reintroducing Resend directly in the frontend.
+     shipped. Recommend the backend owns email sending entirely instead
+     (Next Server Action → Payload validates + emails + stores via an
+     Enquiries collection), rather than reintroducing Resend directly in
+     the frontend.
   2. Newsletter signup (`StayInTouch.astro`) has no action/handler —
      decorative only.
   3. All three legal-page "Download PDF" buttons 404 — `pdfPath`
@@ -1580,10 +1956,16 @@ audit" (legacy redirect table, analytics — neither ported/added yet).
 ## Env vars
 
 See `.env.example`.
-- `API_URL` — Laravel API base URL. Server-only (no `NEXT_PUBLIC_`
-  prefix) since all fetching happens server-side.
-- `REVALIDATE_SECRET` — shared secret Laravel sends when calling
-  `POST /api/revalidate` to bust the ISR cache for a tag.
+- `PAYLOAD_SECRET` — Payload's admin/auth signing secret. Real generated
+  value in local `.env` (not committed); generate a different one for
+  production.
+- `DATABASE_URL` — Neon Postgres connection string. Currently a
+  placeholder (`postgres://TODO-fill-in-neon-connection-string`) — `/admin`
+  500s until this is a real value, confirmed expected, not a bug.
+- `REVALIDATE_SECRET` — shared secret sent as the `x-revalidate-secret`
+  header when calling `POST /api/revalidate` to bust the ISR cache for a
+  tag. Will be called from Payload's own `afterChange` hooks once those
+  are wired up.
 
 ## Next steps
 
@@ -1591,17 +1973,20 @@ See `.env.example`.
    contact form architecture, FAQ/testimonials CMS-editable or static,
    newsletter real-or-drop, the cream color question, the "Traverse"
    collection, redirect map completeness, analytics.
-2. Agree the Laravel API contract with the backend dev (resource shapes
-   for products, gallery, blog, FAQ, testimonials, enquiries — real
-   field lists now known from the audit) and update `types/*` + add
-   per-resource files under `lib/api/` to match.
-3. Port the legacy redirect table into `next.config.ts`.
-4. Build `components/sections/{page}/*` for each page using the real
+2. Create the real Neon database (agency-owned organization, see "CMS"
+   above) and set `DATABASE_URL` — unblocks `/admin` immediately.
+3. Design and build the remaining Payload collections (Products,
+   Collaborations, Gallery, Blog, Testimonials, Enquiries — field lists
+   already known from the Astro audit below) and update `types/*` +
+   `lib/api/<page>.ts` to query them via the Local API instead of
+   returning static mock data.
+4. Port the legacy redirect table into `next.config.ts`.
+5. Build `components/sections/{page}/*` for each page using the real
    Astro source as reference; extract shared pieces into
    `components/ui/*` once a second real use case shows up (not before).
-5. Port `lib/animations.ts`'s GSAP utilities (char reveal, magnetic
+6. Port `lib/animations.ts`'s GSAP utilities (char reveal, magnetic
    hover, curtain reveal, parallax) and the `[data-reveal]`
    IntersectionObserver system as shared Client Component helpers.
-6. Replace placeholder copy in every `app/**/page.tsx` with real content,
+7. Replace placeholder copy in every `app/**/page.tsx` with real content,
    fixing the pre-existing bugs found along the way rather than
    preserving them.

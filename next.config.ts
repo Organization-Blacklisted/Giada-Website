@@ -1,10 +1,28 @@
+import { withPayload } from "@payloadcms/next/withPayload";
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
 
-  // TODO: once the Laravel media host is known, add it under
-  // images.remotePatterns so next/image can optimize remote images.
+  // `localPatterns` is an allowlist, not an addition to Next's default
+  // "any local path is fine" behavior — adding it without listing the
+  // existing /images/** paths broke every current next/image usage site-
+  // wide (confirmed: every image 400'd after adding just the Payload
+  // pattern below, fixed by listing both explicitly).
+  // Payload's Media collection uploads are served from this same app at
+  // /api/media/file/* — once Neon Object Storage is wired in as the
+  // upload adapter, uploaded files still resolve through that same path
+  // (Payload proxies them), so no remotePatterns entry is needed here.
+  images: {
+    localPatterns: [
+      {
+        pathname: "/images/**",
+      },
+      {
+        pathname: "/api/media/file/**",
+      },
+    ],
+  },
 
   // HTTP response headers applied to every route
   async headers() {
@@ -35,4 +53,4 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+export default withPayload(nextConfig);

@@ -1,8 +1,9 @@
 import { revalidateTag } from "next/cache";
 import { NextRequest, NextResponse } from "next/server";
 
-// Laravel calls this whenever published content changes, so the ISR cache
-// doesn't sit on stale data for the full revalidate window (see fetcher.ts).
+// Payload calls this (via an afterChange hook) whenever published content
+// changes, so the ISR cache doesn't sit on stale data for the full
+// revalidate window.
 export async function POST(request: NextRequest) {
   const secret = request.headers.get("x-revalidate-secret");
 

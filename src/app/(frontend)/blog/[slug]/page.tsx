@@ -11,7 +11,7 @@ export default async function BlogPostPage({
     <Container size="narrow" className="py-24">
       <h1 className="text-3xl font-semibold tracking-tight">Post: {slug}</h1>
       <p className="mt-4 text-stone-600">
-        TODO: single post content, fed from the Laravel blog API.
+        TODO: single post content, fed from a Payload Blog collection.
       </p>
     </Container>
   );

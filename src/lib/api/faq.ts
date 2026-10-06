@@ -28,9 +28,9 @@ export type FaqPageData = {
 // the section components only see this typed, already-shaped data. Real
 // content (confirmed from the Astro source's pages/faq.astro), not
 // placeholder; folded in from the old data/faq.ts, which only this page
-// ever consumed. Static for now; swapping the body for
-// `apiFetch<...>("/pages/faq")` later shouldn't require touching
-// page.tsx or either section component.
+// ever consumed. Static for now; swapping the body for Payload's Local
+// API (e.g. `payload.findGlobal({ slug: "faq-page" })`) later shouldn't
+// require touching page.tsx or either section component.
 //
 // closingCta: real content confirmed from the Astro source's
 // pages/faq.astro own <ContactCTA> usage (the generic, prop-driven

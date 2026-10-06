@@ -7,7 +7,7 @@ export default function BlogPage() {
     <Container className="py-24">
       <h1 className="text-3xl font-semibold tracking-tight">Blog</h1>
       <p className="mt-4 text-stone-600">
-        TODO: post list, fed from the Laravel blog API.
+        TODO: post list, fed from a Payload Blog collection.
       </p>
     </Container>
   );

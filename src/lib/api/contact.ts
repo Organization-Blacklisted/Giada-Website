@@ -2,7 +2,7 @@ import { siteConfig } from "@/data/site";
 
 // Owned by this data layer, not imported from the section components —
 // lib/api/* must not depend on components/*. Each shape here is the
-// contract a real Laravel response would be mapped into; the section
+// contract a real Payload query result will be mapped into; the section
 // components declare their own separate prop types that happen to match.
 // TypeScript still catches any drift between the two at the `{...x}`
 // spread call sites in page.tsx, so nothing is lost by not sharing the
@@ -45,11 +45,12 @@ export type ContactPageData = {
 
 // Mirrors the Torque Pharma `lib/api/<page>.ts` pattern: page.tsx and the
 // section components only ever see this typed, already-shaped data — same
-// contract a real Laravel-backed fetch would return. Right now this just
+// contract a real Payload-backed fetch would return. Right now this just
 // returns static content (real copy, confirmed from the Astro source), but
 // it's already `async` and already the single place that assembles the
-// page's props. Swapping the body for `apiFetch<...>("/pages/contact")`
-// later shouldn't require touching page.tsx or any section component.
+// page's props. Swapping the body for Payload's Local API (e.g.
+// `payload.findGlobal({ slug: "contact-page" })`) later shouldn't require
+// touching page.tsx or any section component.
 export async function getContactPage(): Promise<ContactPageData> {
   const locations: ShowroomLocationData[] = siteConfig.locations.map((location) => ({
     city: location.city,

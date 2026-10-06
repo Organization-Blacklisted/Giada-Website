@@ -1,6 +1,6 @@
 @import "tailwindcss";
-@import "../styles/typography.css";
-@import "../styles/colors.css";
+@import "../../styles/typography.css";
+@import "../../styles/colors.css";
 
 /*
  * :root here is deliberately minimal — confirmed from the live site's
