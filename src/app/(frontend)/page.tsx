@@ -1,5 +1,6 @@
 import CategoryGridSection from "@/components/sections/home/CategoryGridSection";
 import ClosingCtaSection from "@/components/sections/home/ClosingCtaSection";
+import CollaborationsSliderSection from "@/components/sections/home/CollaborationsSliderSection";
 import CollectionSection from "@/components/sections/home/CollectionSection";
 import HeroSlideshowSection from "@/components/sections/home/HeroSlideshowSection";
 import ImageReelSection from "@/components/sections/home/ImageReelSection";
@@ -11,9 +12,12 @@ import WhyGiadaSection from "@/components/sections/home/WhyGiadaSection";
 import { getHomePage } from "@/lib/api/home";
 
 // Real source's home page (pages/index.astro) order, fully built, plus
-// one new client-provided section not in the real source: `values`
+// two new client-provided sections not in the real source: `values`
 // ("Living Art Beyond Simple Decor", via Figma, 2026-10-06), placed
-// between CategoryGrid and ProcessStrip per the client's own mockup.
+// between CategoryGrid and ProcessStrip per the client's own mockup,
+// and `collaborationsSlider` ("Where Two Visions Weave as One", via
+// Figma node 579:90, 2026-10-06), placed below ProcessStrip per
+// explicit instruction.
 export default async function Home() {
   const {
     hero,
@@ -21,6 +25,7 @@ export default async function Home() {
     categoryGrid,
     values,
     processStrip,
+    collaborationsSlider,
     pressFeature,
     whyGiada,
     testimonials,
@@ -35,6 +40,7 @@ export default async function Home() {
       <CategoryGridSection {...categoryGrid} />
       <ValuesSection {...values} />
       <ProcessStripSection {...processStrip} />
+      <CollaborationsSliderSection {...collaborationsSlider} />
       <PressFeatureSection {...pressFeature} />
       <WhyGiadaSection {...whyGiada} />
       <TestimonialsSection {...testimonials} />

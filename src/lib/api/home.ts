@@ -110,12 +110,31 @@ export type CollectionSectionData = {
   buttonLink: string;
 };
 
+export type CollaborationSlideData = {
+  image: string;
+  imageAlt: string;
+  heading: string;
+  description: string;
+  cardImage: string;
+  cardImageAlt: string;
+  cardTitle: string;
+  cardCaption: string;
+  buttonText: string;
+  buttonLink: string;
+};
+
+export type CollaborationsSliderSectionData = {
+  eyebrow: string;
+  slides: CollaborationSlideData[];
+};
+
 export type HomePageData = {
   hero: HeroSlideshowSectionData;
   collection: CollectionSectionData;
   categoryGrid: CategoryGridSectionData;
   values: ValuesSectionData;
   processStrip: ProcessStripSectionData;
+  collaborationsSlider: CollaborationsSliderSectionData;
   pressFeature: PressFeatureSectionData;
   whyGiada: WhyGiadaSectionData;
   testimonials: TestimonialsSectionData;
@@ -199,6 +218,24 @@ export type HomePageData = {
 // (right after Category grid). Fully hardcoded there (no CMS-editable
 // fields in the real source either) — 5 steps, real copy.
 //
+// collaborationsSlider: NOT ported from the Astro source — new
+// client-provided content via Figma (node 579:90, 2026-10-06), placed
+// below Process strip per explicit instruction. Real images
+// (vision.png, dunagan.png) and real copy for the one confirmed
+// collaboration (Giada x Dunagan); the Figma spec shows 3 slides
+// (counter reads "01 / 03") so all 3 entries reuse the same real
+// content/images for now, per explicit instruction ("use same content
+// and image for now we will update later") — not a guess at what the
+// other 2 collaborations are, just a placeholder duplication until the
+// client provides the rest. buttonLink reuses /collaborations, already
+// the confirmed real route from CollectionSection and ContactCTA's
+// usage list above.
+//
+// NOTE: despite the filenames, vision.png is the large group photo and
+// dunagan.png is the textile close-up — confirmed by actually opening
+// both files, not guessed from their names (which point the other way
+// and would have swapped the image/cardImage assignment below).
+//
 // whyGiada: real content confirmed from the Astro source's
 // components/home/WhyGiada.astro, sixth section in real page order
 // (right after Press feature). Fully hardcoded there — 3 pillars, real
@@ -229,6 +266,50 @@ export async function getHomePage(): Promise<HomePageData> {
         "Every Giada rug begins as a conversation. Our design team collaborates with you from the first sketch to the final installation, transforming your vision into a woven work of art. With complete creative freedom and the technical mastery of four generations, we bring your idea to life — exactly as imagined, and built to endure for generations.",
       buttonText: "Explore Our Collections",
       buttonLink: "/collaborations",
+    },
+    collaborationsSlider: {
+      eyebrow: "Creative Collaborations",
+      slides: [
+        {
+          image: "/images/home/vision.png",
+          imageAlt: "Giada and Dunagan's founders in the Giada showroom",
+          heading: "Where Two Visions Weave as One",
+          description:
+            "Every collaboration starts from the same belief: a rug becomes more than a floor covering when it's shaped by more than one mind. GIADA partners with artists and designers who see the craft differently and lets that difference lead.",
+          cardImage: "/images/home/dunagan.png",
+          cardImageAlt: "Hand-drawn textile detail from the Giada x Dunagan collaboration",
+          cardTitle: "Giada x Dunagan",
+          cardCaption: "A dialogue between art & craftmanship.",
+          buttonText: "Explore The Collaboration",
+          buttonLink: "/collaborations",
+        },
+        {
+          image: "/images/home/vision.png",
+          imageAlt: "Giada and Dunagan's founders in the Giada showroom",
+          heading: "Where Two Visions Weave as One",
+          description:
+            "Every collaboration starts from the same belief: a rug becomes more than a floor covering when it's shaped by more than one mind. GIADA partners with artists and designers who see the craft differently and lets that difference lead.",
+          cardImage: "/images/home/dunagan.png",
+          cardImageAlt: "Hand-drawn textile detail from the Giada x Dunagan collaboration",
+          cardTitle: "Giada x Dunagan",
+          cardCaption: "A dialogue between art & craftmanship.",
+          buttonText: "Explore The Collaboration",
+          buttonLink: "/collaborations",
+        },
+        {
+          image: "/images/home/vision.png",
+          imageAlt: "Giada and Dunagan's founders in the Giada showroom",
+          heading: "Where Two Visions Weave as One",
+          description:
+            "Every collaboration starts from the same belief: a rug becomes more than a floor covering when it's shaped by more than one mind. GIADA partners with artists and designers who see the craft differently and lets that difference lead.",
+          cardImage: "/images/home/dunagan.png",
+          cardImageAlt: "Hand-drawn textile detail from the Giada x Dunagan collaboration",
+          cardTitle: "Giada x Dunagan",
+          cardCaption: "A dialogue between art & craftmanship.",
+          buttonText: "Explore The Collaboration",
+          buttonLink: "/collaborations",
+        },
+      ],
     },
     testimonials: {
       eyebrow: "What Designers Say",
