@@ -1,3 +1,6 @@
+import { unstable_cache } from "next/cache";
+import { getPayload } from "payload";
+import config from "@payload-config";
 import type { Testimonial } from "@/types/testimonial";
 
 // Owned by this data layer, not imported from the section components —
@@ -147,14 +150,17 @@ export type HomePageData = {
 // section in this project is, ready for whenever Home gets composed for
 // real.
 //
-// hero: real content confirmed from the Astro source's
-// components/home/HeroSlideshow.astro. Only one slide configured —
-// matches the real source's own `slides` array exactly (it has three
-// other hero images sitting unused in its assets folder, never wired
-// into the config; not fabricated into extra slides here). The carousel
-// machinery (dots, keyboard, swipe, autoplay) is still fully real and
-// functional in HeroSlideshowSection, same as the real source — it just
-// has nothing to switch to yet.
+// hero: now served from Payload's "home" global (see getHeroFromCMS
+// above and src/globals/Home.ts), not a literal here anymore — the first
+// section migrated off this file's mock-data pattern. Seeded with the
+// same real content originally confirmed from the Astro source's
+// components/home/HeroSlideshow.astro (one slide, matching the real
+// source's own `slides` array exactly — it has three other hero images
+// sitting unused in its assets folder, never wired into the config, not
+// fabricated into extra slides here). The carousel machinery (dots,
+// keyboard, swipe, autoplay) is still fully real and functional in
+// HeroSlideshowSection, same as the real source — it just has nothing to
+// switch to yet.
 //
 // testimonials: real content confirmed from the Astro source's
 // components/home/Testimonials.astro, folded in from the old
@@ -243,20 +249,37 @@ export type HomePageData = {
 // documented as "real but unused anywhere" under pressFeature's own
 // section in ARCHITECTURE.md — that was true for PressFeature
 // specifically; it's actually wired in here instead.
+// First real CMS wiring on Home (2026-10-06), scoped to just Hero as a
+// working test before the rest of this file's sections get migrated the
+// same way. Wrapped in unstable_cache (tagged "home") rather than called
+// directly — Home currently renders statically (confirmed via `next
+// build`'s route table: "○ /"), and a plain Local API call bypasses
+// Next's Data Cache entirely (that only wraps `fetch()`), so without this
+// wrapper the page would never pick up edits made in /admin without a
+// full rebuild. The Home global's `afterChange` hook calls
+// `revalidateTag("home")` to bust this on every save.
+const getHeroFromCMS = unstable_cache(
+  async (): Promise<HeroSlideshowSectionData> => {
+    const payload = await getPayload({ config });
+    const home = await payload.findGlobal({ slug: "home" });
+    return {
+      eyebrow: home.hero.eyebrow,
+      title: home.hero.title,
+      taglineLine1: home.hero.taglineLine1,
+      taglineLine2: home.hero.taglineLine2,
+      slides: (home.hero.slides ?? []).map((slide) => ({
+        src: typeof slide.image === "object" ? slide.image.url ?? "" : "",
+        alt: slide.alt,
+      })),
+    };
+  },
+  ["home-hero"],
+  { tags: ["home"] }
+);
+
 export async function getHomePage(): Promise<HomePageData> {
   return {
-    hero: {
-      eyebrow: "From Our Atelier to Your Vision",
-      title: "A Legacy Woven Over Generations",
-      taglineLine1: "Over 100 years of family-owned craftsmanship in fine rug making from India.",
-      taglineLine2: "Four generations of weaving mastery — from the selection of noble fibres to the final gesture of installation.",
-      slides: [
-        {
-          src: "/images/home/slideshow/hero-living-room.webp",
-          alt: "A bespoke hand-knotted rug anchoring a refined contemporary living room",
-        },
-      ],
-    },
+    hero: await getHeroFromCMS(),
     collection: {
       image: "/images/home/collection-feature.webp",
       alt: "",

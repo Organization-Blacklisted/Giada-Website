@@ -44,3 +44,5 @@ next-env.d.ts
 # Payload's default local-disk upload adapter writes here until Neon
 # Object Storage is wired in as the real storage adapter.
 /media
+.neon
+.mcp.json

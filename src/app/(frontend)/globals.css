@@ -77,6 +77,33 @@ h3 {
 }
 
 /*
+ * Gallery lightbox entrance — ported from pages/gallery.astro's
+ * #lightbox[open]/#lightbox-figure animations. Same reasoning as
+ * kenBurns above: a real named CSS animation triggered by the native
+ * <dialog>'s [open] attribute, not something a Tailwind utility alone
+ * can express (needed a real keyframes definition here either way).
+ */
+@keyframes lbFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes lbScaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.93);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/*
  * Scroll reveal — pairs with components/ui/ScrollReveal (sets
  * .is-visible via IntersectionObserver, one entry per [data-reveal]
  * element, no stagger). Confirmed real from the source — matches

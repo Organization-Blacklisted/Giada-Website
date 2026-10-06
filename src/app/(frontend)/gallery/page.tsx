@@ -1,15 +1,20 @@
-import Container from "@/components/layouts/Container";
+import GalleryHeroSection from "@/components/sections/gallery/GalleryHeroSection";
+import GalleryWallSection from "@/components/sections/gallery/GalleryWallSection";
+import { getGalleryPage } from "@/lib/api/gallery";
 
-export const metadata = { title: "Gallery" };
+export const metadata = {
+  title: "Gallery",
+  description:
+    "A visual record of craft, spaces, people, and process — the world behind Giada.",
+};
 
-export default function GalleryPage() {
+export default async function GalleryPage() {
+  const { hero, items } = await getGalleryPage();
+
   return (
-    <Container className="py-24">
-      <h1 className="text-3xl font-semibold tracking-tight">Gallery</h1>
-      <p className="mt-4 text-stone-600">
-        TODO: portfolio of completed projects, fed from a Payload Gallery
-        collection.
-      </p>
-    </Container>
+    <>
+      <GalleryHeroSection {...hero} />
+      <GalleryWallSection items={items} />
+    </>
   );
 }

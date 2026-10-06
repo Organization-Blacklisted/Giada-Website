@@ -1839,6 +1839,32 @@ falls back to standard org-to-org transfer otherwise) lets ownership
 move to a client later without changing the connection string or
 touching deployed code.
 
+**Real project created 2026-10-06** (`Giada`, `weathered-resonance-26023066`,
+`aws-us-east-1` — matches Vercel's default serverless function region,
+`iad1`, to minimize DB/storage latency on every request) with a `giada-media`
+object storage bucket (private). Managed via Neon's CLI + `neon.ts`
+infrastructure-as-code (declares the bucket; `neon deploy` reconciles it
+against the linked branch) rather than hand-configuring through the
+dashboard alone — `neon link` also pulls real credentials directly into
+`.env`. Media's local-disk upload adapter (the `/media` placeholder) has
+been replaced with `@payloadcms/storage-s3` pointed at `giada-media`
+(`disableLocalStorage: true`, `forcePathStyle: true` — required for Neon's
+S3-compatible API) — verified end-to-end via a real upload through
+Payload's Local API: the object actually lands in the Neon bucket (not
+`/media`), serves correctly through `/api/media/file/...`, and deleting
+the doc removes the S3 object too.
+
+One open item: the first `neon mcp` install minted an **account-wide**
+API key (reaches every org on the account) instead of one scoped to this
+project — the CLI itself warns about this. Revoking it and re-minting a
+project-scoped key both got blocked by this environment's own permission
+system (secret/key management needs explicit human approval each time);
+the over-broad key only lives in the gitignored `.mcp.json`, so it's not
+a leak risk, but it should still be narrowed — either approve that
+permission next time, or revoke key id `3403345` from the Neon dashboard
+and re-run `neon mcp --agent claude-code --project --project-id
+weathered-resonance-26023066 -y`.
+
 ## Astro source audit (`giada-studio.com-handover.zip`, extracted 2026-09-29)
 
 Full analysis done, extracted source kept out of this repo (scratch
@@ -1959,9 +1985,16 @@ See `.env.example`.
 - `PAYLOAD_SECRET` — Payload's admin/auth signing secret. Real generated
   value in local `.env` (not committed); generate a different one for
   production.
-- `DATABASE_URL` — Neon Postgres connection string. Currently a
-  placeholder (`postgres://TODO-fill-in-neon-connection-string`) — `/admin`
-  500s until this is a real value, confirmed expected, not a bug.
+- `DATABASE_URL` / `DATABASE_URL_UNPOOLED` — real Neon Postgres connection
+  strings (project created 2026-10-06, see "CMS" above) — populated
+  automatically by `neon link`/`neon deploy`, not hand-edited.
+- `NEON_BRANCH` — which Neon branch this `.env` was pulled from (set by
+  `neon link`).
+- `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` / `AWS_ENDPOINT_URL_S3` /
+  `AWS_REGION` — Neon Object Storage (S3-compatible) credentials for the
+  `giada-media` bucket, also auto-populated by `neon link`/`neon deploy`.
+  AWS-standard names by design (see the `neon-object-storage` skill) —
+  picked up by `@payloadcms/storage-s3`'s underlying AWS SDK client.
 - `REVALIDATE_SECRET` — shared secret sent as the `x-revalidate-secret`
   header when calling `POST /api/revalidate` to bust the ISR cache for a
   tag. Will be called from Payload's own `afterChange` hooks once those
@@ -1973,8 +2006,10 @@ See `.env.example`.
    contact form architecture, FAQ/testimonials CMS-editable or static,
    newsletter real-or-drop, the cream color question, the "Traverse"
    collection, redirect map completeness, analytics.
-2. Create the real Neon database (agency-owned organization, see "CMS"
-   above) and set `DATABASE_URL` — unblocks `/admin` immediately.
+2. ~~Create the real Neon database and set `DATABASE_URL`~~ — done
+   2026-10-06 (see "CMS" above): real project, `giada-media` object
+   storage bucket wired into Media via `@payloadcms/storage-s3`, verified
+   end-to-end. Remaining: narrow the over-broad MCP API key (see "CMS").
 3. Design and build the remaining Payload collections (Products,
    Collaborations, Gallery, Blog, Testimonials, Enquiries — field lists
    already known from the Astro audit below) and update `types/*` +

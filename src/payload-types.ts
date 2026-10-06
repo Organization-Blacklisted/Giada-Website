@@ -87,8 +87,12 @@ export interface Config {
     defaultIDType: number;
   };
   fallbackLocale: null;
-  globals: {};
-  globalsSelect: {};
+  globals: {
+    home: Home;
+  };
+  globalsSelect: {
+    home: HomeSelect<false> | HomeSelect<true>;
+  };
   locale: null;
   widgets: {
     collections: CollectionsWidget;
@@ -150,6 +154,7 @@ export interface User {
 export interface Media {
   id: number;
   alt: string;
+  _objectKey?: string | null;
   updatedAt: string;
   createdAt: string;
   url?: string | null;
@@ -265,6 +270,7 @@ export interface UsersSelect<T extends boolean = true> {
  */
 export interface MediaSelect<T extends boolean = true> {
   alt?: T;
+  _objectKey?: T;
   updatedAt?: T;
   createdAt?: T;
   url?: T;
@@ -316,6 +322,52 @@ export interface PayloadMigrationsSelect<T extends boolean = true> {
   batch?: T;
   updatedAt?: T;
   createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "home".
+ */
+export interface Home {
+  id: number;
+  hero: {
+    eyebrow: string;
+    title: string;
+    taglineLine1: string;
+    taglineLine2: string;
+    slides?:
+      | {
+          image: number | Media;
+          alt: string;
+          id?: string | null;
+        }[]
+      | null;
+  };
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "home_select".
+ */
+export interface HomeSelect<T extends boolean = true> {
+  hero?:
+    | T
+    | {
+        eyebrow?: T;
+        title?: T;
+        taglineLine1?: T;
+        taglineLine2?: T;
+        slides?:
+          | T
+          | {
+              image?: T;
+              alt?: T;
+              id?: T;
+            };
+      };
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
