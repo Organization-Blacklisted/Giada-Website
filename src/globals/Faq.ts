@@ -2,8 +2,11 @@ import type { GlobalConfig } from "payload";
 import { revalidateTag } from "next/cache";
 
 // Same pattern as Home (src/globals/Home.ts): a singleton global, not a
-// collection, since the FAQ page has exactly one instance. No `tabs`
-// wrapper here — only 3 logical sections, small enough for a flat form.
+// collection, since the FAQ page has exactly one instance. Wrapped in
+// `tabs` now (Content + SEO) purely for /admin UI grouping, same as
+// Home — the `tabs` field itself has no `name`, so this doesn't change
+// the underlying data shape at all; `hero`/`items`/`closingCta` stay
+// top-level fields on the document exactly as before.
 export const Faq: GlobalConfig = {
   slug: "faq-page",
   admin: {
@@ -40,31 +43,63 @@ export const Faq: GlobalConfig = {
   },
   fields: [
     {
-      name: "hero",
-      type: "group",
-      fields: [
-        { name: "eyebrow", type: "text", required: true },
-        { name: "heading", type: "text", required: true },
-      ],
-    },
-    {
-      name: "items",
-      type: "array",
-      minRows: 1,
-      fields: [
-        { name: "question", type: "text", required: true },
-        { name: "answer", type: "textarea", required: true },
-      ],
-    },
-    {
-      name: "closingCta",
-      type: "group",
-      fields: [
-        { name: "eyebrow", type: "text", required: true },
-        { name: "heading", type: "text", required: true },
-        { name: "description", type: "textarea", required: true },
-        { name: "linkText", type: "text", required: true },
-        { name: "href", type: "text", required: true },
+      type: "tabs",
+      tabs: [
+        {
+          label: "Content",
+          fields: [
+            {
+              name: "hero",
+              type: "group",
+              fields: [
+                { name: "eyebrow", type: "text", required: true },
+                { name: "heading", type: "text", required: true },
+              ],
+            },
+            {
+              name: "items",
+              type: "array",
+              minRows: 1,
+              fields: [
+                { name: "question", type: "text", required: true },
+                { name: "answer", type: "textarea", required: true },
+              ],
+            },
+            {
+              name: "closingCta",
+              type: "group",
+              fields: [
+                { name: "eyebrow", type: "text", required: true },
+                { name: "heading", type: "text", required: true },
+                { name: "description", type: "textarea", required: true },
+                { name: "linkText", type: "text", required: true },
+                { name: "href", type: "text", required: true },
+              ],
+            },
+          ],
+        },
+        {
+          label: "SEO",
+          fields: [
+            {
+              name: "seo",
+              type: "group",
+              fields: [
+                {
+                  name: "metaTitle",
+                  type: "text",
+                  admin: { description: 'Leave blank to use the default ("FAQ").' },
+                },
+                {
+                  name: "metaDescription",
+                  type: "textarea",
+                  admin: { description: "Leave blank to use the default description." },
+                },
+                { name: "ogImage", type: "upload", relationTo: "media" },
+              ],
+            },
+          ],
+        },
       ],
     },
   ],

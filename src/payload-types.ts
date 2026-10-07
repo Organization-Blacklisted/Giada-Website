@@ -498,6 +498,17 @@ export interface Home {
         }[]
       | null;
   };
+  seo?: {
+    /**
+     * Leave blank to use the default site title ("Giada").
+     */
+    metaTitle?: string | null;
+    /**
+     * Leave blank to use the default site description.
+     */
+    metaDescription?: string | null;
+    ogImage?: (number | null) | Media;
+  };
   updatedAt?: string | null;
   createdAt?: string | null;
 }
@@ -524,6 +535,17 @@ export interface FaqPage {
     description: string;
     linkText: string;
     href: string;
+  };
+  seo?: {
+    /**
+     * Leave blank to use the default ("FAQ").
+     */
+    metaTitle?: string | null;
+    /**
+     * Leave blank to use the default description.
+     */
+    metaDescription?: string | null;
+    ogImage?: (number | null) | Media;
   };
   updatedAt?: string | null;
   createdAt?: string | null;
@@ -690,6 +712,13 @@ export interface HomeSelect<T extends boolean = true> {
               id?: T;
             };
       };
+  seo?:
+    | T
+    | {
+        metaTitle?: T;
+        metaDescription?: T;
+        ogImage?: T;
+      };
   updatedAt?: T;
   createdAt?: T;
   globalType?: T;
@@ -720,6 +749,13 @@ export interface FaqPageSelect<T extends boolean = true> {
         description?: T;
         linkText?: T;
         href?: T;
+      };
+  seo?:
+    | T
+    | {
+        metaTitle?: T;
+        metaDescription?: T;
+        ogImage?: T;
       };
   updatedAt?: T;
   createdAt?: T;

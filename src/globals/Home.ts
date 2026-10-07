@@ -309,6 +309,28 @@ export const Home: GlobalConfig = {
             },
           ],
         },
+        {
+          label: "SEO",
+          fields: [
+            {
+              name: "seo",
+              type: "group",
+              fields: [
+                {
+                  name: "metaTitle",
+                  type: "text",
+                  admin: { description: "Leave blank to use the default site title (\"Giada\")." },
+                },
+                {
+                  name: "metaDescription",
+                  type: "textarea",
+                  admin: { description: "Leave blank to use the default site description." },
+                },
+                { name: "ogImage", type: "upload", relationTo: "media" },
+              ],
+            },
+          ],
+        },
       ],
     },
   ],

@@ -2,6 +2,15 @@ import { unstable_cache } from "next/cache";
 import { getPayload } from "payload";
 import config from "@payload-config";
 import type { FaqItem } from "@/types/faq";
+import type { SeoData } from "./seo-types";
+import type { Media } from "@/payload-types";
+
+// Same helper as lib/api/home-map.ts's — not shared across files since
+// faq.ts and home.ts/home-map.ts are otherwise independent, and it's
+// only 3 lines.
+function mediaUrl(image: number | Media | null | undefined): string {
+  return typeof image === "object" && image !== null ? (image.url ?? "") : "";
+}
 
 // Owned by this data layer, not imported from the section components —
 // same reasoning as lib/api/contact.ts: the data layer stays independent
@@ -25,6 +34,7 @@ export type FaqPageData = {
   hero: FaqHeroData;
   items: FaqItem[];
   closingCta: FaqClosingCtaData;
+  seo: SeoData;
 };
 
 // Mirrors lib/api/home.ts's pattern: a single `findGlobal` call wrapped
@@ -54,6 +64,11 @@ const getFaqFromCMS = unstable_cache(
         description: faq.closingCta.description,
         linkText: faq.closingCta.linkText,
         href: faq.closingCta.href,
+      },
+      seo: {
+        metaTitle: faq.seo?.metaTitle ?? "",
+        metaDescription: faq.seo?.metaDescription ?? "",
+        ogImage: mediaUrl(faq.seo?.ogImage),
       },
     };
   },

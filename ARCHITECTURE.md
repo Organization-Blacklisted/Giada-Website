@@ -2076,6 +2076,54 @@ process (independently holding its own file-watcher locks on
 `public/images/**`) was found and killed separately during the same
 investigation; don't conflate the two if this resurfaces.
 
+**Live Preview + CMS-editable SEO, 2026-10-07.** Added Payload's
+`admin.livePreview` to both the `home` and `faq-page` globals — the
+real frontend route renders in an iframe next to the edit form,
+live-updating as fields change before saving, via
+`@payloadcms/live-preview-react`'s `useLivePreview` hook on the page
+side (`FaqPageClient.tsx`/`HomePageClient.tsx`). `livePreview.url` is
+derived from the incoming request's own Host header (not a hardcoded/
+env-based origin) — the first version fell back to
+`NEXT_PUBLIC_SERVER_URL || "http://localhost:3000"`, which broke Live
+Preview on the deployed Vercel domain outright (the iframe tried to
+load the admin's own local machine's localhost). Also had to change
+`next.config.ts`'s `X-Frame-Options` from `DENY` to `SAMEORIGIN` —
+`DENY` blocks all framing unconditionally, including same-origin,
+which was the actual cause of Vercel showing "refused to connect"
+(not the origin issue above, which was a separate, also-real bug).
+
+Home's raw CMS document doesn't match `HomePageData` directly (Media
+relationships are full objects, not flattened url/width/height), so a
+`home-map.ts` module was split out of `lib/api/home.ts` specifically
+so `HomePageClient.tsx` (a Client Component) can import the pure
+`mapHomeData` function as a value without dragging
+`getPayload`/`@payload-config` into the client bundle — importing it
+from `home.ts` directly broke the homepage outright ("You're
+importing a module that depends on 'revalidateTag' ... only available
+in Server Components"), since `home.ts` transitively imports
+`Media.ts`'s `revalidateTag` call via `@payload-config`. FAQ never hit
+this because `FaqPageClient` only ever imported a *type* from
+`faq.ts`, which erases at compile time.
+
+Also renamed the admin sidebar's default "Globals" group to "Pages"
+(`admin.group` on both globals) — reads more naturally for a
+non-technical client, and leaves room for future collections
+(Products, Collaborations, Gallery, Blog) to pick their own group
+instead of everything piling into one generic bucket.
+
+Added a genuinely CMS-editable "SEO" tab to both globals (metaTitle,
+metaDescription, ogImage — all optional), replacing FAQ's previously
+hardcoded `export const metadata` and giving Home a metadata export
+for the first time. Both `page.tsx` files use `generateMetadata`
+reading the CMS value with the exact previous hardcoded copy as the
+fallback when left blank, so leaving the SEO tab empty reproduces
+today's actual behavior exactly, not some new default. Verified the
+override actually takes effect end-to-end (seeded a test value,
+forced a `/api/revalidate` call since `revalidateTag` from a
+standalone script can't run outside real request context, confirmed
+the rendered `<title>`/`<meta description>` changed, then cleared it
+back to blank and reconfirmed the real fallback copy returned).
+
 ## Astro source audit (`giada-studio.com-handover.zip`, extracted 2026-09-29)
 
 Full analysis done, extracted source kept out of this repo (scratch

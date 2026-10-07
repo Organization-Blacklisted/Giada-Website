@@ -11,14 +11,18 @@
 // (FaqPageClient only ever imported a *type* from faq.ts, which erases
 // at compile time, so it never hit this).
 import type { Testimonial } from "@/types/testimonial";
+import type { SeoData } from "./seo-types";
 import type { Home, Media } from "@/payload-types";
 
 // Resolves a Payload upload relationship to its served URL. Local API
 // calls populate relationships as full docs by default (not just the
 // numeric id), but the generated type is still a `number | Media`
 // union, so every image reference needs this narrowing regardless.
-function mediaUrl(image: number | Media): string {
-  return typeof image === "object" ? (image.url ?? "") : "";
+// Widened to accept null/undefined for the SEO group's optional ogImage
+// (every other image field on Home is `required: true`, so this was
+// never needed until now).
+function mediaUrl(image: number | Media | null | undefined): string {
+  return typeof image === "object" && image !== null ? (image.url ?? "") : "";
 }
 
 // Real intrinsic pixel dimensions from the populated Media doc (Payload
@@ -169,6 +173,7 @@ export type HomePageData = {
   testimonials: TestimonialsSectionData;
   closingCta: ClosingCtaSectionData;
   imageReel: ImageReelSectionData;
+  seo: SeoData;
 };
 
 // Reused by both the normal cached SSR path (lib/api/home.ts's
@@ -290,6 +295,11 @@ export function mapHomeData(home: Home): HomePageData {
         src: mediaUrl(img.image),
         alt: img.alt ?? "",
       })),
+    },
+    seo: {
+      metaTitle: home.seo?.metaTitle ?? "",
+      metaDescription: home.seo?.metaDescription ?? "",
+      ogImage: mediaUrl(home.seo?.ogImage),
     },
   };
 }
