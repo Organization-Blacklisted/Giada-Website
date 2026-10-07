@@ -2,6 +2,23 @@ import { unstable_cache } from "next/cache";
 import { getPayload } from "payload";
 import config from "@payload-config";
 import type { Testimonial } from "@/types/testimonial";
+import type { Media } from "@/payload-types";
+
+// Resolves a Payload upload relationship to its served URL. Local API
+// calls populate relationships as full docs by default (not just the
+// numeric id), but the generated type is still a `number | Media`
+// union, so every image reference needs this narrowing regardless.
+function mediaUrl(image: number | Media): string {
+  return typeof image === "object" ? (image.url ?? "") : "";
+}
+
+// Real intrinsic pixel dimensions from the populated Media doc (Payload
+// auto-measures every upload via sharp) — used for CategoryItem's and
+// Testimonial's width/height fields instead of storing them a second
+// time in the CMS schema.
+function mediaDims(image: number | Media): { width: number; height: number } {
+  return typeof image === "object" ? { width: image.width ?? 0, height: image.height ?? 0 } : { width: 0, height: 0 };
+}
 
 // Owned by this data layer, not imported from the section components —
 // same reasoning as lib/api/contact.ts and lib/api/faq.ts.
@@ -145,365 +162,157 @@ export type HomePageData = {
   imageReel: ImageReelSectionData;
 };
 
-// Home page itself isn't built out yet (see app/page.tsx) — this exists
-// so each real Home section is already wired the same way every other
-// section in this project is, ready for whenever Home gets composed for
-// real.
+// Full Home page CMS wiring (2026-10-06/07). Every section below is now
+// served from Payload's "home" global (src/globals/Home.ts) instead of a
+// literal here — started with just Hero as a working test, now extended
+// to the whole page the same way. Seeded with the exact real content
+// previously hardcoded here (see git history / ARCHITECTURE.md for each
+// section's original real-content provenance — the Astro source file it
+// came from, or, for `values`/`collaborationsSlider`, the Figma
+// mockup that introduced it); this file no longer carries that
+// provenance narrative itself since the content now lives in the CMS,
+// not in this file's literals.
 //
-// hero: now served from Payload's "home" global (see getHeroFromCMS
-// above and src/globals/Home.ts), not a literal here anymore — the first
-// section migrated off this file's mock-data pattern. Seeded with the
-// same real content originally confirmed from the Astro source's
-// components/home/HeroSlideshow.astro (one slide, matching the real
-// source's own `slides` array exactly — it has three other hero images
-// sitting unused in its assets folder, never wired into the config, not
-// fabricated into extra slides here). The carousel machinery (dots,
-// keyboard, swipe, autoplay) is still fully real and functional in
-// HeroSlideshowSection, same as the real source — it just has nothing to
-// switch to yet.
+// One real content-shape nuance preserved from the original mock data:
+// `collaborationsSlider` still has 3 slides that reuse the same real
+// Giada x Dunagan content/images — that was already a deliberate
+// placeholder (the client hasn't provided the other 2 collaborations
+// yet), not something this migration should silently collapse to 1.
 //
-// testimonials: real content confirmed from the Astro source's
-// components/home/Testimonials.astro, folded in from the old
-// data/testimonials.ts, which only this section ever consumed.
-// logoWidth/logoHeight on each testimonial are each logo's actual
-// measured pixel dimensions (via sharp), not guesses — required by
-// next/image to avoid CLS. Note: despite the .webp extension on all
-// three source files, testimonial-fam is actually HEIF-encoded and
-// testimonial-kelli-richards is actually a GIF (confirmed by inspecting
-// file contents, not the extension) — harmless since browsers sniff real
-// content, but worth knowing if a future image-processing step assumes
-// the extension is accurate.
-//
-// imageReel: real content confirmed from the Astro source's
-// components/home/ImageBar.astro. Order ([1, 3, 5, 4, 2]) matches the
-// real source's own reordering of the five source files — not arbitrary,
-// kept exactly as authored there. alt text is empty strings, matching
-// the real source (the images are decorative, not individually
-// captioned).
-//
-// categoryGrid: real content confirmed from the Astro source's
-// components/home/CategoryGrid.astro. hrefs point to `/products?category=rugs`
-// /`glass` rather than the real source's separate top-level `/rugs`/`/glass`
-// routes — this project already consolidated those into one `/products`
-// listing with a `category` field (see types/product.ts, decided earlier
-// in the project), so matching the real source's literal hrefs would
-// just 404 here. The Products page itself doesn't filter by that query
-// param yet (still a placeholder) — the hrefs are just structured
-// correctly for when it does.
-//
-// pressFeature: real content confirmed from the Astro source's
-// components/home/PressFeature.astro. Three images, matching the real
-// source's config exactly — it has a fourth image
-// (press-feature-tv.webp) sitting unused in its assets folder, never
-// wired into the section; not fabricated into a fourth card here.
-//
-// closingCta: real content confirmed from the Astro source's
-// components/home/ClosingCTA.astro — a hardcoded, zero-props component
-// (no eyebrow/description), distinct from the generic, prop-driven
-// components/global/ContactCTA.astro used elsewhere (FAQ, Our Story,
-// Blog, Collaborations). Both render through the shared
-// ContactCtaBanner primitive; Home's ClosingCtaSection just omits
-// eyebrow/description to reproduce this simpler real variant.
-//
-// collection: real content confirmed from the Astro source's
-// components/home/Collection.astro (imported there as `ImageWithText`),
-// second section in real page order, right after the hero. `buttonLink`
-// points at /collaborations in the real source, not /products — kept
-// as-is, not a guess.
-//
-// values: NOT ported from the Astro source — new client-provided content
-// via Figma (2026-10-06), placed between Category grid and Process strip
-// per the real client's own mockup. Only section in this file that isn't
-// sourced from the live site; see components/ui/ValuesSection's own
-// comment for why it's built as a genuine reusable primitive instead of
-// a Home-only section, and how it relates to Our Story's real
-// StoryBeliefs.astro ("Values That Endure").
-//
-// processStrip: real content confirmed from the Astro source's
-// components/home/ProcessStrip.astro, fourth section in real page order
-// (right after Category grid). Fully hardcoded there (no CMS-editable
-// fields in the real source either) — 5 steps, real copy.
-//
-// collaborationsSlider: NOT ported from the Astro source — new
-// client-provided content via Figma (node 579:90, 2026-10-06), placed
-// below Process strip per explicit instruction. Real images
-// (vision.png, dunagan.png) and real copy for the one confirmed
-// collaboration (Giada x Dunagan); the Figma spec shows 3 slides
-// (counter reads "01 / 03") so all 3 entries reuse the same real
-// content/images for now, per explicit instruction ("use same content
-// and image for now we will update later") — not a guess at what the
-// other 2 collaborations are, just a placeholder duplication until the
-// client provides the rest. buttonLink reuses /collaborations, already
-// the confirmed real route from CollectionSection and ContactCTA's
-// usage list above.
-//
-// NOTE: despite the filenames, vision.png is the large group photo and
-// dunagan.png is the textile close-up — confirmed by actually opening
-// both files, not guessed from their names (which point the other way
-// and would have swapped the image/cardImage assignment below).
-//
-// whyGiada: real content confirmed from the Astro source's
-// components/home/WhyGiada.astro, sixth section in real page order
-// (right after Press feature). Fully hardcoded there — 3 pillars, real
-// copy. Its closing image (press-feature-tv.webp) is the same file
-// documented as "real but unused anywhere" under pressFeature's own
-// section in ARCHITECTURE.md — that was true for PressFeature
-// specifically; it's actually wired in here instead.
-// First real CMS wiring on Home (2026-10-06), scoped to just Hero as a
-// working test before the rest of this file's sections get migrated the
-// same way. Wrapped in unstable_cache (tagged "home") rather than called
-// directly — Home currently renders statically (confirmed via `next
-// build`'s route table: "○ /"), and a plain Local API call bypasses
-// Next's Data Cache entirely (that only wraps `fetch()`), so without this
-// wrapper the page would never pick up edits made in /admin without a
-// full rebuild. The Home global's `afterChange` hook calls
-// `revalidateTag("home")` to bust this on every save.
-const getHeroFromCMS = unstable_cache(
-  async (): Promise<HeroSlideshowSectionData> => {
+// Single findGlobal call wrapped in unstable_cache (tagged "home")
+// rather than one cached function per section — Home currently renders
+// statically (confirmed via `next build`'s route table: "○ /"), and a
+// plain Local API call bypasses Next's Data Cache entirely (that only
+// wraps `fetch()`), so without this wrapper the page would never pick up
+// edits made in /admin without a full rebuild. The Home global's
+// `afterChange` hook calls `revalidateTag("home")` on every save
+// (any section), which is why one shared tag for the whole page is the
+// right granularity, not a tag per section.
+const getHomeFromCMS = unstable_cache(
+  async (): Promise<HomePageData> => {
     const payload = await getPayload({ config });
     const home = await payload.findGlobal({ slug: "home" });
+
     return {
-      eyebrow: home.hero.eyebrow,
-      title: home.hero.title,
-      taglineLine1: home.hero.taglineLine1,
-      taglineLine2: home.hero.taglineLine2,
-      slides: (home.hero.slides ?? []).map((slide) => ({
-        src: typeof slide.image === "object" ? slide.image.url ?? "" : "",
-        alt: slide.alt,
-      })),
+      hero: {
+        eyebrow: home.hero.eyebrow,
+        title: home.hero.title,
+        taglineLine1: home.hero.taglineLine1,
+        taglineLine2: home.hero.taglineLine2,
+        slides: (home.hero.slides ?? []).map((slide) => ({
+          src: mediaUrl(slide.image),
+          alt: slide.alt,
+        })),
+      },
+      collection: {
+        image: mediaUrl(home.collection.image),
+        alt: home.collection.alt ?? "",
+        heading: home.collection.heading,
+        subheading: home.collection.subheading,
+        description: home.collection.description,
+        buttonText: home.collection.buttonText ?? "",
+        buttonLink: home.collection.buttonLink ?? "",
+      },
+      categoryGrid: {
+        eyebrow: home.categoryGrid.eyebrow,
+        heading: home.categoryGrid.heading,
+        categories: (home.categoryGrid.categories ?? []).map((cat) => ({
+          title: cat.title,
+          image: mediaUrl(cat.image),
+          imageWidth: mediaDims(cat.image).width,
+          imageHeight: mediaDims(cat.image).height,
+          href: cat.href,
+        })),
+      },
+      values: {
+        eyebrow: home.values.eyebrow,
+        heading: home.values.heading,
+        description: home.values.description,
+        image: mediaUrl(home.values.image),
+        imageAlt: home.values.imageAlt,
+        items: (home.values.items ?? []).map((item) => ({
+          index: item.index,
+          title: item.title,
+          text: item.text,
+        })),
+        buttonText: home.values.buttonText ?? "",
+        buttonLink: home.values.buttonLink ?? "",
+      },
+      processStrip: {
+        eyebrow: home.processStrip.eyebrow,
+        heading: home.processStrip.heading,
+        description: home.processStrip.description,
+        steps: (home.processStrip.steps ?? []).map((step) => ({
+          step: step.step,
+          title: step.title,
+          body: step.body,
+        })),
+      },
+      collaborationsSlider: {
+        eyebrow: home.collaborationsSlider.eyebrow,
+        slides: (home.collaborationsSlider.slides ?? []).map((slide) => ({
+          image: mediaUrl(slide.image),
+          imageAlt: slide.imageAlt,
+          heading: slide.heading,
+          description: slide.description,
+          cardImage: mediaUrl(slide.cardImage),
+          cardImageAlt: slide.cardImageAlt,
+          cardTitle: slide.cardTitle,
+          cardCaption: slide.cardCaption,
+          buttonText: slide.buttonText,
+          buttonLink: slide.buttonLink,
+        })),
+      },
+      pressFeature: {
+        eyebrow: home.pressFeature.eyebrow,
+        heading: home.pressFeature.heading,
+        description: home.pressFeature.description,
+        images: (home.pressFeature.images ?? []).map((img) => ({
+          image: mediaUrl(img.image),
+          alt: img.alt,
+        })),
+      },
+      whyGiada: {
+        eyebrow: home.whyGiada.eyebrow,
+        heading: home.whyGiada.heading,
+        pillars: (home.whyGiada.pillars ?? []).map((pillar) => ({
+          title: pillar.title,
+          body: pillar.body,
+        })),
+        image: mediaUrl(home.whyGiada.image),
+        imageAlt: home.whyGiada.imageAlt,
+      },
+      testimonials: {
+        eyebrow: home.testimonials.eyebrow,
+        heading: home.testimonials.heading,
+        testimonials: (home.testimonials.testimonials ?? []).map((t) => ({
+          id: t.id ?? t.name,
+          quote: t.quote,
+          name: t.name,
+          company: t.company,
+          logo: mediaUrl(t.logo),
+          logoWidth: mediaDims(t.logo).width,
+          logoHeight: mediaDims(t.logo).height,
+          logoInvert: t.logoInvert ?? undefined,
+        })),
+      },
+      closingCta: {
+        heading: home.closingCta.heading,
+        linkText: home.closingCta.linkText,
+        href: home.closingCta.href,
+      },
+      imageReel: {
+        images: (home.imageReel?.images ?? []).map((img) => ({
+          src: mediaUrl(img.image),
+          alt: img.alt ?? "",
+        })),
+      },
     };
   },
-  ["home-hero"],
+  ["home-full"],
   { tags: ["home"] }
 );
 
 export async function getHomePage(): Promise<HomePageData> {
-  return {
-    hero: await getHeroFromCMS(),
-    collection: {
-      image: "/images/home/collection-feature.webp",
-      alt: "",
-      heading: "Every great interior begins with a conversation.",
-      subheading: "From Our Atelier to Your Vision",
-      description:
-        "Every Giada rug begins as a conversation. Our design team collaborates with you from the first sketch to the final installation, transforming your vision into a woven work of art. With complete creative freedom and the technical mastery of four generations, we bring your idea to life — exactly as imagined, and built to endure for generations.",
-      buttonText: "Explore Our Collections",
-      buttonLink: "/collaborations",
-    },
-    collaborationsSlider: {
-      eyebrow: "Creative Collaborations",
-      slides: [
-        {
-          image: "/images/home/vision.png",
-          imageAlt: "Giada and Dunagan's founders in the Giada showroom",
-          heading: "Where Two Visions Weave as One",
-          description:
-            "Every collaboration starts from the same belief: a rug becomes more than a floor covering when it's shaped by more than one mind. GIADA partners with artists and designers who see the craft differently and lets that difference lead.",
-          cardImage: "/images/home/dunagan.png",
-          cardImageAlt: "Hand-drawn textile detail from the Giada x Dunagan collaboration",
-          cardTitle: "Giada x Dunagan",
-          cardCaption: "A dialogue between art & craftmanship.",
-          buttonText: "Explore The Collaboration",
-          buttonLink: "/collaborations",
-        },
-        {
-          image: "/images/home/vision.png",
-          imageAlt: "Giada and Dunagan's founders in the Giada showroom",
-          heading: "Where Two Visions Weave as One",
-          description:
-            "Every collaboration starts from the same belief: a rug becomes more than a floor covering when it's shaped by more than one mind. GIADA partners with artists and designers who see the craft differently and lets that difference lead.",
-          cardImage: "/images/home/dunagan.png",
-          cardImageAlt: "Hand-drawn textile detail from the Giada x Dunagan collaboration",
-          cardTitle: "Giada x Dunagan",
-          cardCaption: "A dialogue between art & craftmanship.",
-          buttonText: "Explore The Collaboration",
-          buttonLink: "/collaborations",
-        },
-        {
-          image: "/images/home/vision.png",
-          imageAlt: "Giada and Dunagan's founders in the Giada showroom",
-          heading: "Where Two Visions Weave as One",
-          description:
-            "Every collaboration starts from the same belief: a rug becomes more than a floor covering when it's shaped by more than one mind. GIADA partners with artists and designers who see the craft differently and lets that difference lead.",
-          cardImage: "/images/home/dunagan.png",
-          cardImageAlt: "Hand-drawn textile detail from the Giada x Dunagan collaboration",
-          cardTitle: "Giada x Dunagan",
-          cardCaption: "A dialogue between art & craftmanship.",
-          buttonText: "Explore The Collaboration",
-          buttonLink: "/collaborations",
-        },
-      ],
-    },
-    testimonials: {
-      eyebrow: "What Designers Say",
-      heading: "Client Notes",
-      testimonials: [
-        {
-          id: "fam",
-          quote:
-            "We truly feel fortunate to work with Giada. Julien and Nitin are not only incredibly kind and generous with their time — they consistently go above and beyond.",
-          name: "Vanessa Brisset",
-          company: "FAMDESIGN",
-          logo: "/images/testimonials/testimonial-fam.webp",
-          logoWidth: 330,
-          logoHeight: 26,
-          logoInvert: true,
-        },
-        {
-          id: "kelli-richards",
-          quote:
-            "Working with Giada has been a fantastic experience for our design studio. Their craftsmanship, attention to detail, and commitment to quality are truly exceptional.",
-          name: "Kelli Richards",
-          company: "Interior Montréal",
-          logo: "/images/testimonials/testimonial-kelli-richards.webp",
-          logoWidth: 1500,
-          logoHeight: 522,
-        },
-        {
-          id: "ali-budd",
-          quote:
-            "The ABI team loves Nitin and Julien from the Giada team. They are always bringing us new ideas and samples.",
-          name: "Susie Park",
-          company: "Ali Budd Interiors",
-          logo: "/images/testimonials/testimonial-ali-budd.webp",
-          logoWidth: 1369,
-          logoHeight: 576,
-        },
-      ],
-    },
-    categoryGrid: {
-      eyebrow: "Our Products",
-      heading: "The Complete Collection",
-      categories: [
-        {
-          title: "Rugs",
-          image: "/images/categories/category-rugs.webp",
-          imageWidth: 1536,
-          imageHeight: 2730,
-          href: "/products?category=rugs",
-        },
-        {
-          title: "Glass",
-          image: "/images/categories/category-glass.webp",
-          imageWidth: 1122,
-          imageHeight: 1402,
-          href: "/products?category=glass",
-        },
-      ],
-    },
-    values: {
-      eyebrow: "Our Core Ethos",
-      heading: "Living Art Beyond Simple Decor",
-      description:
-        "To walk across a GIADA rug is to feel generations of weaving heritage beneath your feet. We weave raw art, emotion, and architectural weight into hand-knotted heirlooms that define how a home feels, anchoring your space with enduring, quiet soul.",
-      image: "/images/home/simple-decor.webp",
-      imageAlt: "An artisan's hand hand-knotting dark wool fibres into a rug, dot by dot",
-      items: [
-        {
-          index: "01",
-          title: "Expressive Artistry",
-          text: "A seamless dialogue between raw imagination and tactile design, carved directly into the weave.",
-        },
-        {
-          index: "02",
-          title: "Material Intention",
-          text: "Anchored in the pure integrity of natural materials, merging hand-spun fibers with bespoke dyes to create a sensuous, multidimensional surface.",
-        },
-        {
-          index: "03",
-          title: "Timeless Anchor",
-          text: "More than floor decor, each piece absorbs the essence of an interior, aging gracefully into an heirloom.",
-        },
-      ],
-      buttonText: "Discover Giada",
-      buttonLink: "/our-story",
-    },
-    processStrip: {
-      eyebrow: "Our Process",
-      heading: "Crafted With Purpose",
-      description:
-        "From the first consultation to final installation, every step honours century-old traditions while embracing the precision that modern interiors demand.",
-      steps: [
-        {
-          step: "01",
-          title: "Design Consultation",
-          body: "Collaborate directly with our founders to translate your vision into a clear creative direction.",
-        },
-        {
-          step: "02",
-          title: "Material Selection",
-          body: "Choose from the finest natural fibres: New Zealand wool, pure mulberry silk, cashmere blends, and sustainable plant fibres.",
-        },
-        {
-          step: "03",
-          title: "Colour & Texture",
-          body: "Explore a rich spectrum of hand-dyed palettes and tactile finishes, validated through physical samples.",
-        },
-        {
-          step: "04",
-          title: "Artisan Weaving",
-          body: "Ancient techniques, perfected over four generations, transform your chosen fibres into an heirloom object.",
-        },
-        {
-          step: "05",
-          title: "White-Glove Delivery",
-          body: "Complimentary worldwide shipping with professional installation coordination, door to door.",
-        },
-      ],
-    },
-    pressFeature: {
-      eyebrow: "Press Feature",
-      heading: "As Seen in Florida Design",
-      description:
-        "Giada and its founders were recently the subject of a full editorial spread — a reflection of the craft and vision behind every piece we create.",
-      images: [
-        {
-          image: "/images/home/press/press-magazine-spread.webp",
-          alt: "The Giada team featured in Florida Design magazine",
-        },
-        {
-          image: "/images/home/press/press-magazine-1.webp",
-          alt: "Florida Design editorial feature — page one",
-        },
-        {
-          image: "/images/home/press/press-magazine-2.webp",
-          alt: "Florida Design editorial feature — page two",
-        },
-      ],
-    },
-    whyGiada: {
-      eyebrow: "Our Difference",
-      heading: "Why the World's Leading Designers Choose Giada",
-      pillars: [
-        {
-          title: "Our Heritage: Over 100 Years of Fine Rug Making.",
-          body: "For over a century, Giada has woven beauty into the foundations of extraordinary spaces. Each rug is an heirloom in the making — a testament to four generations of textile mastery, where ancestral savoir-faire meets contemporary vision. More than a furnishing, it is the soul of a room.",
-        },
-        {
-          title: "Our Advantage: We Own Our Mill. You Own the Quality.",
-          body: "By owning and operating our mill in India, we control every gesture — from the hand-selection of fibres to the final finishing touch. This vertical mastery ensures absolute consistency, uncompromising quality, and the creative freedom to realise any vision without constraint.",
-        },
-        {
-          title: "Our Approach: Fully Bespoke, Built Around Your Vision.",
-          body: "Each Giada rug is born from collaboration. From the first consultation to final installation, we craft entirely bespoke pieces tailored to your exact specifications — custom materials, colours, patterns, and dimensions. The result is not simply a rug. It is the defining element of your space.",
-        },
-      ],
-      image: "/images/home/press-feature-tv.webp",
-      imageAlt: "The Giada team featured in Florida Design magazine",
-    },
-    closingCta: {
-      heading: "Every Great Space Begins with a Conversation.",
-      linkText: "Connect With Us",
-      href: "/contact",
-    },
-    imageReel: {
-      images: [
-        { src: "/images/home/image-bar-1.webp", alt: "" },
-        { src: "/images/home/image-bar-3.webp", alt: "" },
-        { src: "/images/home/image-bar-5.webp", alt: "" },
-        { src: "/images/home/image-bar-4.webp", alt: "" },
-        { src: "/images/home/image-bar-2.webp", alt: "" },
-      ],
-    },
-  };
+  return getHomeFromCMS();
 }

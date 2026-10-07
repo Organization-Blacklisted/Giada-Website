@@ -1854,16 +1854,104 @@ Payload's Local API: the object actually lands in the Neon bucket (not
 `/media`), serves correctly through `/api/media/file/...`, and deleting
 the doc removes the S3 object too.
 
-One open item: the first `neon mcp` install minted an **account-wide**
-API key (reaches every org on the account) instead of one scoped to this
-project — the CLI itself warns about this. Revoking it and re-minting a
-project-scoped key both got blocked by this environment's own permission
-system (secret/key management needs explicit human approval each time);
-the over-broad key only lives in the gitignored `.mcp.json`, so it's not
-a leak risk, but it should still be narrowed — either approve that
-permission next time, or revoke key id `3403345` from the Neon dashboard
-and re-run `neon mcp --agent claude-code --project --project-id
-weathered-resonance-26023066 -y`.
+The first `neon mcp` install minted an **account-wide** API key (reaches
+every org on the account) instead of one scoped to this project — the
+CLI itself warned about this. Resolved 2026-10-07: revoked key id
+`3403345` from the Neon dashboard, then re-ran `neon mcp --agent
+claude-code --project --project-id weathered-resonance-26023066 -y`
+after clearing the stale `.mcp.json` entry (the CLI reuses whatever key
+is already on file otherwise, even a revoked one) — confirmed via `neon
+api-keys list --org-id ...` that only the new, project-scoped key
+exists now.
+
+**Full Home page wired to the CMS, 2026-10-06/07.** Every section in
+`lib/api/home.ts`'s `HomePageData` (Hero, Collection, Category Grid,
+Core Values, Process Strip, Collaborations Slider, Press Feature, Why
+Giada, Testimonials, Closing CTA, Image Strip) now comes from Payload's
+`home` global (`src/globals/Home.ts`) instead of literals — Hero was
+built first as a working test the day before, then every remaining
+section followed the identical pattern. The global's fields are
+organized under `tabs` purely for `/admin` editing UX (one tab per
+section instead of one long scrolling form); the underlying data shape
+is unchanged, still `home.<section>.{...}`, matching each section's
+existing TS type almost field-for-field. A single `findGlobal` call,
+wrapped once in `unstable_cache` (tagged `"home"`), replaces the
+per-section cached fetchers Hero's first pass used — one tag for the
+whole page is the right granularity since the global's own
+`afterChange` hook busts that same tag on every save, regardless of
+which section changed.
+
+Upload fields never duplicate width/height in the schema — Payload
+auto-measures every upload via sharp, so `CategoryItem.imageWidth` /
+`Testimonial.logoWidth` (etc.) are derived from the populated Media
+relation at read time instead of being stored a second time.
+
+All real content was re-seeded from scratch into the CMS (same text
+confirmed from the Astro source/Figma back when each section was first
+built — see git history for that original per-section provenance,
+which no longer lives in `lib/api/home.ts` now that the content itself
+lives in the CMS, not in this file's literals) via a one-off script,
+since extending a Global's schema with new required fields while it
+already has an existing row triggers Payload's db-postgres adapter to
+ask for an interactive data-loss confirmation (`y/N`) before adding
+`NOT NULL` columns — handled by piping `y` into the non-interactive
+script run. One real gotcha hit during seeding: Media's `alt` field
+rejects empty strings (several real sections, like the decorative image
+strip, legitimately have empty per-use alt text, but the *Media doc's
+own* alt still needs a real value) — fixed by giving the Media upload a
+real description while keeping the section's own per-use `alt` field
+empty where that's genuinely correct. A second gotcha: Payload renames
+an upload's stored filename to match its *actually detected* format,
+not its given extension (confirmed with `testimonial-kelli-richards.webp`,
+which is real GIF content — see "Real content confirmed..." note below
+— landing in the bucket as `testimonial-kelli-richards-1.gif`); a
+filename-based "does this already exist" check written against the
+original extension missed it and uploaded a duplicate, cleaned up after
+the fact once noticed.
+
+Verified end-to-end: real browser load of `/`, scrolled through fully
+so every scroll-triggered reveal fires, confirmed every section's
+heading/content text and all images render correctly with zero console
+errors, and confirmed `next build` still statically prerenders `/`
+(unaffected by the CMS wiring, since the whole fetch is cache-tagged,
+not force-dynamic). **Not independently verified**: editing a
+non-Hero field in the real `/admin` UI and confirming it reflects live
+— that requires a real browser session logged in as an actual admin
+user, which this environment doesn't have credentials for. The
+mechanism is identical to Hero's (same single hook, same single tag,
+no per-section special-casing anywhere in the revalidation path), which
+was confirmed working by the user directly, so there's no structural
+reason it would behave differently per section — but this is inference
+from the code, not a repeated observation, and is worth an actual click
+test.
+
+**Admin UI polish, 2026-10-07**:
+- Real site logo on `/admin/login` (`components/admin/Logo.tsx`, wired
+  via `admin.components.graphics.Logo`), inverted to white only when
+  `data-theme="dark"` — keyed off that attribute specifically because
+  it's the same one Payload's own CSS uses to pick the actual background
+  color, so it can't desync from what's really rendered. A plain
+  `prefers-color-scheme` media query was tried first and rejected: real
+  testing showed it can report dark while the page background stays
+  light (Payload's server-side theme check depends on a
+  `Sec-CH-Prefers-Color-Scheme` client hint header, not pure
+  `matchMedia`), which would invert the logo to invisible-white-on-white.
+- `admin.theme: "dark"` — fixed dark mode for the whole `/admin` panel,
+  not just OS-dependent (explicit ask). Confirmed via testing that this
+  forces dark even with the browser's own color scheme set to light.
+- Media's `upload` config gained a `thumbnail` image size
+  (400x400, `adminThumbnail: "thumbnail"`) — `upload: true` (no sizes)
+  meant every admin preview/thumbnail requested the full original file
+  over the network from Neon Object Storage, some 500KB-1.3MB, which is
+  what the user noticed as slow image loading in `/admin`. Backfilled
+  the 19 already-existing Media docs by re-processing each through its
+  own stored file (Payload only generates image sizes at upload time,
+  not retroactively). Two docs legitimately still have no thumbnail —
+  `dunagan.png` (170x170) and the FAMDESIGN testimonial logo (330x26) —
+  both genuinely smaller than 400x400 in every dimension, and Payload's
+  documented default skips generating a size rather than upscale a tiny
+  source image; harmless here since both files are already tiny (65KB
+  and 3.6KB) regardless.
 
 ## Astro source audit (`giada-studio.com-handover.zip`, extracted 2026-09-29)
 
@@ -2010,11 +2098,13 @@ See `.env.example`.
    2026-10-06 (see "CMS" above): real project, `giada-media` object
    storage bucket wired into Media via `@payloadcms/storage-s3`, verified
    end-to-end. Remaining: narrow the over-broad MCP API key (see "CMS").
-3. Design and build the remaining Payload collections (Products,
-   Collaborations, Gallery, Blog, Testimonials, Enquiries — field lists
-   already known from the Astro audit below) and update `types/*` +
-   `lib/api/<page>.ts` to query them via the Local API instead of
-   returning static mock data.
+3. ~~Design and build the remaining Payload collections... and update
+   `lib/api/<page>.ts` to query them via the Local API~~ — done for
+   **Home** 2026-10-07 (see "CMS" above: a `home` global, not a
+   collection, since it's a singleton page). Still open for every other
+   page: Products, Collaborations, Gallery, Blog, Testimonials (the
+   standalone page, distinct from Home's embedded section), Enquiries —
+   field lists already known from the Astro audit below.
 4. Port the legacy redirect table into `next.config.ts`.
 5. Build `components/sections/{page}/*` for each page using the real
    Astro source as reference; extract shared pieces into

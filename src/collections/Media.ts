@@ -17,5 +17,26 @@ export const Media: CollectionConfig = {
       required: true,
     },
   ],
-  upload: true,
+  // `upload: true` (no sizes) meant the admin UI had no small preview
+  // variant to fall back on — every thumbnail in /admin (the Media list,
+  // and every upload field across Home's sections) requested the FULL
+  // original file over the network from Neon Object Storage, some of
+  // which are 500KB-1.3MB real photography. Real cause, not assumed:
+  // confirmed by reading Payload's own upload types (`adminThumbnail`
+  // falls back to the full file when no named size is configured).
+  // `thumbnail` here is a real generated+stored 400x400 crop used
+  // specifically for admin previews — the live site itself never
+  // references `sizes.thumbnail`, only the original (via `mediaUrl()` in
+  // lib/api/home.ts), so this doesn't change anything client-facing.
+  upload: {
+    imageSizes: [
+      {
+        name: "thumbnail",
+        width: 400,
+        height: 400,
+        fit: "cover",
+      },
+    ],
+    adminThumbnail: "thumbnail",
+  },
 };

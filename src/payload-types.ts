@@ -166,6 +166,16 @@ export interface Media {
   height?: number | null;
   focalX?: number | null;
   focalY?: number | null;
+  sizes?: {
+    thumbnail?: {
+      url?: string | null;
+      width?: number | null;
+      height?: number | null;
+      mimeType?: string | null;
+      filesize?: number | null;
+      filename?: string | null;
+    };
+  };
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -282,6 +292,20 @@ export interface MediaSelect<T extends boolean = true> {
   height?: T;
   focalX?: T;
   focalY?: T;
+  sizes?:
+    | T
+    | {
+        thumbnail?:
+          | T
+          | {
+              url?: T;
+              width?: T;
+              height?: T;
+              mimeType?: T;
+              filesize?: T;
+              filename?: T;
+            };
+      };
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -342,6 +366,131 @@ export interface Home {
         }[]
       | null;
   };
+  collection: {
+    image: number | Media;
+    alt?: string | null;
+    heading: string;
+    subheading: string;
+    description: string;
+    buttonText?: string | null;
+    buttonLink?: string | null;
+  };
+  categoryGrid: {
+    eyebrow: string;
+    heading: string;
+    categories?:
+      | {
+          title: string;
+          image: number | Media;
+          href: string;
+          id?: string | null;
+        }[]
+      | null;
+  };
+  values: {
+    eyebrow: string;
+    heading: string;
+    description: string;
+    image: number | Media;
+    imageAlt: string;
+    items?:
+      | {
+          index: string;
+          title: string;
+          text: string;
+          id?: string | null;
+        }[]
+      | null;
+    buttonText?: string | null;
+    buttonLink?: string | null;
+  };
+  processStrip: {
+    eyebrow: string;
+    heading: string;
+    description: string;
+    steps?:
+      | {
+          step: string;
+          title: string;
+          body: string;
+          id?: string | null;
+        }[]
+      | null;
+  };
+  collaborationsSlider: {
+    eyebrow: string;
+    slides?:
+      | {
+          image: number | Media;
+          imageAlt: string;
+          heading: string;
+          description: string;
+          cardImage: number | Media;
+          cardImageAlt: string;
+          cardTitle: string;
+          cardCaption: string;
+          buttonText: string;
+          buttonLink: string;
+          id?: string | null;
+        }[]
+      | null;
+  };
+  pressFeature: {
+    eyebrow: string;
+    heading: string;
+    description: string;
+    images?:
+      | {
+          image: number | Media;
+          alt: string;
+          id?: string | null;
+        }[]
+      | null;
+  };
+  whyGiada: {
+    eyebrow: string;
+    heading: string;
+    pillars?:
+      | {
+          title: string;
+          body: string;
+          id?: string | null;
+        }[]
+      | null;
+    image: number | Media;
+    imageAlt: string;
+  };
+  testimonials: {
+    eyebrow: string;
+    heading: string;
+    testimonials?:
+      | {
+          quote: string;
+          name: string;
+          company: string;
+          logo: number | Media;
+          /**
+           * Invert logo to white — for dark/colored logos that need to read on a light background.
+           */
+          logoInvert?: boolean | null;
+          id?: string | null;
+        }[]
+      | null;
+  };
+  closingCta: {
+    heading: string;
+    linkText: string;
+    href: string;
+  };
+  imageReel?: {
+    images?:
+      | {
+          image: number | Media;
+          alt?: string | null;
+          id?: string | null;
+        }[]
+      | null;
+  };
   updatedAt?: string | null;
   createdAt?: string | null;
 }
@@ -358,6 +507,148 @@ export interface HomeSelect<T extends boolean = true> {
         taglineLine1?: T;
         taglineLine2?: T;
         slides?:
+          | T
+          | {
+              image?: T;
+              alt?: T;
+              id?: T;
+            };
+      };
+  collection?:
+    | T
+    | {
+        image?: T;
+        alt?: T;
+        heading?: T;
+        subheading?: T;
+        description?: T;
+        buttonText?: T;
+        buttonLink?: T;
+      };
+  categoryGrid?:
+    | T
+    | {
+        eyebrow?: T;
+        heading?: T;
+        categories?:
+          | T
+          | {
+              title?: T;
+              image?: T;
+              href?: T;
+              id?: T;
+            };
+      };
+  values?:
+    | T
+    | {
+        eyebrow?: T;
+        heading?: T;
+        description?: T;
+        image?: T;
+        imageAlt?: T;
+        items?:
+          | T
+          | {
+              index?: T;
+              title?: T;
+              text?: T;
+              id?: T;
+            };
+        buttonText?: T;
+        buttonLink?: T;
+      };
+  processStrip?:
+    | T
+    | {
+        eyebrow?: T;
+        heading?: T;
+        description?: T;
+        steps?:
+          | T
+          | {
+              step?: T;
+              title?: T;
+              body?: T;
+              id?: T;
+            };
+      };
+  collaborationsSlider?:
+    | T
+    | {
+        eyebrow?: T;
+        slides?:
+          | T
+          | {
+              image?: T;
+              imageAlt?: T;
+              heading?: T;
+              description?: T;
+              cardImage?: T;
+              cardImageAlt?: T;
+              cardTitle?: T;
+              cardCaption?: T;
+              buttonText?: T;
+              buttonLink?: T;
+              id?: T;
+            };
+      };
+  pressFeature?:
+    | T
+    | {
+        eyebrow?: T;
+        heading?: T;
+        description?: T;
+        images?:
+          | T
+          | {
+              image?: T;
+              alt?: T;
+              id?: T;
+            };
+      };
+  whyGiada?:
+    | T
+    | {
+        eyebrow?: T;
+        heading?: T;
+        pillars?:
+          | T
+          | {
+              title?: T;
+              body?: T;
+              id?: T;
+            };
+        image?: T;
+        imageAlt?: T;
+      };
+  testimonials?:
+    | T
+    | {
+        eyebrow?: T;
+        heading?: T;
+        testimonials?:
+          | T
+          | {
+              quote?: T;
+              name?: T;
+              company?: T;
+              logo?: T;
+              logoInvert?: T;
+              id?: T;
+            };
+      };
+  closingCta?:
+    | T
+    | {
+        heading?: T;
+        linkText?: T;
+        href?: T;
+      };
+  imageReel?:
+    | T
+    | {
+        images?:
           | T
           | {
               image?: T;

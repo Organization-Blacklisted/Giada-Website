@@ -16,8 +16,28 @@ const dirname = path.dirname(filename);
 export default buildConfig({
   admin: {
     user: Users.slug,
+    // Fixed dark mode, not OS-dependent — default is 'all' (follows OS
+    // preference, user-togglable). Setting a fixed value here short-
+    // circuits both the server-side initial-render theme check
+    // (getRequestTheme, which otherwise falls back to the
+    // Sec-CH-Prefers-Color-Scheme client-hint header or a cookie) and
+    // the client-side ThemeProvider's own OS-detection effect — both
+    // confirmed by reading @payloadcms/next's and @payloadcms/ui's
+    // source directly while debugging the admin logo's light/dark
+    // handling, not assumed from docs alone.
+    theme: "dark",
     importMap: {
       baseDir: path.resolve(dirname),
+    },
+    components: {
+      graphics: {
+        // Real site logo on the /admin login screen instead of Payload's
+        // own wordmark — see components/admin/Logo.tsx for why it needs
+        // inverting (source file is black-on-transparent, login page is
+        // dark). Not touching `Icon` (the in-dashboard nav graphic) —
+        // only the login screen was asked for.
+        Logo: "@/components/admin/Logo#Logo",
+      },
     },
   },
   collections: [Users, Media],
