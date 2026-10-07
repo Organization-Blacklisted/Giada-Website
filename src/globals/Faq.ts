@@ -7,6 +7,9 @@ import { revalidateTag } from "next/cache";
 export const Faq: GlobalConfig = {
   slug: "faq-page",
   admin: {
+    // See Home.ts's identical `group` for why — renames the sidebar
+    // section from Payload's default "Globals" to "Pages".
+    group: "Pages",
     // Renders the real /faq route in an iframe next to the edit form,
     // live-updating as fields change (before saving) via the
     // `useLivePreview` hook on the page side — see FaqPageClient.tsx.

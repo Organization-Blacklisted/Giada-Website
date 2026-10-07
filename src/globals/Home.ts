@@ -21,6 +21,12 @@ import { revalidateTag } from "next/cache";
 export const Home: GlobalConfig = {
   slug: "home",
   admin: {
+    // Renames the sidebar section Payload's default-generates from
+    // "Globals" to "Pages" — reads more naturally for a non-technical
+    // client, and sets up for Products/Collaborations/Gallery/Blog etc.
+    // (once those exist) to pick their own group instead of everything
+    // piling into one generic bucket.
+    group: "Pages",
     // Same Live Preview wiring as the Faq global (src/globals/Faq.ts) —
     // see its comment for why the URL is derived from the request's own
     // Host header rather than a hardcoded/env-based origin. Unlike FAQ,
