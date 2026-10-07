@@ -32,8 +32,16 @@ const nextConfig: NextConfig = {
         headers: [
           // Stops browsers from guessing the content-type (prevents MIME-sniffing attacks)
           { key: "X-Content-Type-Options", value: "nosniff" },
-          // Blocks the site from being embedded in an iframe (clickjacking protection)
-          { key: "X-Frame-Options", value: "DENY" },
+          // Blocks the site from being embedded in an iframe on another
+          // domain (clickjacking protection) while still allowing
+          // same-origin framing — Payload's admin Live Preview embeds
+          // frontend routes (e.g. /faq) in an iframe within /admin,
+          // which is the same Next.js app/origin, so a blanket `DENY`
+          // broke that entirely (confirmed: Vercel showed "refused to
+          // connect", the exact browser response to this header
+          // rejecting the frame). `SAMEORIGIN` keeps the actual
+          // protection — no third-party site can still frame this one.
+          { key: "X-Frame-Options", value: "SAMEORIGIN" },
           // Controls how much referrer info is sent when clicking outbound links
           { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
           // Tells browsers to only connect via HTTPS for the next year (once live on HTTPS)
