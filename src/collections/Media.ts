@@ -1,4 +1,5 @@
 import type { CollectionConfig } from "payload";
+import { revalidateTag } from "next/cache";
 
 // Uploads collection — every image/file across every other collection
 // relates to a document here. Kept minimal (no Folders/Tags, unlike
@@ -38,5 +39,37 @@ export const Media: CollectionConfig = {
       },
     ],
     adminThumbnail: "thumbnail",
+  },
+  hooks: {
+    // Home's own `afterChange` hook (src/globals/Home.ts) only fires
+    // when the Home global ITSELF is saved — replacing an image's file
+    // directly here, in Collections > Media, rather than through the
+    // Home global's own form, changes what actually renders on the
+    // homepage (same doc id, new bytes/URL) without ever touching Home,
+    // so that edit wouldn't otherwise bust the homepage's cache — found
+    // during an audit, not hit live. Media doesn't know which specific
+    // docs Home references, so this busts the same "home" tag on every
+    // Media save/delete rather than only relevant ones; harmless, since
+    // revalidation itself is cheap (marks the cache stale, does no real
+    // work) and this collection isn't high-traffic.
+    afterChange: [
+      async () => {
+        try {
+          revalidateTag("home", { expire: 0 });
+        } catch {
+          // No request-scoped cache to bust outside a real Next.js
+          // request (e.g. a script using the Local API) — nothing to do.
+        }
+      },
+    ],
+    afterDelete: [
+      async () => {
+        try {
+          revalidateTag("home", { expire: 0 });
+        } catch {
+          // Same as above.
+        }
+      },
+    ],
   },
 };

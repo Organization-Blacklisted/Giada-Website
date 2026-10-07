@@ -1953,6 +1953,39 @@ test.
   source image; harmless here since both files are already tiny (65KB
   and 3.6KB) regardless.
 
+**Full Payload + Neon integration audit, 2026-10-07** — went through every
+piece built so far (Neon infra, `payload.config.ts`, access control,
+Media, the Home global, the CMS data-fetching layer, revalidation,
+data integrity) looking for real bugs, not just re-reading for style.
+Verified clean, with real evidence not assumption:
+- `neon config plan` shows zero drift between `neon.ts` and the live
+  project — infra-as-code and reality agree.
+- Exactly one Neon API key exists, correctly scoped to this project
+  (not account-wide).
+- All 19 Media docs are referenced somewhere in the Home global — no
+  orphans left over from any of this week's seed/backfill/test scripts.
+- Checked whether the `Users`/`Media`/`Home` collections' missing
+  `access` config is a real hole (e.g. public self-registration of admin
+  accounts) by reading Payload's actual `executeAccess` source, not
+  assuming either way — confirmed the real default when `access` is
+  unspecified is "authenticated users only," not "fully public." Not a
+  vulnerability.
+- `getPayload()` is internally memoized per-process (confirmed via
+  source), so the `getPayload({config})` call inside the cached
+  `getHomeFromCMS()` fetcher doesn't re-initialize Payload on every
+  cache miss.
+- `next.config.ts`'s `images.localPatterns` and security headers still
+  correctly cover the S3-backed Media proxy route.
+
+One real gap found and fixed: Media had no `afterChange`/`afterDelete`
+hooks, so replacing an image's underlying file via **Collections >
+Media** directly (rather than through the Home global's own form) would
+change what's actually stored (same doc id, new bytes/URL) without
+busting the homepage's cache tag — Home's own hook only fires when the
+Home global itself is saved. Added matching hooks to Media that also
+revalidate the `"home"` tag, so either editing path correctly reflects
+live.
+
 ## Astro source audit (`giada-studio.com-handover.zip`, extracted 2026-09-29)
 
 Full analysis done, extracted source kept out of this repo (scratch
