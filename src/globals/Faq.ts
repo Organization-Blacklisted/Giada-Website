@@ -6,6 +6,22 @@ import { revalidateTag } from "next/cache";
 // wrapper here — only 3 logical sections, small enough for a flat form.
 export const Faq: GlobalConfig = {
   slug: "faq-page",
+  admin: {
+    // Renders the real /faq route in an iframe next to the edit form,
+    // live-updating as fields change (before saving) via the
+    // `useLivePreview` hook on the page side — see FaqPageClient.tsx.
+    // Trying this on FAQ first since its lib/api shape is a clean 1:1
+    // match with the raw document (no media/testimonial transforms to
+    // duplicate client-side the way Home would need).
+    livePreview: {
+      url: `${process.env.NEXT_PUBLIC_SERVER_URL || "http://localhost:3000"}/faq`,
+      breakpoints: [
+        { label: "Mobile", name: "mobile", width: 375, height: 667 },
+        { label: "Tablet", name: "tablet", width: 768, height: 1024 },
+        { label: "Desktop", name: "desktop", width: 1440, height: 900 },
+      ],
+    },
+  },
   fields: [
     {
       name: "hero",
