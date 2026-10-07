@@ -2124,6 +2124,30 @@ standalone script can't run outside real request context, confirmed
 the rendered `<title>`/`<meta description>` changed, then cleared it
 back to blank and reconfirmed the real fallback copy returned).
 
+Nested Home's 10 section tabs one level deeper under a new outer
+"Content" tab, a sibling of "SEO" — matches the Content/SEO split FAQ
+already had, instead of the SEO tab sitting in the middle of an
+otherwise unrelated list of page sections. Purely a UI reorganization
+(nested `tabs` fields carry no `name`, so no data-path change;
+confirmed zero schema drift — no confirmation prompt on push, unlike
+every actual field-shape change this project has made).
+
+**Section show/hide toggles, 2026-10-07.** Added an "Appearance" tab
+to Home (sibling of Content/SEO) with one checkbox per section
+(`visibility.hero`, `visibility.collection`, etc.), all defaulting to
+`true`. Lets the client temporarily pull a section from the live
+homepage without deleting its content. `HomePageClient.tsx` wraps
+each section in `{visibility.<section> && <Section ... />}` — since
+Home renders fully static, this is evaluated once at build/
+revalidation time, not per-request, so there's no runtime cost to
+toggling a section on or off. Not added to FAQ — its 3 fields (hero,
+items, closing CTA) aren't independent, optional sections the same
+way Home's are. Verified end-to-end (toggled `collaborationsSlider`
+off, forced revalidation, confirmed the section's heading no longer
+appears in the rendered HTML — only in the hydration data payload
+passed to the client component, which is expected and correct, not a
+leak — then restored it and reconfirmed).
+
 ## Astro source audit (`giada-studio.com-handover.zip`, extracted 2026-09-29)
 
 Full analysis done, extracted source kept out of this repo (scratch

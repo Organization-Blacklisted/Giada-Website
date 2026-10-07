@@ -498,6 +498,22 @@ export interface Home {
         }[]
       | null;
   };
+  /**
+   * Temporarily hide a section from the live homepage without deleting its content. Every section is visible by default.
+   */
+  visibility?: {
+    hero?: boolean | null;
+    collection?: boolean | null;
+    categoryGrid?: boolean | null;
+    values?: boolean | null;
+    processStrip?: boolean | null;
+    collaborationsSlider?: boolean | null;
+    pressFeature?: boolean | null;
+    whyGiada?: boolean | null;
+    testimonials?: boolean | null;
+    closingCta?: boolean | null;
+    imageReel?: boolean | null;
+  };
   seo?: {
     /**
      * Leave blank to use the default site title ("Giada").
@@ -711,6 +727,21 @@ export interface HomeSelect<T extends boolean = true> {
               alt?: T;
               id?: T;
             };
+      };
+  visibility?:
+    | T
+    | {
+        hero?: T;
+        collection?: T;
+        categoryGrid?: T;
+        values?: T;
+        processStrip?: T;
+        collaborationsSlider?: T;
+        pressFeature?: T;
+        whyGiada?: T;
+        testimonials?: T;
+        closingCta?: T;
+        imageReel?: T;
       };
   seo?:
     | T

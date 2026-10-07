@@ -418,6 +418,37 @@ export const Home: GlobalConfig = {
           ],
         },
         {
+          label: "Appearance",
+          fields: [
+            {
+              name: "visibility",
+              type: "group",
+              admin: {
+                description:
+                  "Temporarily hide a section from the live homepage without deleting its content. Every section is visible by default.",
+              },
+              fields: [
+                { name: "hero", type: "checkbox", defaultValue: true, label: "Show Hero" },
+                { name: "collection", type: "checkbox", defaultValue: true, label: "Show Collection" },
+                { name: "categoryGrid", type: "checkbox", defaultValue: true, label: "Show Category Grid" },
+                { name: "values", type: "checkbox", defaultValue: true, label: "Show Core Values" },
+                { name: "processStrip", type: "checkbox", defaultValue: true, label: "Show Process Strip" },
+                {
+                  name: "collaborationsSlider",
+                  type: "checkbox",
+                  defaultValue: true,
+                  label: "Show Collaborations",
+                },
+                { name: "pressFeature", type: "checkbox", defaultValue: true, label: "Show Press Feature" },
+                { name: "whyGiada", type: "checkbox", defaultValue: true, label: "Show Why Giada" },
+                { name: "testimonials", type: "checkbox", defaultValue: true, label: "Show Testimonials" },
+                { name: "closingCta", type: "checkbox", defaultValue: true, label: "Show Closing CTA" },
+                { name: "imageReel", type: "checkbox", defaultValue: true, label: "Show Image Strip" },
+              ],
+            },
+          ],
+        },
+        {
           label: "SEO",
           fields: [
             {

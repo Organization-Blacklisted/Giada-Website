@@ -161,6 +161,25 @@ export type CollaborationsSliderSectionData = {
   slides: CollaborationSlideData[];
 };
 
+// Per-section show/hide toggles (Home's "Appearance" tab) — every key
+// defaults to visible, both at the Payload field level (`defaultValue:
+// true`) and here (`?? true`), so a section with no explicit value yet
+// (e.g. an older doc from before this field existed) stays visible
+// rather than silently disappearing.
+export type VisibilityData = {
+  hero: boolean;
+  collection: boolean;
+  categoryGrid: boolean;
+  values: boolean;
+  processStrip: boolean;
+  collaborationsSlider: boolean;
+  pressFeature: boolean;
+  whyGiada: boolean;
+  testimonials: boolean;
+  closingCta: boolean;
+  imageReel: boolean;
+};
+
 export type HomePageData = {
   hero: HeroSlideshowSectionData;
   collection: CollectionSectionData;
@@ -174,6 +193,7 @@ export type HomePageData = {
   closingCta: ClosingCtaSectionData;
   imageReel: ImageReelSectionData;
   seo: SeoData;
+  visibility: VisibilityData;
 };
 
 // Reused by both the normal cached SSR path (lib/api/home.ts's
@@ -300,6 +320,19 @@ export function mapHomeData(home: Home): HomePageData {
       metaTitle: home.seo?.metaTitle ?? "",
       metaDescription: home.seo?.metaDescription ?? "",
       ogImage: mediaUrl(home.seo?.ogImage),
+    },
+    visibility: {
+      hero: home.visibility?.hero ?? true,
+      collection: home.visibility?.collection ?? true,
+      categoryGrid: home.visibility?.categoryGrid ?? true,
+      values: home.visibility?.values ?? true,
+      processStrip: home.visibility?.processStrip ?? true,
+      collaborationsSlider: home.visibility?.collaborationsSlider ?? true,
+      pressFeature: home.visibility?.pressFeature ?? true,
+      whyGiada: home.visibility?.whyGiada ?? true,
+      testimonials: home.visibility?.testimonials ?? true,
+      closingCta: home.visibility?.closingCta ?? true,
+      imageReel: home.visibility?.imageReel ?? true,
     },
   };
 }
