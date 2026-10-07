@@ -20,6 +20,28 @@ import { revalidateTag } from "next/cache";
 // `width`/`height` on every upload via sharp), not stored twice.
 export const Home: GlobalConfig = {
   slug: "home",
+  admin: {
+    // Same Live Preview wiring as the Faq global (src/globals/Faq.ts) —
+    // see its comment for why the URL is derived from the request's own
+    // Host header rather than a hardcoded/env-based origin. Unlike FAQ,
+    // the raw document shape here doesn't match HomePageData directly
+    // (Media relationships are full objects, not flattened url/width/
+    // height strings/numbers), so the live-preview client
+    // (HomePageClient.tsx) re-runs lib/api/home.ts's own `mapHomeData`
+    // transform on every update instead of rendering the raw data as-is.
+    livePreview: {
+      url: ({ req }) => {
+        const host = req.headers.get("host") || "localhost:3000";
+        const protocol = host.startsWith("localhost") ? "http" : "https";
+        return `${protocol}://${host}/`;
+      },
+      breakpoints: [
+        { label: "Mobile", name: "mobile", width: 375, height: 667 },
+        { label: "Tablet", name: "tablet", width: 768, height: 1024 },
+        { label: "Desktop", name: "desktop", width: 1440, height: 900 },
+      ],
+    },
+  },
   fields: [
     {
       type: "tabs",
