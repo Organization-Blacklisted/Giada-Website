@@ -1986,6 +1986,38 @@ Home global itself is saved. Added matching hooks to Media that also
 revalidate the `"home"` tag, so either editing path correctly reflects
 live.
 
+**Role-based access control, 2026-10-07.** Before this, `Users` had no
+`role` field and no `access` rules at all — every created account had
+identical full access to everything, including creating/deleting other
+admin accounts. Added a `role` select field (`admin` | `editor`,
+defaults to `editor`) plus real `access` functions:
+- `create`/`delete`: admin-only.
+- `read`/`update`: admin can act on anyone; a non-admin can only
+  read/update their own record (so the admin UI's "logged in as ___"
+  still works without exposing the full user list).
+- The `role` field itself has a separate **field-level** `access.update`
+  restricting it to admins only — without this, "you can update your
+  own doc" would let an editor just edit their own user and promote
+  themselves to admin.
+- `Home` and `Media` were deliberately left with Payload's default
+  access ("any authenticated user") — editing site content is exactly
+  what the editor role is for.
+- `Users` is hidden from the `/admin` nav for non-admins (UX only, not
+  the real protection).
+
+Adding the required `role` column to a table with an existing user hit
+the same data-loss confirmation prompt as the earlier Home-global
+migrations; the existing account defaulted to `editor` post-push and
+was explicitly backfilled to `admin` so it wasn't locked out of its own
+CMS.
+
+Verified with real simulated access checks (Local API's
+`overrideAccess: false` + a specific `user`), not just by reading the
+code: a disposable test editor account was confirmed unable to create
+users, unable to see any user besides itself, unable to promote itself
+to admin via its own `role` field — while still able to read/edit Home
+content and upload Media. All test data cleaned up after.
+
 ## Astro source audit (`giada-studio.com-handover.zip`, extracted 2026-09-29)
 
 Full analysis done, extracted source kept out of this repo (scratch
