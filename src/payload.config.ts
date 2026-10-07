@@ -9,6 +9,7 @@ import { buildConfig } from "payload";
 import { Users } from "./collections/Users";
 import { Media } from "./collections/Media";
 import { Home } from "./globals/Home";
+import { Faq } from "./globals/Faq";
 
 const filename = fileURLToPath(import.meta.url);
 const dirname = path.dirname(filename);
@@ -41,7 +42,7 @@ export default buildConfig({
     },
   },
   collections: [Users, Media],
-  globals: [Home],
+  globals: [Home, Faq],
   editor: lexicalEditor(),
   secret: process.env.PAYLOAD_SECRET || "",
   typescript: {

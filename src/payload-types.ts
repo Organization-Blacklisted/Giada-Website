@@ -89,9 +89,11 @@ export interface Config {
   fallbackLocale: null;
   globals: {
     home: Home;
+    'faq-page': FaqPage;
   };
   globalsSelect: {
     home: HomeSelect<false> | HomeSelect<true>;
+    'faq-page': FaqPageSelect<false> | FaqPageSelect<true>;
   };
   locale: null;
   widgets: {
@@ -501,6 +503,33 @@ export interface Home {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "faq-page".
+ */
+export interface FaqPage {
+  id: number;
+  hero: {
+    eyebrow: string;
+    heading: string;
+  };
+  items?:
+    | {
+        question: string;
+        answer: string;
+        id?: string | null;
+      }[]
+    | null;
+  closingCta: {
+    eyebrow: string;
+    heading: string;
+    description: string;
+    linkText: string;
+    href: string;
+  };
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "home_select".
  */
 export interface HomeSelect<T extends boolean = true> {
@@ -660,6 +689,37 @@ export interface HomeSelect<T extends boolean = true> {
               alt?: T;
               id?: T;
             };
+      };
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "faq-page_select".
+ */
+export interface FaqPageSelect<T extends boolean = true> {
+  hero?:
+    | T
+    | {
+        eyebrow?: T;
+        heading?: T;
+      };
+  items?:
+    | T
+    | {
+        question?: T;
+        answer?: T;
+        id?: T;
+      };
+  closingCta?:
+    | T
+    | {
+        eyebrow?: T;
+        heading?: T;
+        description?: T;
+        linkText?: T;
+        href?: T;
       };
   updatedAt?: T;
   createdAt?: T;
