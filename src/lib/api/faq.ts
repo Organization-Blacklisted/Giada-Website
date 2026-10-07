@@ -43,10 +43,13 @@ export type FaqPageData = {
 // /admin save. Real content, seeded from what previously lived here as
 // a literal (see git history) into the "faq-page" global via a one-off
 // script, not fabricated.
+// `draft: false` is explicit, not relying on it already being the
+// default — see lib/api/home.ts's identical comment. Same reasoning,
+// now that versions.drafts is enabled on this global too.
 const getFaqFromCMS = unstable_cache(
   async (): Promise<FaqPageData> => {
     const payload = await getPayload({ config });
-    const faq = await payload.findGlobal({ slug: "faq-page" });
+    const faq = await payload.findGlobal({ slug: "faq-page", draft: false });
 
     return {
       hero: {
@@ -69,6 +72,7 @@ const getFaqFromCMS = unstable_cache(
         metaTitle: faq.seo?.metaTitle ?? "",
         metaDescription: faq.seo?.metaDescription ?? "",
         ogImage: mediaUrl(faq.seo?.ogImage),
+        noIndex: faq.seo?.noIndex ?? false,
       },
     };
   },

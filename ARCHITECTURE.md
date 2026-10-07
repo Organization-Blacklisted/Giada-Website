@@ -2148,6 +2148,57 @@ appears in the rendered HTML — only in the hydration data payload
 passed to the client component, which is expected and correct, not a
 leak — then restored it and reconfirmed).
 
+**SEO `noIndex` toggle, 2026-10-07.** Added a "Hide from search engines
+(noindex)" checkbox to both globals' SEO group, defaulting to
+unchecked. `generateMetadata` in both `page.tsx` files adds
+`robots: { index: false, follow: false }` only when checked, otherwise
+the `robots` key is omitted entirely (not set to a value) so normal
+pages get Next's default indexable behavior. Verified by actually
+toggling it on, confirming the `<meta name="robots">` tag appeared in
+the rendered HTML, then toggling it back off and confirming the tag
+disappeared.
+
+**Drafts (Published/Draft workflow), 2026-10-07.** Enabled
+`versions.drafts` on both Home and Faq globals — `/admin` now has a
+real Save Draft / Publish workflow (plus version history, free with
+the same feature) instead of every save instantly overwriting the one
+live document. `maxPerDoc`-equivalent (`versions.max: 50` for globals)
+caps version history growth. Autosave deliberately left off — only
+explicit "Save Draft" clicks create a version, not continuous
+background saves.
+
+Confirmed safe by reading Payload's own `findOne`/`update` global
+operations directly, not assumed: a `draft: false` read (what
+`lib/api/home.ts`/`lib/api/faq.ts` do for every public page load) does
+not touch the versions table *at all*, regardless of draft activity —
+it reads the main table row directly, exactly as before drafts
+existed. That row only changes on an actual publish. This means a
+public leak of draft content is structurally impossible, not just
+prevented by hook logic; the `afterChange` hooks skipping revalidation
+on draft saves (`doc._status !== "published"`) is purely a wasted-
+rebuild optimization, not a safety mechanism.
+
+One real surprise, found by testing rather than assumed from docs:
+enabling drafts on a global that already has data does **not**
+automatically mark that existing content as "published" — the main
+row's `_status` came back `"draft"` even though `draft: false` reads
+were (correctly, per the above) still serving it. `updateGlobal({...,
+draft: false, data: {}})` doesn't flip it either, since `_status` is
+an ordinary field that only changes when explicitly included in
+`data` for a non-localized config (this project has no localization
+configured, and the automatic per-locale publish-status flip in
+Payload's own `update` operation is gated on localization being
+enabled). Fixed with a one-time `updateGlobal({..., draft: false,
+data: { _status: "published" } })` call per global, verified to leave
+every other field byte-for-byte unchanged.
+
+Ran the full lifecycle against the Local API before trusting any of
+this: saved a draft change, confirmed the public (`draft: false`)
+read was unaffected, confirmed the draft (`draft: true`) read showed
+the new value, published it, confirmed the public read then picked it
+up, and reverted back to the original value — all before touching the
+real content.
+
 ## Astro source audit (`giada-studio.com-handover.zip`, extracted 2026-09-29)
 
 Full analysis done, extracted source kept out of this repo (scratch

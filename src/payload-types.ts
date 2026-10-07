@@ -524,7 +524,12 @@ export interface Home {
      */
     metaDescription?: string | null;
     ogImage?: (number | null) | Media;
+    /**
+     * Tells Google and other search engines not to list this page. Leave unchecked for normal pages.
+     */
+    noIndex?: boolean | null;
   };
+  _status?: ('draft' | 'published') | null;
   updatedAt?: string | null;
   createdAt?: string | null;
 }
@@ -562,7 +567,12 @@ export interface FaqPage {
      */
     metaDescription?: string | null;
     ogImage?: (number | null) | Media;
+    /**
+     * Tells Google and other search engines not to list this page. Leave unchecked for normal pages.
+     */
+    noIndex?: boolean | null;
   };
+  _status?: ('draft' | 'published') | null;
   updatedAt?: string | null;
   createdAt?: string | null;
 }
@@ -749,7 +759,9 @@ export interface HomeSelect<T extends boolean = true> {
         metaTitle?: T;
         metaDescription?: T;
         ogImage?: T;
+        noIndex?: T;
       };
+  _status?: T;
   updatedAt?: T;
   createdAt?: T;
   globalType?: T;
@@ -787,7 +799,9 @@ export interface FaqPageSelect<T extends boolean = true> {
         metaTitle?: T;
         metaDescription?: T;
         ogImage?: T;
+        noIndex?: T;
       };
+  _status?: T;
   updatedAt?: T;
   createdAt?: T;
   globalType?: T;

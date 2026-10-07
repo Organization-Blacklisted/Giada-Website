@@ -472,6 +472,16 @@ export const Home: GlobalConfig = {
                   },
                 },
                 { name: "ogImage", type: "upload", relationTo: "media" },
+                {
+                  name: "noIndex",
+                  type: "checkbox",
+                  defaultValue: false,
+                  label: "Hide from search engines (noindex)",
+                  admin: {
+                    description:
+                      "Tells Google and other search engines not to list this page. Leave unchecked for normal pages.",
+                  },
+                },
               ],
             },
           ],
@@ -479,6 +489,22 @@ export const Home: GlobalConfig = {
       ],
     },
   ],
+  // Drafts (2026-10-07): editing in /admin now saves to a separate
+  // versions table (Save Draft) until explicitly Published, instead of
+  // every save instantly overwriting the one live document. Confirmed
+  // by reading Payload's own findOne/update operations directly, not
+  // assumed: `draft: false` (lib/api/home.ts's public read) NEVER
+  // touches the versions table at all regardless of draft activity — it
+  // reads the main `home` row directly, same as before this existed.
+  // That row only changes on an actual Publish. So this is safe by
+  // construction: a bug in the afterChange hook below could at worst
+  // cause a stale or wasted cache revalidation, never a draft leaking
+  // to the public site. `max: 50` caps version history per doc instead
+  // of growing it unboundedly.
+  versions: {
+    drafts: true,
+    max: 50,
+  },
   hooks: {
     // Home currently renders statically (confirmed via `next build`'s
     // route table: "○ /"); every section's fetch in lib/api/home.ts
@@ -490,7 +516,16 @@ export const Home: GlobalConfig = {
     // save busts the same single "home" tag, which is exactly the cache
     // boundary the page itself uses.
     afterChange: [
-      async () => {
+      async ({ doc }) => {
+        // With drafts enabled, this hook now fires on every save
+        // (draft or publish) — only an actual publish should revalidate
+        // the public cache. Saving a draft doesn't change what's
+        // public anyway (see the `versions` comment above), so skipping
+        // here is purely to avoid a wasted ISR regen on every draft
+        // save, not a safety requirement.
+        if (doc?._status && doc._status !== "published") {
+          return;
+        }
         // `revalidateTag` throws ("Invariant: static generation store
         // missing") when called outside a real Next.js request context —
         // confirmed by running a standalone seed script that calls

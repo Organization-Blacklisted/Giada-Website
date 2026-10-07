@@ -42,10 +42,15 @@ export * from "./home-map";
 // import it directly without dragging getPayload/this file's other
 // imports into the client bundle — see home-map.ts's own comment for
 // what broke when that boundary wasn't there.
+// `draft: false` is explicit, not relying on it already being the
+// default (which it is) — this is the one line standing between
+// visitors and ever seeing someone's unpublished draft, now that
+// versions.drafts is enabled on the Home global (src/globals/Home.ts),
+// worth being unmistakable about rather than implicit.
 export const getHomeRaw = unstable_cache(
   async (): Promise<Home> => {
     const payload = await getPayload({ config });
-    return payload.findGlobal({ slug: "home" });
+    return payload.findGlobal({ slug: "home", draft: false });
   },
   ["home-raw"],
   { tags: ["home"] }

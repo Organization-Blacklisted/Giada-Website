@@ -15,6 +15,7 @@ export async function generateMetadata(): Promise<Metadata> {
     title: seo.metaTitle || DEFAULT_TITLE,
     description: seo.metaDescription || DEFAULT_DESCRIPTION,
     ...(seo.ogImage ? { openGraph: { images: [{ url: seo.ogImage }] } } : {}),
+    ...(seo.noIndex ? { robots: { index: false, follow: false } } : {}),
   };
 }
 

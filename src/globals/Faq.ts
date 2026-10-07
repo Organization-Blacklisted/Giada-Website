@@ -96,6 +96,16 @@ export const Faq: GlobalConfig = {
                   admin: { description: "Leave blank to use the default description." },
                 },
                 { name: "ogImage", type: "upload", relationTo: "media" },
+                {
+                  name: "noIndex",
+                  type: "checkbox",
+                  defaultValue: false,
+                  label: "Hide from search engines (noindex)",
+                  admin: {
+                    description:
+                      "Tells Google and other search engines not to list this page. Leave unchecked for normal pages.",
+                  },
+                },
               ],
             },
           ],
@@ -103,9 +113,24 @@ export const Faq: GlobalConfig = {
       ],
     },
   ],
+  // Drafts (2026-10-07) — same pattern and same safety reasoning as
+  // Home.ts (see its comment): `draft: false` (lib/api/faq.ts's public
+  // read) never touches the versions table regardless of draft
+  // activity, so this is safe by construction, not just by the hook
+  // below behaving correctly.
+  versions: {
+    drafts: true,
+    max: 50,
+  },
   hooks: {
     afterChange: [
-      async () => {
+      async ({ doc }) => {
+        // Only revalidate on an actual publish — see Home.ts's
+        // identical check for why this is a freshness/efficiency
+        // concern, not a safety one.
+        if (doc?._status && doc._status !== "published") {
+          return;
+        }
         try {
           revalidateTag("faq", { expire: 0 });
         } catch {

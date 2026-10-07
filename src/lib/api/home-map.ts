@@ -320,6 +320,7 @@ export function mapHomeData(home: Home): HomePageData {
       metaTitle: home.seo?.metaTitle ?? "",
       metaDescription: home.seo?.metaDescription ?? "",
       ogImage: mediaUrl(home.seo?.ogImage),
+      noIndex: home.seo?.noIndex ?? false,
     },
     visibility: {
       hero: home.visibility?.hero ?? true,
