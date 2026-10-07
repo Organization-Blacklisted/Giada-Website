@@ -2018,6 +2018,64 @@ users, unable to see any user besides itself, unable to promote itself
 to admin via its own `role` field — while still able to read/edit Home
 content and upload Media. All test data cleaned up after.
 
+**Image compression pass, 2026-10-07.** Audited every image over 100KB
+across `public/images/**` and re-encoded as WebP (quality 85, effort 6)
+at the actual max rendered size for its component (read each section's
+`sizes`/container classes rather than resizing blindly), adding a 2x
+retina margin. Skipped any file where compression showed no real
+improvement rather than applying the same settings everywhere (several
+`press-magazine-*`, `behind-the-craft-*`, and `image-bar-*` files were
+left untouched for this reason). `vision.png` was converted to
+`vision.webp` — its alpha channel was verified via `sharp().stats()` to
+be constant 255 (fully opaque) before flattening it away, a 90% size
+reduction with zero visual loss.
+
+Gallery images are served straight from `/public` (never migrated to
+Payload) so their compression took effect immediately. Every other
+compressed image — hero, category tiles, press photos, image-bar strip,
+vision — is served through Payload Media / Neon Object Storage, so
+compressing the `/public` source alone does nothing for the live site;
+each of those 9 Media docs was individually re-uploaded with the
+compressed bytes via the Local API (`payload.update()` with a new
+`file`), keeping the same doc id so every reference in the `Home`
+global stayed valid.
+
+Matching each local file to its live Media doc could not be done by
+filename or `alt` text — Payload's upload-time dedup renaming has
+scrambled filenames since the original seed (e.g. local
+`image-bar-3.webp`'s content is actually stored as `image-bar-4.webp`),
+and two unrelated docs shared the exact same `alt` string. Every mapping
+was confirmed by downloading the live file from the dev server and
+visually comparing it to the local one before writing anything.
+
+Two files ended up **larger** after the first pass: `hero-living-room`
+(819KB → 962KB) and `category-glass` (100KB → 112KB). In both cases the
+version already stored in Payload was more compressed than the stale
+local `/public` copy this session's compression ran against, so a
+quality-only, no-resize recompression regressed it. Caught by comparing
+before/after sizes per doc rather than assuming success, and fixed by
+re-deriving each from its live dimensions (hero: resized to 2560px long
+edge — a true `fill`/`sizes="100vw"` background has no fixed display
+cap, so 2x retina at common viewport widths was the bound — quality 85,
+819KB → 279KB; glass: same 1400px frame, quality dropped to 82, 100KB →
+78KB). Also confirms Payload's Local API re-encodes the main upload file
+through its own pipeline on write (final stored bytes consistently
+smaller than the buffer handed to `payload.update()`), not only the
+named `imageSizes` — not something to rely on for compression, but
+worth knowing when comparing an uploaded buffer's size to what actually
+ends up served.
+
+Separately, hit a Windows-specific file-lock issue mid-task: writing a
+sharp-processed buffer back to the exact path it was read from, in the
+same process, failed inconsistently (`EBUSY`/`EPERM`/`UNKNOWN`
+depending on the write method). Root cause was sharp/libvips' internal
+operation cache holding a live reference to the just-read source file
+even after `.toBuffer()` resolved — fixed with `sharp.cache(false)` at
+the top of the script. A genuinely unrelated orphaned second dev-server
+process (independently holding its own file-watcher locks on
+`public/images/**`) was found and killed separately during the same
+investigation; don't conflate the two if this resurfaces.
+
 ## Astro source audit (`giada-studio.com-handover.zip`, extracted 2026-09-29)
 
 Full analysis done, extracted source kept out of this repo (scratch
