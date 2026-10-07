@@ -3,12 +3,15 @@ import { revalidateTag } from "next/cache";
 
 // Full Home page CMS wiring (2026-10-06/07) — started with just Hero as a
 // working test, now extended to every section in lib/api/home.ts's
-// HomePageData. Each tab below is a separate named `group` field (tabs
-// are purely a /admin UI grouping — a large single-page form with 10
-// sections' worth of fields would be unwieldy to edit otherwise); the
-// underlying data shape is unchanged, still `home.<section>.{...}`, so
-// the mapping in lib/api/home.ts stays a thin, obvious 1:1 conversion
-// same as Hero's.
+// HomePageData. Each section is a separate named `group` field under its
+// own tab (tabs are purely a /admin UI grouping — a large single-page
+// form with 10 sections' worth of fields would be unwieldy to edit
+// otherwise); the underlying data shape is unchanged, still
+// `home.<section>.{...}`, so the mapping in lib/api/home-map.ts stays a
+// thin, obvious 1:1 conversion same as Hero's. Nested one level deeper
+// (2026-10-07): all 10 section tabs now live inside an outer "Content"
+// tab, a sibling of "SEO" — same purely-UI grouping, no data-shape
+// change, just visual separation between page content and page metadata.
 //
 // Per-image `alt`/`imageAlt` fields are kept alongside each `upload`
 // field rather than reusing the Media doc's own required `alt` field —
@@ -53,256 +56,361 @@ export const Home: GlobalConfig = {
       type: "tabs",
       tabs: [
         {
-          label: "Hero",
+          label: "Content",
           fields: [
             {
-              name: "hero",
-              type: "group",
-              fields: [
-                { name: "eyebrow", type: "text", required: true },
-                { name: "title", type: "text", required: true },
-                { name: "taglineLine1", type: "text", required: true },
-                { name: "taglineLine2", type: "text", required: true },
+              // Nested tabs — Payload supports a `tabs` field anywhere
+              // in a `fields` array, including inside another tab, and
+              // renders it as its own (second-level) tab bar. Keeps all
+              // 10 page-section tabs grouped under one outer "Content"
+              // tab, visually separate from "SEO" below — same purely-
+              // UI grouping as the outer tabs, data paths unchanged.
+              type: "tabs",
+              tabs: [
                 {
-                  name: "slides",
-                  type: "array",
-                  minRows: 1,
+                  label: "Hero",
                   fields: [
-                    { name: "image", type: "upload", relationTo: "media", required: true },
-                    { name: "alt", type: "text", required: true },
-                  ],
-                },
-              ],
-            },
-          ],
-        },
-        {
-          label: "Collection",
-          fields: [
-            {
-              name: "collection",
-              type: "group",
-              fields: [
-                { name: "image", type: "upload", relationTo: "media", required: true },
-                { name: "alt", type: "text" },
-                { name: "heading", type: "text", required: true },
-                { name: "subheading", type: "text", required: true },
-                { name: "description", type: "textarea", required: true },
-                { name: "buttonText", type: "text" },
-                { name: "buttonLink", type: "text" },
-              ],
-            },
-          ],
-        },
-        {
-          label: "Category Grid",
-          fields: [
-            {
-              name: "categoryGrid",
-              type: "group",
-              fields: [
-                { name: "eyebrow", type: "text", required: true },
-                { name: "heading", type: "text", required: true },
-                {
-                  name: "categories",
-                  type: "array",
-                  minRows: 1,
-                  fields: [
-                    { name: "title", type: "text", required: true },
-                    { name: "image", type: "upload", relationTo: "media", required: true },
-                    { name: "href", type: "text", required: true },
-                  ],
-                },
-              ],
-            },
-          ],
-        },
-        {
-          label: "Core Values",
-          fields: [
-            {
-              name: "values",
-              type: "group",
-              fields: [
-                { name: "eyebrow", type: "text", required: true },
-                { name: "heading", type: "text", required: true },
-                { name: "description", type: "textarea", required: true },
-                { name: "image", type: "upload", relationTo: "media", required: true },
-                { name: "imageAlt", type: "text", required: true },
-                {
-                  name: "items",
-                  type: "array",
-                  minRows: 1,
-                  fields: [
-                    { name: "index", type: "text", required: true },
-                    { name: "title", type: "text", required: true },
-                    { name: "text", type: "textarea", required: true },
-                  ],
-                },
-                { name: "buttonText", type: "text" },
-                { name: "buttonLink", type: "text" },
-              ],
-            },
-          ],
-        },
-        {
-          label: "Process Strip",
-          fields: [
-            {
-              name: "processStrip",
-              type: "group",
-              fields: [
-                { name: "eyebrow", type: "text", required: true },
-                { name: "heading", type: "text", required: true },
-                { name: "description", type: "textarea", required: true },
-                {
-                  name: "steps",
-                  type: "array",
-                  minRows: 1,
-                  fields: [
-                    { name: "step", type: "text", required: true },
-                    { name: "title", type: "text", required: true },
-                    { name: "body", type: "textarea", required: true },
-                  ],
-                },
-              ],
-            },
-          ],
-        },
-        {
-          label: "Collaborations",
-          fields: [
-            {
-              name: "collaborationsSlider",
-              type: "group",
-              fields: [
-                { name: "eyebrow", type: "text", required: true },
-                {
-                  name: "slides",
-                  type: "array",
-                  minRows: 1,
-                  fields: [
-                    { name: "image", type: "upload", relationTo: "media", required: true },
-                    { name: "imageAlt", type: "text", required: true },
-                    { name: "heading", type: "text", required: true },
-                    { name: "description", type: "textarea", required: true },
-                    { name: "cardImage", type: "upload", relationTo: "media", required: true },
-                    { name: "cardImageAlt", type: "text", required: true },
-                    { name: "cardTitle", type: "text", required: true },
-                    { name: "cardCaption", type: "text", required: true },
-                    { name: "buttonText", type: "text", required: true },
-                    { name: "buttonLink", type: "text", required: true },
-                  ],
-                },
-              ],
-            },
-          ],
-        },
-        {
-          label: "Press Feature",
-          fields: [
-            {
-              name: "pressFeature",
-              type: "group",
-              fields: [
-                { name: "eyebrow", type: "text", required: true },
-                { name: "heading", type: "text", required: true },
-                { name: "description", type: "textarea", required: true },
-                {
-                  name: "images",
-                  type: "array",
-                  minRows: 1,
-                  fields: [
-                    { name: "image", type: "upload", relationTo: "media", required: true },
-                    { name: "alt", type: "text", required: true },
-                  ],
-                },
-              ],
-            },
-          ],
-        },
-        {
-          label: "Why Giada",
-          fields: [
-            {
-              name: "whyGiada",
-              type: "group",
-              fields: [
-                { name: "eyebrow", type: "text", required: true },
-                { name: "heading", type: "text", required: true },
-                {
-                  name: "pillars",
-                  type: "array",
-                  minRows: 1,
-                  fields: [
-                    { name: "title", type: "text", required: true },
-                    { name: "body", type: "textarea", required: true },
-                  ],
-                },
-                { name: "image", type: "upload", relationTo: "media", required: true },
-                { name: "imageAlt", type: "text", required: true },
-              ],
-            },
-          ],
-        },
-        {
-          label: "Testimonials",
-          fields: [
-            {
-              name: "testimonials",
-              type: "group",
-              fields: [
-                { name: "eyebrow", type: "text", required: true },
-                { name: "heading", type: "text", required: true },
-                {
-                  name: "testimonials",
-                  type: "array",
-                  minRows: 1,
-                  fields: [
-                    { name: "quote", type: "textarea", required: true },
-                    { name: "name", type: "text", required: true },
-                    { name: "company", type: "text", required: true },
-                    { name: "logo", type: "upload", relationTo: "media", required: true },
                     {
-                      name: "logoInvert",
-                      type: "checkbox",
-                      defaultValue: false,
-                      admin: { description: "Invert logo to white — for dark/colored logos that need to read on a light background." },
+                      name: "hero",
+                      type: "group",
+                      fields: [
+                        { name: "eyebrow", type: "text", required: true },
+                        { name: "title", type: "text", required: true },
+                        { name: "taglineLine1", type: "text", required: true },
+                        { name: "taglineLine2", type: "text", required: true },
+                        {
+                          name: "slides",
+                          type: "array",
+                          minRows: 1,
+                          fields: [
+                            {
+                              name: "image",
+                              type: "upload",
+                              relationTo: "media",
+                              required: true,
+                            },
+                            { name: "alt", type: "text", required: true },
+                          ],
+                        },
+                      ],
                     },
                   ],
                 },
-              ],
-            },
-          ],
-        },
-        {
-          label: "Closing CTA",
-          fields: [
-            {
-              name: "closingCta",
-              type: "group",
-              fields: [
-                { name: "heading", type: "text", required: true },
-                { name: "linkText", type: "text", required: true },
-                { name: "href", type: "text", required: true },
-              ],
-            },
-          ],
-        },
-        {
-          label: "Image Strip",
-          fields: [
-            {
-              name: "imageReel",
-              type: "group",
-              fields: [
                 {
-                  name: "images",
-                  type: "array",
-                  minRows: 1,
+                  label: "Collection",
                   fields: [
-                    { name: "image", type: "upload", relationTo: "media", required: true },
-                    { name: "alt", type: "text" },
+                    {
+                      name: "collection",
+                      type: "group",
+                      fields: [
+                        {
+                          name: "image",
+                          type: "upload",
+                          relationTo: "media",
+                          required: true,
+                        },
+                        { name: "alt", type: "text" },
+                        { name: "heading", type: "text", required: true },
+                        { name: "subheading", type: "text", required: true },
+                        {
+                          name: "description",
+                          type: "textarea",
+                          required: true,
+                        },
+                        { name: "buttonText", type: "text" },
+                        { name: "buttonLink", type: "text" },
+                      ],
+                    },
+                  ],
+                },
+                {
+                  label: "Category Grid",
+                  fields: [
+                    {
+                      name: "categoryGrid",
+                      type: "group",
+                      fields: [
+                        { name: "eyebrow", type: "text", required: true },
+                        { name: "heading", type: "text", required: true },
+                        {
+                          name: "categories",
+                          type: "array",
+                          minRows: 1,
+                          fields: [
+                            { name: "title", type: "text", required: true },
+                            {
+                              name: "image",
+                              type: "upload",
+                              relationTo: "media",
+                              required: true,
+                            },
+                            { name: "href", type: "text", required: true },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
+                },
+                {
+                  label: "Core Values",
+                  fields: [
+                    {
+                      name: "values",
+                      type: "group",
+                      fields: [
+                        { name: "eyebrow", type: "text", required: true },
+                        { name: "heading", type: "text", required: true },
+                        {
+                          name: "description",
+                          type: "textarea",
+                          required: true,
+                        },
+                        {
+                          name: "image",
+                          type: "upload",
+                          relationTo: "media",
+                          required: true,
+                        },
+                        { name: "imageAlt", type: "text", required: true },
+                        {
+                          name: "items",
+                          type: "array",
+                          minRows: 1,
+                          fields: [
+                            { name: "index", type: "text", required: true },
+                            { name: "title", type: "text", required: true },
+                            { name: "text", type: "textarea", required: true },
+                          ],
+                        },
+                        { name: "buttonText", type: "text" },
+                        { name: "buttonLink", type: "text" },
+                      ],
+                    },
+                  ],
+                },
+                {
+                  label: "Process Strip",
+                  fields: [
+                    {
+                      name: "processStrip",
+                      type: "group",
+                      fields: [
+                        { name: "eyebrow", type: "text", required: true },
+                        { name: "heading", type: "text", required: true },
+                        {
+                          name: "description",
+                          type: "textarea",
+                          required: true,
+                        },
+                        {
+                          name: "steps",
+                          type: "array",
+                          minRows: 1,
+                          fields: [
+                            { name: "step", type: "text", required: true },
+                            { name: "title", type: "text", required: true },
+                            { name: "body", type: "textarea", required: true },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
+                },
+                {
+                  label: "Collaborations",
+                  fields: [
+                    {
+                      name: "collaborationsSlider",
+                      type: "group",
+                      fields: [
+                        { name: "eyebrow", type: "text", required: true },
+                        {
+                          name: "slides",
+                          type: "array",
+                          minRows: 1,
+                          fields: [
+                            {
+                              name: "image",
+                              type: "upload",
+                              relationTo: "media",
+                              required: true,
+                            },
+                            { name: "imageAlt", type: "text", required: true },
+                            { name: "heading", type: "text", required: true },
+                            {
+                              name: "description",
+                              type: "textarea",
+                              required: true,
+                            },
+                            {
+                              name: "cardImage",
+                              type: "upload",
+                              relationTo: "media",
+                              required: true,
+                            },
+                            {
+                              name: "cardImageAlt",
+                              type: "text",
+                              required: true,
+                            },
+                            { name: "cardTitle", type: "text", required: true },
+                            {
+                              name: "cardCaption",
+                              type: "text",
+                              required: true,
+                            },
+                            {
+                              name: "buttonText",
+                              type: "text",
+                              required: true,
+                            },
+                            {
+                              name: "buttonLink",
+                              type: "text",
+                              required: true,
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
+                },
+                {
+                  label: "Press Feature",
+                  fields: [
+                    {
+                      name: "pressFeature",
+                      type: "group",
+                      fields: [
+                        { name: "eyebrow", type: "text", required: true },
+                        { name: "heading", type: "text", required: true },
+                        {
+                          name: "description",
+                          type: "textarea",
+                          required: true,
+                        },
+                        {
+                          name: "images",
+                          type: "array",
+                          minRows: 1,
+                          fields: [
+                            {
+                              name: "image",
+                              type: "upload",
+                              relationTo: "media",
+                              required: true,
+                            },
+                            { name: "alt", type: "text", required: true },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
+                },
+                {
+                  label: "Why Giada",
+                  fields: [
+                    {
+                      name: "whyGiada",
+                      type: "group",
+                      fields: [
+                        { name: "eyebrow", type: "text", required: true },
+                        { name: "heading", type: "text", required: true },
+                        {
+                          name: "pillars",
+                          type: "array",
+                          minRows: 1,
+                          fields: [
+                            { name: "title", type: "text", required: true },
+                            { name: "body", type: "textarea", required: true },
+                          ],
+                        },
+                        {
+                          name: "image",
+                          type: "upload",
+                          relationTo: "media",
+                          required: true,
+                        },
+                        { name: "imageAlt", type: "text", required: true },
+                      ],
+                    },
+                  ],
+                },
+                {
+                  label: "Testimonials",
+                  fields: [
+                    {
+                      name: "testimonials",
+                      type: "group",
+                      fields: [
+                        { name: "eyebrow", type: "text", required: true },
+                        { name: "heading", type: "text", required: true },
+                        {
+                          name: "testimonials",
+                          type: "array",
+                          minRows: 1,
+                          fields: [
+                            { name: "quote", type: "textarea", required: true },
+                            { name: "name", type: "text", required: true },
+                            { name: "company", type: "text", required: true },
+                            {
+                              name: "logo",
+                              type: "upload",
+                              relationTo: "media",
+                              required: true,
+                            },
+                            {
+                              name: "logoInvert",
+                              type: "checkbox",
+                              defaultValue: false,
+                              admin: {
+                                description:
+                                  "Invert logo to white — for dark/colored logos that need to read on a light background.",
+                              },
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
+                },
+                {
+                  label: "Closing CTA",
+                  fields: [
+                    {
+                      name: "closingCta",
+                      type: "group",
+                      fields: [
+                        { name: "heading", type: "text", required: true },
+                        { name: "linkText", type: "text", required: true },
+                        { name: "href", type: "text", required: true },
+                      ],
+                    },
+                  ],
+                },
+                {
+                  label: "Image Strip",
+                  fields: [
+                    {
+                      name: "imageReel",
+                      type: "group",
+                      fields: [
+                        {
+                          name: "images",
+                          type: "array",
+                          minRows: 1,
+                          fields: [
+                            {
+                              name: "image",
+                              type: "upload",
+                              relationTo: "media",
+                              required: true,
+                            },
+                            { name: "alt", type: "text" },
+                          ],
+                        },
+                      ],
+                    },
                   ],
                 },
               ],
@@ -319,12 +427,18 @@ export const Home: GlobalConfig = {
                 {
                   name: "metaTitle",
                   type: "text",
-                  admin: { description: "Leave blank to use the default site title (\"Giada\")." },
+                  admin: {
+                    description:
+                      'Leave blank to use the default site title ("Giada").',
+                  },
                 },
                 {
                   name: "metaDescription",
                   type: "textarea",
-                  admin: { description: "Leave blank to use the default site description." },
+                  admin: {
+                    description:
+                      "Leave blank to use the default site description.",
+                  },
                 },
                 { name: "ogImage", type: "upload", relationTo: "media" },
               ],
