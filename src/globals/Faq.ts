@@ -13,8 +13,21 @@ export const Faq: GlobalConfig = {
     // Trying this on FAQ first since its lib/api shape is a clean 1:1
     // match with the raw document (no media/testimonial transforms to
     // duplicate client-side the way Home would need).
+    //
+    // Derived from the incoming request's own Host header, not a
+    // hardcoded/env-based origin — a fixed `NEXT_PUBLIC_SERVER_URL`
+    // fallback broke Live Preview on the deployed Vercel domain (the
+    // iframe tried to load the admin's *local* machine's localhost,
+    // which the production page obviously can't reach). This way the
+    // preview always points at whatever origin /admin itself is being
+    // viewed from — localhost in dev, the real domain in prod, any
+    // Vercel preview deployment — with no per-environment config needed.
     livePreview: {
-      url: `${process.env.NEXT_PUBLIC_SERVER_URL || "http://localhost:3000"}/faq`,
+      url: ({ req }) => {
+        const host = req.headers.get("host") || "localhost:3000";
+        const protocol = host.startsWith("localhost") ? "http" : "https";
+        return `${protocol}://${host}/faq`;
+      },
       breakpoints: [
         { label: "Mobile", name: "mobile", width: 375, height: 667 },
         { label: "Tablet", name: "tablet", width: 768, height: 1024 },
