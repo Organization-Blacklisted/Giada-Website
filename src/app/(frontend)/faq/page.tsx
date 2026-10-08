@@ -6,9 +6,8 @@ const DEFAULT_TITLE = "FAQ";
 const DEFAULT_DESCRIPTION =
   "Answers to the most common questions about Giada's bespoke rug service — sizing, shipping, payment, trade programme, and more.";
 
-// CMS-editable now (the "SEO" tab on the faq-page global) — these
-// constants stay as the fallback when those fields are left blank,
-// same real copy this page always had before the SEO tab existed.
+// CMS-editable now (the "SEO" tab on the faq-page global) —
+
 export async function generateMetadata(): Promise<Metadata> {
   const { seo } = await getFaqPage();
   return {

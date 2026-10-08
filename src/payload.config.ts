@@ -10,6 +10,8 @@ import { Users } from "./collections/Users";
 import { Media } from "./collections/Media";
 import { Home } from "./globals/Home";
 import { Faq } from "./globals/Faq";
+import { Gallery } from "./globals/Gallery";
+import { Contact } from "./globals/Contact";
 
 const filename = fileURLToPath(import.meta.url);
 const dirname = path.dirname(filename);
@@ -42,7 +44,7 @@ export default buildConfig({
     },
   },
   collections: [Users, Media],
-  globals: [Home, Faq],
+  globals: [Home, Faq, Gallery, Contact],
   editor: lexicalEditor(),
   secret: process.env.PAYLOAD_SECRET || "",
   typescript: {

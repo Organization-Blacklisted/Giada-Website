@@ -90,10 +90,14 @@ export interface Config {
   globals: {
     home: Home;
     'faq-page': FaqPage;
+    'gallery-page': GalleryPage;
+    'contact-page': ContactPage;
   };
   globalsSelect: {
     home: HomeSelect<false> | HomeSelect<true>;
     'faq-page': FaqPageSelect<false> | FaqPageSelect<true>;
+    'gallery-page': GalleryPageSelect<false> | GalleryPageSelect<true>;
+    'contact-page': ContactPageSelect<false> | ContactPageSelect<true>;
   };
   locale: null;
   widgets: {
@@ -578,6 +582,93 @@ export interface FaqPage {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "gallery-page".
+ */
+export interface GalleryPage {
+  id: number;
+  hero: {
+    eyebrow: string;
+    heading: string;
+    description: string;
+  };
+  items?:
+    | {
+        image: number | Media;
+        alt: string;
+        category: 'Spaces' | 'Behind the Craft';
+        id?: string | null;
+      }[]
+    | null;
+  seo?: {
+    /**
+     * Leave blank to use the default ("Gallery").
+     */
+    metaTitle?: string | null;
+    /**
+     * Leave blank to use the default description.
+     */
+    metaDescription?: string | null;
+    ogImage?: (number | null) | Media;
+    /**
+     * Tells Google and other search engines not to list this page. Leave unchecked for normal pages.
+     */
+    noIndex?: boolean | null;
+  };
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "contact-page".
+ */
+export interface ContactPage {
+  id: number;
+  hero: {
+    eyebrow: string;
+    heading: string;
+    description: string;
+  };
+  visit: {
+    eyebrow: string;
+    heading: string;
+    description: string;
+    generalContact: {
+      email: {
+        label: string;
+        value: string;
+        href: string;
+      };
+      studioHours: {
+        label: string;
+        days: string;
+        hours: string;
+      };
+      responseTime: {
+        label: string;
+        value: string;
+      };
+    };
+  };
+  seo?: {
+    /**
+     * Leave blank to use the default ("Contact").
+     */
+    metaTitle?: string | null;
+    /**
+     * Leave blank to use the default description.
+     */
+    metaDescription?: string | null;
+    ogImage?: (number | null) | Media;
+    /**
+     * Tells Google and other search engines not to list this page. Leave unchecked for normal pages.
+     */
+    noIndex?: boolean | null;
+  };
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "home_select".
  */
 export interface HomeSelect<T extends boolean = true> {
@@ -802,6 +893,93 @@ export interface FaqPageSelect<T extends boolean = true> {
         noIndex?: T;
       };
   _status?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "gallery-page_select".
+ */
+export interface GalleryPageSelect<T extends boolean = true> {
+  hero?:
+    | T
+    | {
+        eyebrow?: T;
+        heading?: T;
+        description?: T;
+      };
+  items?:
+    | T
+    | {
+        image?: T;
+        alt?: T;
+        category?: T;
+        id?: T;
+      };
+  seo?:
+    | T
+    | {
+        metaTitle?: T;
+        metaDescription?: T;
+        ogImage?: T;
+        noIndex?: T;
+      };
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "contact-page_select".
+ */
+export interface ContactPageSelect<T extends boolean = true> {
+  hero?:
+    | T
+    | {
+        eyebrow?: T;
+        heading?: T;
+        description?: T;
+      };
+  visit?:
+    | T
+    | {
+        eyebrow?: T;
+        heading?: T;
+        description?: T;
+        generalContact?:
+          | T
+          | {
+              email?:
+                | T
+                | {
+                    label?: T;
+                    value?: T;
+                    href?: T;
+                  };
+              studioHours?:
+                | T
+                | {
+                    label?: T;
+                    days?: T;
+                    hours?: T;
+                  };
+              responseTime?:
+                | T
+                | {
+                    label?: T;
+                    value?: T;
+                  };
+            };
+      };
+  seo?:
+    | T
+    | {
+        metaTitle?: T;
+        metaDescription?: T;
+        ogImage?: T;
+        noIndex?: T;
+      };
   updatedAt?: T;
   createdAt?: T;
   globalType?: T;

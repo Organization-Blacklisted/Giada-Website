@@ -1,13 +1,24 @@
-import ContactHeroSection from "@/components/sections/contact/ContactHeroSection";
-import ShowroomSection from "@/components/sections/contact/ShowroomSection";
+import type { Metadata } from "next";
+import ContactPageClient from "@/components/sections/contact/ContactPageClient";
 import { siteConfig } from "@/data/site";
-import { getContactPage } from "@/lib/api/contact";
+import { getContactPage, getContactRaw } from "@/lib/api/contact";
 
-export const metadata = {
-  title: "Contact",
-  description:
-    "Begin your bespoke project, explore a design partnership, or book a private showroom visit. Giada — Montréal & Miami.",
-};
+const DEFAULT_TITLE = "Contact";
+const DEFAULT_DESCRIPTION =
+  "Begin your bespoke project, explore a design partnership, or book a private showroom visit. Giada — Montréal & Miami.";
+
+// CMS-editable now (the "SEO" tab on the contact-page global) — these
+// constants stay as the fallback when those fields are left blank, same
+// real copy this page always had before the SEO tab existed.
+export async function generateMetadata(): Promise<Metadata> {
+  const { seo } = await getContactPage();
+  return {
+    title: seo.metaTitle || DEFAULT_TITLE,
+    description: seo.metaDescription || DEFAULT_DESCRIPTION,
+    ...(seo.ogImage ? { openGraph: { images: [{ url: seo.ogImage }] } } : {}),
+    ...(seo.noIndex ? { robots: { index: false, follow: false } } : {}),
+  };
+}
 
 // LocalBusiness JSON-LD per showroom, confirmed from the real source's
 // ContactMain.astro. Built from siteConfig.locations directly rather than
@@ -39,17 +50,12 @@ function buildLocalBusinessSchemas() {
 }
 
 export default async function ContactPage() {
-  const { hero, visit } = await getContactPage();
+  const raw = await getContactRaw();
   const localBusinessSchemas = buildLocalBusinessSchemas();
 
   return (
     <>
-      <section className="bg-white px-5 pb-0 pt-24 md:px-10 lg:px-16 lg:pt-32">
-        <div className="mx-auto max-w-6xl">
-          <ContactHeroSection {...hero} />
-          <ShowroomSection {...visit} />
-        </div>
-      </section>
+      <ContactPageClient initialData={raw} />
 
       {localBusinessSchemas.map((schema) => (
         <script key={schema["@id"]} type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }} />
