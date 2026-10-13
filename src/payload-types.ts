@@ -69,6 +69,8 @@ export interface Config {
   collections: {
     users: User;
     media: Media;
+    products: Product;
+    collaborations: Collaboration;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
@@ -78,6 +80,8 @@ export interface Config {
   collectionsSelect: {
     users: UsersSelect<false> | UsersSelect<true>;
     media: MediaSelect<false> | MediaSelect<true>;
+    products: ProductsSelect<false> | ProductsSelect<true>;
+    collaborations: CollaborationsSelect<false> | CollaborationsSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
@@ -92,12 +96,32 @@ export interface Config {
     'faq-page': FaqPage;
     'gallery-page': GalleryPage;
     'contact-page': ContactPage;
+    'products-page': ProductsPage;
+    'privacy-page': PrivacyPage;
+    'terms-page': TermsPage;
+    'shipping-page': ShippingPage;
+    'our-story-page': OurStoryPage;
+    'collaborations-page': CollaborationsPage;
+    'glass-page': GlassPage;
+    'rugs-page': RugsPage;
+    'fragments-page': FragmentsPage;
+    'of-earth-and-light-page': OfEarthAndLightPage;
   };
   globalsSelect: {
     home: HomeSelect<false> | HomeSelect<true>;
     'faq-page': FaqPageSelect<false> | FaqPageSelect<true>;
     'gallery-page': GalleryPageSelect<false> | GalleryPageSelect<true>;
     'contact-page': ContactPageSelect<false> | ContactPageSelect<true>;
+    'products-page': ProductsPageSelect<false> | ProductsPageSelect<true>;
+    'privacy-page': PrivacyPageSelect<false> | PrivacyPageSelect<true>;
+    'terms-page': TermsPageSelect<false> | TermsPageSelect<true>;
+    'shipping-page': ShippingPageSelect<false> | ShippingPageSelect<true>;
+    'our-story-page': OurStoryPageSelect<false> | OurStoryPageSelect<true>;
+    'collaborations-page': CollaborationsPageSelect<false> | CollaborationsPageSelect<true>;
+    'glass-page': GlassPageSelect<false> | GlassPageSelect<true>;
+    'rugs-page': RugsPageSelect<false> | RugsPageSelect<true>;
+    'fragments-page': FragmentsPageSelect<false> | FragmentsPageSelect<true>;
+    'of-earth-and-light-page': OfEarthAndLightPageSelect<false> | OfEarthAndLightPageSelect<true>;
   };
   locale: null;
   widgets: {
@@ -189,6 +213,67 @@ export interface Media {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "products".
+ */
+export interface Product {
+  id: number;
+  title: string;
+  /**
+   * Used for the /products/[slug] URL. Matches the real site's existing URLs.
+   */
+  slug: string;
+  category: string;
+  active?: boolean | null;
+  inStock?: boolean | null;
+  color?: string | null;
+  weavingStyle?: string | null;
+  composition?: string | null;
+  /**
+   * E.g. `9'-0" W x 12'-0" L`, `9'-0" D`, or `Made to Order`.
+   */
+  size?: string | null;
+  origin?: string | null;
+  /**
+   * Loose reference, not a real relationship — matches the real source. Known values: "of-earth-and-light", "fragments". Leave blank for none.
+   */
+  collection?: string | null;
+  description: string;
+  images?:
+    | {
+        image: number | Media;
+        id?: string | null;
+      }[]
+    | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "collaborations".
+ */
+export interface Collaboration {
+  id: number;
+  name: string;
+  /**
+   * Used for this collaboration's /collaborations/[slug] URL.
+   */
+  slug: string;
+  tagline: string;
+  active?: boolean | null;
+  heroImage: number | Media;
+  /**
+   * Shown on the listing card's hover badge ("N Pieces"). Set manually — the detail page itself shows the real, live count of products in this collection (matched by the Products collection's own `collection` field), so keep this in sync if you add or remove any.
+   */
+  productCount?: number | null;
+  /**
+   * Shown on the card as "Designed with [Name]". Bio and portrait live on this collaboration's own detail-page Global, not here.
+   */
+  designerName: string;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv".
  */
 export interface PayloadKv {
@@ -218,6 +303,14 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'media';
         value: number | Media;
+      } | null)
+    | ({
+        relationTo: 'products';
+        value: number | Product;
+      } | null)
+    | ({
+        relationTo: 'collaborations';
+        value: number | Collaboration;
       } | null);
   globalSlug?: string | null;
   user: {
@@ -317,6 +410,47 @@ export interface MediaSelect<T extends boolean = true> {
               filename?: T;
             };
       };
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "products_select".
+ */
+export interface ProductsSelect<T extends boolean = true> {
+  title?: T;
+  slug?: T;
+  category?: T;
+  active?: T;
+  inStock?: T;
+  color?: T;
+  weavingStyle?: T;
+  composition?: T;
+  size?: T;
+  origin?: T;
+  collection?: T;
+  description?: T;
+  images?:
+    | T
+    | {
+        image?: T;
+        id?: T;
+      };
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "collaborations_select".
+ */
+export interface CollaborationsSelect<T extends boolean = true> {
+  name?: T;
+  slug?: T;
+  tagline?: T;
+  active?: T;
+  heroImage?: T;
+  productCount?: T;
+  designerName?: T;
+  updatedAt?: T;
+  createdAt?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -669,6 +803,678 @@ export interface ContactPage {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "products-page".
+ */
+export interface ProductsPage {
+  id: number;
+  hero: {
+    eyebrow: string;
+    heading: string;
+  };
+  categories?:
+    | {
+        title: string;
+        image: number | Media;
+        /**
+         * E.g. "/products?category=rugs" — the full catalog/filtering behind this isn't built yet, so this just needs to point somewhere sensible.
+         */
+        href: string;
+        id?: string | null;
+      }[]
+    | null;
+  galleryCta: {
+    label: string;
+    href: string;
+  };
+  seo?: {
+    /**
+     * Leave blank to use the default ("Products").
+     */
+    metaTitle?: string | null;
+    /**
+     * Leave blank to use the default description.
+     */
+    metaDescription?: string | null;
+    ogImage?: (number | null) | Media;
+    /**
+     * Tells Google and other search engines not to list this page. Leave unchecked for normal pages.
+     */
+    noIndex?: boolean | null;
+  };
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "privacy-page".
+ */
+export interface PrivacyPage {
+  id: number;
+  hero: {
+    title: string;
+    intro: string;
+  };
+  sections?:
+    | {
+        title: string;
+        content: {
+          root: {
+            type: string;
+            children: {
+              type: any;
+              version: number;
+              [k: string]: unknown;
+            }[];
+            direction: ('ltr' | 'rtl') | null;
+            format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+            indent: number;
+            version: number;
+          };
+          [k: string]: unknown;
+        };
+        note?: string | null;
+        /**
+         * Appends the Giada Inc. contact block (email/website) after this section's content — used for the closing "Contact Us" section.
+         */
+        isContactSection?: boolean | null;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Label above the contact prompt at the bottom of the page — e.g. Shipping's real copy overrides this to "Questions about your shipment?".
+   */
+  questionLabel?: string | null;
+  /**
+   * Optional — upload a PDF version of this policy. The Download PDF button only appears on the live page once one is attached here.
+   */
+  pdfDocument?: (number | null) | Media;
+  seo?: {
+    /**
+     * Leave blank to use the default ("Privacy Policy").
+     */
+    metaTitle?: string | null;
+    /**
+     * Leave blank to use the default description.
+     */
+    metaDescription?: string | null;
+    ogImage?: (number | null) | Media;
+    /**
+     * Tells Google and other search engines not to list this page. Leave unchecked for normal pages.
+     */
+    noIndex?: boolean | null;
+  };
+  _status?: ('draft' | 'published') | null;
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "terms-page".
+ */
+export interface TermsPage {
+  id: number;
+  hero: {
+    title: string;
+    intro: string;
+  };
+  sections?:
+    | {
+        title: string;
+        content: {
+          root: {
+            type: string;
+            children: {
+              type: any;
+              version: number;
+              [k: string]: unknown;
+            }[];
+            direction: ('ltr' | 'rtl') | null;
+            format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+            indent: number;
+            version: number;
+          };
+          [k: string]: unknown;
+        };
+        note?: string | null;
+        /**
+         * Appends the Giada Inc. contact block (email/website) after this section's content — used for the closing "Contact Us" section.
+         */
+        isContactSection?: boolean | null;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Label above the contact prompt at the bottom of the page — e.g. Shipping's real copy overrides this to "Questions about your shipment?".
+   */
+  questionLabel?: string | null;
+  /**
+   * Optional — upload a PDF version of this policy. The Download PDF button only appears on the live page once one is attached here.
+   */
+  pdfDocument?: (number | null) | Media;
+  seo?: {
+    /**
+     * Leave blank to use the default ("Terms & Conditions").
+     */
+    metaTitle?: string | null;
+    /**
+     * Leave blank to use the default description.
+     */
+    metaDescription?: string | null;
+    ogImage?: (number | null) | Media;
+    /**
+     * Tells Google and other search engines not to list this page. Leave unchecked for normal pages.
+     */
+    noIndex?: boolean | null;
+  };
+  _status?: ('draft' | 'published') | null;
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "shipping-page".
+ */
+export interface ShippingPage {
+  id: number;
+  hero: {
+    title: string;
+    intro: string;
+  };
+  sections?:
+    | {
+        title: string;
+        content: {
+          root: {
+            type: string;
+            children: {
+              type: any;
+              version: number;
+              [k: string]: unknown;
+            }[];
+            direction: ('ltr' | 'rtl') | null;
+            format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+            indent: number;
+            version: number;
+          };
+          [k: string]: unknown;
+        };
+        note?: string | null;
+        /**
+         * Appends the Giada Inc. contact block (email/website) after this section's content — used for the closing "Contact Us" section.
+         */
+        isContactSection?: boolean | null;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Label above the contact prompt at the bottom of the page — e.g. Shipping's real copy overrides this to "Questions about your shipment?".
+   */
+  questionLabel?: string | null;
+  /**
+   * Optional — upload a PDF version of this policy. The Download PDF button only appears on the live page once one is attached here.
+   */
+  pdfDocument?: (number | null) | Media;
+  seo?: {
+    /**
+     * Leave blank to use the default ("Shipping Policy").
+     */
+    metaTitle?: string | null;
+    /**
+     * Leave blank to use the default description.
+     */
+    metaDescription?: string | null;
+    ogImage?: (number | null) | Media;
+    /**
+     * Tells Google and other search engines not to list this page. Leave unchecked for normal pages.
+     */
+    noIndex?: boolean | null;
+  };
+  _status?: ('draft' | 'published') | null;
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "our-story-page".
+ */
+export interface OurStoryPage {
+  id: number;
+  hero: {
+    eyebrow: string;
+    titleLine1: string;
+    titleLine2: string;
+    lead: string;
+  };
+  origin: {
+    eyebrow: string;
+    quote: string;
+    attribution: string;
+    paragraph1: string;
+    paragraph2: string;
+    /**
+     * The 4-picture grid — real source always has exactly 4.
+     */
+    images?:
+      | {
+          image: number | Media;
+          alt: string;
+          id?: string | null;
+        }[]
+      | null;
+  };
+  beliefs: {
+    eyebrow: string;
+    heading: string;
+    items?:
+      | {
+          index: string;
+          title: string;
+          text: string;
+          id?: string | null;
+        }[]
+      | null;
+    closingImage: number | Media;
+    closingImageAlt: string;
+    closingCaption: string;
+  };
+  present: {
+    eyebrow: string;
+    heading: string;
+    description: string;
+    stats?:
+      | {
+          value: string;
+          label: string;
+          id?: string | null;
+        }[]
+      | null;
+    linkLabel: string;
+    linkHref: string;
+  };
+  founders: {
+    eyebrow: string;
+    quote: string;
+    attribution: string;
+    people?:
+      | {
+          name: string;
+          role: string;
+          image: number | Media;
+          alt: string;
+          bio: string;
+          id?: string | null;
+        }[]
+      | null;
+  };
+  closingCta: {
+    eyebrow: string;
+    heading: string;
+    description: string;
+    linkText: string;
+    href: string;
+  };
+  seo?: {
+    /**
+     * Leave blank to use the default ("Our Story").
+     */
+    metaTitle?: string | null;
+    /**
+     * Leave blank to use the default description.
+     */
+    metaDescription?: string | null;
+    ogImage?: (number | null) | Media;
+    /**
+     * Tells Google and other search engines not to list this page. Leave unchecked for normal pages.
+     */
+    noIndex?: boolean | null;
+  };
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "collaborations-page".
+ */
+export interface CollaborationsPage {
+  id: number;
+  hero: {
+    eyebrow: string;
+    heading: string;
+    subheadline: string;
+  };
+  closingCta: {
+    eyebrow: string;
+    heading: string;
+    description: string;
+  };
+  seo?: {
+    /**
+     * Leave blank to use the default ("Collaborations").
+     */
+    metaTitle?: string | null;
+    /**
+     * Leave blank to use the default description.
+     */
+    metaDescription?: string | null;
+    ogImage?: (number | null) | Media;
+    /**
+     * Tells Google and other search engines not to list this page. Leave unchecked for normal pages.
+     */
+    noIndex?: boolean | null;
+  };
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "glass-page".
+ */
+export interface GlassPage {
+  id: number;
+  hero: {
+    eyebrow: string;
+    heading: string;
+    lead: string;
+    ctaLabel: string;
+    badgeLabel: string;
+    /**
+     * The 3-image triptych below the hero text — always exactly 3.
+     */
+    images?:
+      | {
+          image: number | Media;
+          alt: string;
+          id?: string | null;
+        }[]
+      | null;
+  };
+  material: {
+    eyebrow: string;
+    heading: string;
+    pullQuote: string;
+    paragraph1: string;
+    paragraph2: string;
+  };
+  feature: {
+    eyebrow: string;
+    heading: string;
+    description: string;
+    image: number | Media;
+    imageAlt: string;
+  };
+  applications: {
+    eyebrow: string;
+    heading: string;
+    description: string;
+    items?:
+      | {
+          label: string;
+          body: string;
+          id?: string | null;
+        }[]
+      | null;
+  };
+  gallery: {
+    eyebrow: string;
+    heading: string;
+    description: string;
+    items?:
+      | {
+          image: number | Media;
+          alt: string;
+          eyebrow: string;
+          title: string;
+          id?: string | null;
+        }[]
+      | null;
+  };
+  process: {
+    eyebrow: string;
+    heading: string;
+    steps?:
+      | {
+          title: string;
+          body: string;
+          id?: string | null;
+        }[]
+      | null;
+  };
+  technicalSpecs: {
+    eyebrow: string;
+    heading: string;
+    description: string;
+    specs?:
+      | {
+          label: string;
+          value: string;
+          id?: string | null;
+        }[]
+      | null;
+  };
+  closingCta: {
+    eyebrow: string;
+    heading: string;
+    description: string;
+    linkText: string;
+    image: number | Media;
+    imageAlt: string;
+  };
+  seo?: {
+    /**
+     * Leave blank to use the default ("Textile in Glass").
+     */
+    metaTitle?: string | null;
+    /**
+     * Leave blank to use the default description.
+     */
+    metaDescription?: string | null;
+    ogImage?: (number | null) | Media;
+    /**
+     * Tells Google and other search engines not to list this page. Leave unchecked for normal pages.
+     */
+    noIndex?: boolean | null;
+  };
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "rugs-page".
+ */
+export interface RugsPage {
+  id: number;
+  hero: {
+    eyebrow: string;
+    heading: string;
+    description: string;
+  };
+  closingCta: {
+    eyebrow: string;
+    heading: string;
+    description: string;
+  };
+  seo?: {
+    /**
+     * Leave blank to use the default ("Rugs").
+     */
+    metaTitle?: string | null;
+    /**
+     * Leave blank to use the default description.
+     */
+    metaDescription?: string | null;
+    ogImage?: (number | null) | Media;
+    /**
+     * Tells Google and other search engines not to list this page. Leave unchecked for normal pages.
+     */
+    noIndex?: boolean | null;
+  };
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
+ * Ryan Saghian's bespoke collaboration page — /collaborations/fragments.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "fragments-page".
+ */
+export interface FragmentsPage {
+  id: number;
+  hero: {
+    eyebrow: string;
+    headline: string;
+    paragraph: string;
+    /**
+     * Full-bleed textured background behind the whole hero.
+     */
+    backdropImage: number | Media;
+    /**
+     * The portrait + mosaic cutout (transparent background) placed on top of the backdrop.
+     */
+    cutoutImage: number | Media;
+    /**
+     * The "Unveiling at" panel's lines (e.g. venue, then date | city).
+     */
+    unveilingLines?:
+      | {
+          line: string;
+          id?: string | null;
+        }[]
+      | null;
+  };
+  /**
+   * "The Artist Behind The Collection" section.
+   */
+  artist: {
+    eyebrow: string;
+    name: string;
+    subheadline: string;
+    /**
+     * First block of bio copy (runs tight, no gap, above the visual break before group 2).
+     */
+    bioParagraphGroup1: string;
+    /**
+     * Second block of bio copy (runs tight internally, with one line-height's gap above it).
+     */
+    bioParagraphGroup2: string;
+    portrait: number | Media;
+  };
+  /**
+   * "The Inspiration" section — heading, auto-scrolling card gallery, pull quote.
+   */
+  inspiration: {
+    eyebrow: string;
+    heading: string;
+    paragraph: string;
+    /**
+     * Exactly 6 — the gallery loops this set three times for the seamless scroll.
+     */
+    cards?:
+      | {
+          title: string;
+          caption: string;
+          image: number | Media;
+          id?: string | null;
+        }[]
+      | null;
+    quote: string;
+    quoteAttribution: string;
+  };
+  /**
+   * "When Memories Take Form" section — heading + 8 staggered decorative strips.
+   */
+  memories: {
+    eyebrow: string;
+    heading: string;
+    paragraph: string;
+    /**
+     * Exactly 8, in the same fixed staggered layout every time — position and size are baked into the page design, not editable here. Only the image and alt text for each of the 8 slots change.
+     */
+    strips?:
+      | {
+          image: number | Media;
+          alt: string;
+          id?: string | null;
+        }[]
+      | null;
+  };
+  /**
+   * "A Meeting Of Two Worlds" section — text + two side-by-side photos.
+   */
+  meeting: {
+    eyebrow: string;
+    heading: string;
+    subheadline: string;
+    paragraph: string;
+    imageLeft: number | Media;
+    imageRight: number | Media;
+  };
+  /**
+   * The page's closing call-to-action banner.
+   */
+  closingCta: {
+    heading: string;
+    paragraph: string;
+    linkText: string;
+  };
+  seo?: {
+    /**
+     * Leave blank to use the default ("Fragments").
+     */
+    metaTitle?: string | null;
+    /**
+     * Leave blank to use the hero paragraph as the default description.
+     */
+    metaDescription?: string | null;
+    ogImage?: (number | null) | Media;
+    /**
+     * Tells Google and other search engines not to list this page. Leave unchecked for normal pages.
+     */
+    noIndex?: boolean | null;
+  };
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
+ * Of Earth and Light's detail page content — /collaborations/of-earth-and-light.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "of-earth-and-light-page".
+ */
+export interface OfEarthAndLightPage {
+  id: number;
+  /**
+   * Full statement copy shown below the hero.
+   */
+  statement: {
+    description: string;
+  };
+  /**
+   * The designer bio section. Name itself lives on the card (Collections → Collaborations) — only bio/portrait live here.
+   */
+  designer: {
+    bio: string;
+    portrait: number | Media;
+  };
+  seo?: {
+    /**
+     * Leave blank to use the default ("Of Earth and Light").
+     */
+    metaTitle?: string | null;
+    /**
+     * Leave blank to use the card's tagline as the default description.
+     */
+    metaDescription?: string | null;
+    ogImage?: (number | null) | Media;
+    /**
+     * Tells Google and other search engines not to list this page. Leave unchecked for normal pages.
+     */
+    noIndex?: boolean | null;
+  };
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "home_select".
  */
 export interface HomeSelect<T extends boolean = true> {
@@ -971,6 +1777,546 @@ export interface ContactPageSelect<T extends boolean = true> {
                     value?: T;
                   };
             };
+      };
+  seo?:
+    | T
+    | {
+        metaTitle?: T;
+        metaDescription?: T;
+        ogImage?: T;
+        noIndex?: T;
+      };
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "products-page_select".
+ */
+export interface ProductsPageSelect<T extends boolean = true> {
+  hero?:
+    | T
+    | {
+        eyebrow?: T;
+        heading?: T;
+      };
+  categories?:
+    | T
+    | {
+        title?: T;
+        image?: T;
+        href?: T;
+        id?: T;
+      };
+  galleryCta?:
+    | T
+    | {
+        label?: T;
+        href?: T;
+      };
+  seo?:
+    | T
+    | {
+        metaTitle?: T;
+        metaDescription?: T;
+        ogImage?: T;
+        noIndex?: T;
+      };
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "privacy-page_select".
+ */
+export interface PrivacyPageSelect<T extends boolean = true> {
+  hero?:
+    | T
+    | {
+        title?: T;
+        intro?: T;
+      };
+  sections?:
+    | T
+    | {
+        title?: T;
+        content?: T;
+        note?: T;
+        isContactSection?: T;
+        id?: T;
+      };
+  questionLabel?: T;
+  pdfDocument?: T;
+  seo?:
+    | T
+    | {
+        metaTitle?: T;
+        metaDescription?: T;
+        ogImage?: T;
+        noIndex?: T;
+      };
+  _status?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "terms-page_select".
+ */
+export interface TermsPageSelect<T extends boolean = true> {
+  hero?:
+    | T
+    | {
+        title?: T;
+        intro?: T;
+      };
+  sections?:
+    | T
+    | {
+        title?: T;
+        content?: T;
+        note?: T;
+        isContactSection?: T;
+        id?: T;
+      };
+  questionLabel?: T;
+  pdfDocument?: T;
+  seo?:
+    | T
+    | {
+        metaTitle?: T;
+        metaDescription?: T;
+        ogImage?: T;
+        noIndex?: T;
+      };
+  _status?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "shipping-page_select".
+ */
+export interface ShippingPageSelect<T extends boolean = true> {
+  hero?:
+    | T
+    | {
+        title?: T;
+        intro?: T;
+      };
+  sections?:
+    | T
+    | {
+        title?: T;
+        content?: T;
+        note?: T;
+        isContactSection?: T;
+        id?: T;
+      };
+  questionLabel?: T;
+  pdfDocument?: T;
+  seo?:
+    | T
+    | {
+        metaTitle?: T;
+        metaDescription?: T;
+        ogImage?: T;
+        noIndex?: T;
+      };
+  _status?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "our-story-page_select".
+ */
+export interface OurStoryPageSelect<T extends boolean = true> {
+  hero?:
+    | T
+    | {
+        eyebrow?: T;
+        titleLine1?: T;
+        titleLine2?: T;
+        lead?: T;
+      };
+  origin?:
+    | T
+    | {
+        eyebrow?: T;
+        quote?: T;
+        attribution?: T;
+        paragraph1?: T;
+        paragraph2?: T;
+        images?:
+          | T
+          | {
+              image?: T;
+              alt?: T;
+              id?: T;
+            };
+      };
+  beliefs?:
+    | T
+    | {
+        eyebrow?: T;
+        heading?: T;
+        items?:
+          | T
+          | {
+              index?: T;
+              title?: T;
+              text?: T;
+              id?: T;
+            };
+        closingImage?: T;
+        closingImageAlt?: T;
+        closingCaption?: T;
+      };
+  present?:
+    | T
+    | {
+        eyebrow?: T;
+        heading?: T;
+        description?: T;
+        stats?:
+          | T
+          | {
+              value?: T;
+              label?: T;
+              id?: T;
+            };
+        linkLabel?: T;
+        linkHref?: T;
+      };
+  founders?:
+    | T
+    | {
+        eyebrow?: T;
+        quote?: T;
+        attribution?: T;
+        people?:
+          | T
+          | {
+              name?: T;
+              role?: T;
+              image?: T;
+              alt?: T;
+              bio?: T;
+              id?: T;
+            };
+      };
+  closingCta?:
+    | T
+    | {
+        eyebrow?: T;
+        heading?: T;
+        description?: T;
+        linkText?: T;
+        href?: T;
+      };
+  seo?:
+    | T
+    | {
+        metaTitle?: T;
+        metaDescription?: T;
+        ogImage?: T;
+        noIndex?: T;
+      };
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "collaborations-page_select".
+ */
+export interface CollaborationsPageSelect<T extends boolean = true> {
+  hero?:
+    | T
+    | {
+        eyebrow?: T;
+        heading?: T;
+        subheadline?: T;
+      };
+  closingCta?:
+    | T
+    | {
+        eyebrow?: T;
+        heading?: T;
+        description?: T;
+      };
+  seo?:
+    | T
+    | {
+        metaTitle?: T;
+        metaDescription?: T;
+        ogImage?: T;
+        noIndex?: T;
+      };
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "glass-page_select".
+ */
+export interface GlassPageSelect<T extends boolean = true> {
+  hero?:
+    | T
+    | {
+        eyebrow?: T;
+        heading?: T;
+        lead?: T;
+        ctaLabel?: T;
+        badgeLabel?: T;
+        images?:
+          | T
+          | {
+              image?: T;
+              alt?: T;
+              id?: T;
+            };
+      };
+  material?:
+    | T
+    | {
+        eyebrow?: T;
+        heading?: T;
+        pullQuote?: T;
+        paragraph1?: T;
+        paragraph2?: T;
+      };
+  feature?:
+    | T
+    | {
+        eyebrow?: T;
+        heading?: T;
+        description?: T;
+        image?: T;
+        imageAlt?: T;
+      };
+  applications?:
+    | T
+    | {
+        eyebrow?: T;
+        heading?: T;
+        description?: T;
+        items?:
+          | T
+          | {
+              label?: T;
+              body?: T;
+              id?: T;
+            };
+      };
+  gallery?:
+    | T
+    | {
+        eyebrow?: T;
+        heading?: T;
+        description?: T;
+        items?:
+          | T
+          | {
+              image?: T;
+              alt?: T;
+              eyebrow?: T;
+              title?: T;
+              id?: T;
+            };
+      };
+  process?:
+    | T
+    | {
+        eyebrow?: T;
+        heading?: T;
+        steps?:
+          | T
+          | {
+              title?: T;
+              body?: T;
+              id?: T;
+            };
+      };
+  technicalSpecs?:
+    | T
+    | {
+        eyebrow?: T;
+        heading?: T;
+        description?: T;
+        specs?:
+          | T
+          | {
+              label?: T;
+              value?: T;
+              id?: T;
+            };
+      };
+  closingCta?:
+    | T
+    | {
+        eyebrow?: T;
+        heading?: T;
+        description?: T;
+        linkText?: T;
+        image?: T;
+        imageAlt?: T;
+      };
+  seo?:
+    | T
+    | {
+        metaTitle?: T;
+        metaDescription?: T;
+        ogImage?: T;
+        noIndex?: T;
+      };
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "rugs-page_select".
+ */
+export interface RugsPageSelect<T extends boolean = true> {
+  hero?:
+    | T
+    | {
+        eyebrow?: T;
+        heading?: T;
+        description?: T;
+      };
+  closingCta?:
+    | T
+    | {
+        eyebrow?: T;
+        heading?: T;
+        description?: T;
+      };
+  seo?:
+    | T
+    | {
+        metaTitle?: T;
+        metaDescription?: T;
+        ogImage?: T;
+        noIndex?: T;
+      };
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "fragments-page_select".
+ */
+export interface FragmentsPageSelect<T extends boolean = true> {
+  hero?:
+    | T
+    | {
+        eyebrow?: T;
+        headline?: T;
+        paragraph?: T;
+        backdropImage?: T;
+        cutoutImage?: T;
+        unveilingLines?:
+          | T
+          | {
+              line?: T;
+              id?: T;
+            };
+      };
+  artist?:
+    | T
+    | {
+        eyebrow?: T;
+        name?: T;
+        subheadline?: T;
+        bioParagraphGroup1?: T;
+        bioParagraphGroup2?: T;
+        portrait?: T;
+      };
+  inspiration?:
+    | T
+    | {
+        eyebrow?: T;
+        heading?: T;
+        paragraph?: T;
+        cards?:
+          | T
+          | {
+              title?: T;
+              caption?: T;
+              image?: T;
+              id?: T;
+            };
+        quote?: T;
+        quoteAttribution?: T;
+      };
+  memories?:
+    | T
+    | {
+        eyebrow?: T;
+        heading?: T;
+        paragraph?: T;
+        strips?:
+          | T
+          | {
+              image?: T;
+              alt?: T;
+              id?: T;
+            };
+      };
+  meeting?:
+    | T
+    | {
+        eyebrow?: T;
+        heading?: T;
+        subheadline?: T;
+        paragraph?: T;
+        imageLeft?: T;
+        imageRight?: T;
+      };
+  closingCta?:
+    | T
+    | {
+        heading?: T;
+        paragraph?: T;
+        linkText?: T;
+      };
+  seo?:
+    | T
+    | {
+        metaTitle?: T;
+        metaDescription?: T;
+        ogImage?: T;
+        noIndex?: T;
+      };
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "of-earth-and-light-page_select".
+ */
+export interface OfEarthAndLightPageSelect<T extends boolean = true> {
+  statement?:
+    | T
+    | {
+        description?: T;
+      };
+  designer?:
+    | T
+    | {
+        bio?: T;
+        portrait?: T;
       };
   seo?:
     | T

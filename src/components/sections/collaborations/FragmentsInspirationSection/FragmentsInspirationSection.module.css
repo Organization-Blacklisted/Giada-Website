@@ -1,0 +1,44 @@
+/*
+  Structural styles only — the scroll animation itself is driven by GSAP
+  (see FragmentsInspirationSection.tsx), same split as
+  ImageReelSection.module.css (CSS Module @keyframes weren't actually
+  applying under this project's Turbopack build).
+*/
+
+/* Breaks out of the section's own Container to span the full viewport. */
+.wrap {
+  width: 100vw;
+  margin-left: calc(50% - 50vw);
+}
+
+.reel {
+  width: 100%;
+  overflow: hidden;
+}
+
+.track {
+  display: flex;
+  width: max-content;
+  will-change: transform;
+}
+
+/* Figma positions each 350px card 370px apart (370-350=20px) — a real
+   gap, not cards sitting flush. Expressed as margin-right on every item
+   (not `gap` on .track) so each item consistently owns 370px of track
+   space: with 6 unique cards tripled for the seamless loop, that keeps
+   each third of the track at EXACTLY the same width (6 x 370 = 2220px).
+   A flex `gap` instead would only apply between the 18 items as a flat
+   whole, throwing that even division off by a few px and making the
+   GSAP xPercent: -33.333 loop (which assumes exact thirds) visibly
+   stutter/snap at the restart point every cycle. */
+.item {
+  position: relative;
+  flex: 0 0 350px;
+  margin-right: 20px;
+}
+
+@media (max-width: 768px) {
+  .item {
+    flex-basis: 78vw;
+  }
+}

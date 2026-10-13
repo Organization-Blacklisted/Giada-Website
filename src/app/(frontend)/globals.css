@@ -104,6 +104,33 @@ h3 {
 }
 
 /*
+ * Collaboration detail hero's "Scroll to explore" indicator — ported
+ * from components/collaborations/CollaborationDetail.astro's own
+ * <style> block (scoped there, global here since this project has no
+ * per-component scoped-style mechanism). `prefers-reduced-motion` guard
+ * matches the real source exactly.
+ */
+@keyframes scrollDown {
+  0%,
+  100% {
+    opacity: 0.5;
+    transform: translateY(0);
+  }
+  50% {
+    opacity: 1;
+    transform: translateY(4px);
+  }
+}
+.scroll-down-arrow {
+  animation: scrollDown 1.6s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .scroll-down-arrow {
+    animation: none;
+  }
+}
+
+/*
  * Scroll reveal — pairs with components/ui/ScrollReveal (sets
  * .is-visible via IntersectionObserver, one entry per [data-reveal]
  * element, no stagger). Confirmed real from the source — matches

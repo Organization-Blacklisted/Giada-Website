@@ -8,10 +8,22 @@ import { buildConfig } from "payload";
 
 import { Users } from "./collections/Users";
 import { Media } from "./collections/Media";
+import { Products as ProductsCollection } from "./collections/Products";
+import { Collaborations as CollaborationsCollection } from "./collections/Collaborations";
 import { Home } from "./globals/Home";
 import { Faq } from "./globals/Faq";
 import { Gallery } from "./globals/Gallery";
 import { Contact } from "./globals/Contact";
+import { Products } from "./globals/Products";
+import { Privacy } from "./globals/Privacy";
+import { Terms } from "./globals/Terms";
+import { Shipping } from "./globals/Shipping";
+import { OurStory } from "./globals/OurStory";
+import { Collaborations } from "./globals/Collaborations";
+import { Glass } from "./globals/Glass";
+import { Rugs } from "./globals/Rugs";
+import { FragmentsPage } from "./globals/FragmentsPage";
+import { OfEarthAndLightPage } from "./globals/OfEarthAndLightPage";
 
 const filename = fileURLToPath(import.meta.url);
 const dirname = path.dirname(filename);
@@ -41,10 +53,15 @@ export default buildConfig({
         // only the login screen was asked for.
         Logo: "@/components/admin/Logo#Logo",
       },
+      // Not a real context provider — just the one place guaranteed to
+      // render on every admin page, used to load a small CSS fix (see
+      // AdminStyles.tsx) for a tabs field with many tabs falling back to
+      // the browser's default scrollbar.
+      providers: ["@/components/admin/AdminStyles#AdminStyles"],
     },
   },
-  collections: [Users, Media],
-  globals: [Home, Faq, Gallery, Contact],
+  collections: [Users, Media, ProductsCollection, CollaborationsCollection],
+  globals: [Home, Faq, Gallery, Contact, Products, Privacy, Terms, Shipping, OurStory, Collaborations, Glass, Rugs, FragmentsPage, OfEarthAndLightPage],
   editor: lexicalEditor(),
   secret: process.env.PAYLOAD_SECRET || "",
   typescript: {
