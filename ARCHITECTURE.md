@@ -2199,6 +2199,145 @@ the new value, published it, confirmed the public read then picked it
 up, and reverted back to the original value — all before touching the
 real content.
 
+**Gallery, Contact, Products wired to Payload CMS, 2026-10-07/08.**
+Same full pattern as Home/Faq from the start this time (Content/SEO
+tabs with nested section tabs, Live Preview, split `<page>-map.ts`
+modules for the client-safe transform) rather than adding each piece
+incrementally. All three new globals (`gallery-page`, `contact-page`,
+`products-page`) follow the exact same shape.
+
+Contact's showroom `locations` deliberately stayed OUTSIDE the CMS,
+sourced from `siteConfig` as before — that data is shared with the
+Footer and the page's own LocalBusiness JSON-LD schema (which needs
+region/postalCode/country fields this page's own content shape doesn't
+have). Moving it into the CMS would mean either duplicating it or
+restructuring how Footer/schema generation read it — a separate,
+bigger decision than wiring up this page's own editorial copy. If it's
+ever made CMS-editable, the right shape is a dedicated Locations/Site
+Settings global that Footer, Contact, and the schema all read from the
+same source, not a field added to the Contact page specifically.
+
+**Products scope investigation, 2026-10-08.** Before wiring up
+`/products`, checked both the real Astro source and the actual live
+site (giada-studio.com) to confirm what "Products" really covers —
+found the real scope is much bigger than this project's current page:
+
+- The live `/products` page is genuinely just a 2-card picker (Rugs/
+  Glass) — matches what this project already had, confirmed by
+  fetching the real live page directly.
+- `/products?category=rugs` on the live site doesn't actually filter
+  anything — it just reshows the same 2-card picker. Pre-existing gap
+  on the real site, not something introduced here.
+- The real Astro source has **75 real rug products** (`src/assets/
+  data/products/*.json`), each with title, size, color, composition,
+  weaving style, 3 images, description, in-stock status, and a
+  `collection` field (64 "none", 9 "of-earth-and-light", 2 "Traverse"
+  — the Traverse name matches the open "Traverse collection" question
+  from the original Astro source audit above). Individual product
+  pages ARE live and fully functional (confirmed by fetching `/
+  products/arrow-band` directly — real "Cadence" rug, real spec data)
+  — they're just not linked from anywhere discoverable, since the
+  category listing doesn't actually filter.
+- `/glass` is a separate, substantial (476-line source) "Coming Soon"
+  landing page — hero, material explanation, a 4-step design process,
+  technical specs, "Register Interest" CTA — not a product catalog at
+  all, and not built in this project yet in any form.
+
+Given the size gap, only the existing simple picker page was wired to
+Payload for now (seeded from the same Media docs Home's categoryGrid
+already uses — ids 5/6, "Rugs"/"Glass" — not re-uploaded as
+duplicates). The full 75-product Rugs catalog (needs a real Products
+**collection**, not a global — 75+ individual items — plus rebuilding
+the currently-TODO `[slug]/page.tsx` detail page and the category
+filter listing) and the Glass landing page (an entirely new page, not
+a CMS-wiring task) are both real, confirmed, but explicitly deferred —
+scope to be decided later, not started.
+
+**Products collection, Rugs catalog, and Glass landing page built,
+2026-10-09 through 2026-10-13.** The deferral above was resolved: a
+real `products` Collection now holds all 75 items (title, size, color,
+composition, weaving style, images, description, in-stock status, and
+the loose `collection` string field used to associate a product with a
+Collaboration by slug — not a real relationship field, same reasoning
+as other loose string references in this project). `/rugs` is the full
+filterable/searchable catalog listing, `/products/[slug]` is a real
+detail page per product (`ProductDetail`/`ProductGallery`), and `/glass`
+is the separate "Coming Soon" landing page, built from the real
+Astro source's own copy.
+
+`/rugs`'s filter panel got a mobile-specific redesign: a full-screen
+off-canvas drawer (slides in from the right, dimmed backdrop, scroll-
+locked via the same fixed-position technique as `layouts/Header`'s
+mobile nav) with **staged** selections — checkboxes build up a pending
+filter set and only apply to the grid when a sticky "Show N Pieces"
+button (live match count) is tapped, rather than refiltering the list
+on every tap the way the desktop dropdown still does. Desktop is
+unchanged. Also fixed, same session: a `flex-wrap` + `justify-between`
+row collapses a lone wrapped flex item to the line's start instead of
+staying right-aligned (caused the Filters button to drift left once
+active-filter chips pushed the row onto two lines) — fixed with
+`ml-auto` on that group rather than restructuring the row; and the
+active-filter chips render as a single horizontally-scrollable row
+(`overflow-x-auto`, scrollbar hidden the same way `ProductGallery`'s
+thumbnail strip does it) instead of `flex-wrap`, so many active filters
+read as a swipeable strip instead of growing the header taller.
+
+**Collaborations moved from a per-document bolt-on to dedicated page
+Globals, 2026-10-13.** Fragments (Ryan Saghian)'s bespoke one-off page
+was originally built as an optional `customHero` group on the
+`collaborations` Collection — wrong call, confirmed by the client
+noticing it directly: Payload shows a Collection's fields on every
+document of that Collection regardless of whether a given document
+uses them, so "Of Earth and Light" (the other, standard-template
+collaboration) showed a pile of empty Fragments-only fields
+(Artist/Inspiration/Memories/Meeting/Closing CTA) with no clean way to
+hide them. Fixed by giving each collaboration's actual page content its
+own Global — `FragmentsPage` (bespoke) and `OfEarthAndLightPage`
+(standard template's statement + designer bio/portrait) — same pattern
+as every other one-off page in this project (Home, Our Story, Privacy,
+etc.). The `collaborations` Collection itself was pared back to
+**card-only** fields (name, slug, tagline, active, hero image, product
+count, designer name) — exactly what the `/collaborations` listing
+card shows, nothing more — so every document's admin form is now
+identical and fully used, with no required-but-unread fields hanging
+around because a *different* document happened to need them.
+
+**First scoped production push, 2026-10-13: Collaborations + Fragments
++ Of Earth and Light only.** This project's local dev server and the
+Vercel deployment share **one** Neon database (confirmed directly from
+the Vercel project's env var values, not assumed) — Payload's postgres
+adapter only auto-pushes schema when `NODE_ENV !== 'production'`
+(confirmed by reading `@payloadcms/db-postgres`'s `connect.js`
+directly), so every schema change made via local `npm run dev` this
+whole project has been pushing straight to the live database in real
+time, with no migration files ever created. That means a `git push` to
+`main` was never actually gated on a schema migration step — the
+database already matched before the code went out.
+
+What it *did* require: `payload.config.ts`/`payload-types.ts` register
+every Collection/Global in one shared file, so there's no way to commit
+"just Collaborations" without also registering Glass, Rugs, Our Story,
+Privacy, Terms, Shipping, and the Products hub page in the same push
+(all separately uncommitted, unrelated work-in-progress at the time).
+Resolved by pushing the full config as one unit but adding
+`admin.hidden: true` to the Globals whose frontend wasn't shipping yet
+— they exist in the database and are schema-valid, just excluded from
+the Payload admin nav until their own page ships (removing that one
+line is the entire "reveal" step later). The corresponding frontend
+page files for those features were simply left out of the git
+commit/push entirely (not hidden — the routes don't exist in that
+deploy at all), confirmed by stashing every unstaged/untracked change
+(`git stash push --keep-index --include-untracked`) and running a full
+`tsc`/`eslint`/`next build` against the exact staged-only tree before
+committing, to verify what Vercel would actually receive — not just
+what the full local working tree happened to build.
+
+One real dependency this surfaced: Collaborations' detail pages can't
+be fully isolated from the Products work, since each collaboration's
+"Selected Works" grid and the individual product pages it links to both
+depend on the `products` Collection. The full `/rugs` catalog *listing*
+page has no such dependency and was held back cleanly.
+
 ## Astro source audit (`giada-studio.com-handover.zip`, extracted 2026-09-29)
 
 Full analysis done, extracted source kept out of this repo (scratch
