@@ -1,3 +1,4 @@
+import Image from "next/image";
 import type { FragmentsHeroSectionProps } from "./FragmentsHeroSection.types";
 
 // Bespoke, one-off hero built from a Figma design for the Fragments
@@ -6,17 +7,23 @@ import type { FragmentsHeroSectionProps } from "./FragmentsHeroSection.types";
 //
 // Current structure (after many iterations — see git history for the
 // full back-and-forth on the background approach):
-// - hero-backdrop.png (a plain textured wall photo, no subject) is a
-//   CSS background-image on the outer <section>, behind everything —
-//   anchored bg-left on mobile/narrow screens, bg-center from lg up.
+// - hero-backdrop.png (a plain textured wall photo, no subject) sits
+//   behind everything as an absolutely-positioned <Image fill> — a CSS
+//   background-image originally, switched because next/image can't
+//   intercept a plain url() and that was serving a raw, uncompressed
+//   2.3MB PNG to every visitor with zero resizing. object-cover
+//   object-left lg:object-center reproduces the original bg-cover
+//   bg-left lg:bg-center exactly. Needs its sibling content wrapper divs
+//   to be `relative z-10` (see below) — an absolutely-positioned,
+//   z-index:auto element otherwise paints ABOVE static in-flow content
+//   per the CSS stacking order, which would hide the text behind it.
 // - hero-right-panel.png (Ryan + the tile mosaic, transparent elsewhere)
-//   is a separate plain <img>, not part of that background: centered
-//   above the text on mobile, anchored bottom-right on desktop via
-//   w-[56.35vw] (1082/1920, the image's real width over the Figma
-//   reference width) so it scales with viewport width instead of only
-//   ever changing with height.
-// - Both breakpoints use plain <img> (not next/image) — explicit
-//   request, no srcset/optimization pipeline for this image.
+//   is a separate next/image <Image> (originally a plain <img>, same
+//   raw-505KB-PNG problem), not part of the backdrop: centered above the
+//   text on mobile, anchored bottom-right on desktop via w-[56.35vw]
+//   (1082/1920, the image's real width over the Figma reference width)
+//   so it scales with viewport width instead of only ever changing with
+//   height.
 // - Desktop container height is a fixed `85vh` (explicit request) via
 //   inline style, not a Tailwind h-[85vh] class — Tailwind's JIT
 //   intermittently failed to compile that specific arbitrary value
@@ -61,18 +68,27 @@ export default function FragmentsHeroSection({
 
   return (
     <section
-      className={`relative overflow-hidden bg-stone-950 bg-cover bg-left lg:bg-center lg:pl-6 lg:pt-[104px] xl:pl-0 xl:pt-20 ${className}`}
-      style={{ backgroundImage: `url(${backdropImage})` }}
+      className={`relative overflow-hidden bg-stone-950 lg:pl-6 lg:pt-[104px] xl:pl-0 xl:pt-20 ${className}`}
     >
-      {/* Mobile/tablet — no Figma reference, simplified stack. pt-24 clears the fixed navbar. Cutout centered above the text (explicit request) instead of the desktop's right-anchored placement — there's no room to sit it beside the text at these widths. No horizontal padding on this wrapper (explicit request) so the image is genuinely full-bleed; px-5/md:px-10 is applied per text element below instead. */}
-      <div className="flex flex-col gap-8 pb-10 pt-24 lg:hidden">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
+      <Image
+        src={backdropImage}
+        alt=""
+        fill
+        priority
+        sizes="100vw"
+        className="object-cover object-left lg:object-center"
+      />
+
+      {/* Mobile/tablet — no Figma reference, simplified stack. pt-24 clears the fixed navbar. Cutout centered above the text (explicit request) instead of the desktop's right-anchored placement — there's no room to sit it beside the text at these widths. No horizontal padding on this wrapper (explicit request) so the image is genuinely full-bleed; px-5/md:px-10 is applied per text element below instead. relative z-10 (same as CollaborationHeroSection's own background+content layering) so this stacks above the absolutely-positioned backdrop Image above — without it, an auto-z-index positioned element paints above static in-flow content per the CSS stacking order, hiding this text behind the backdrop. */}
+      <div className="relative z-10 flex flex-col gap-8 pb-10 pt-24 lg:hidden">
+        <Image
           data-reveal
           src={cutoutImage}
           alt="Ryan Saghian seated, surrounded by a mosaic of textures and references for the Fragments collaboration"
           width={1082}
           height={834}
+          priority
+          sizes="100vw"
           className="h-auto w-full"
         />
 
@@ -96,14 +112,15 @@ export default function FragmentsHeroSection({
       </div>
 
       {/* Desktop — right-aligned cutout (man + tile mosaic only, transparent elsewhere) instead of a full-bleed photo. Section's own bg-stone-950 shows on the left where the text sits, so there's no tile-behind-text collision. Fixed h-[85vh] (explicit request) on the container; the cutout itself is sized by VIEWPORT WIDTH (56.35vw = 1082/1920, the image's real width over the Figma reference width) instead of h-full, so it actually shrinks on narrower desktop/laptop widths rather than only ever changing with viewport height. Stuck to bottom-0 right-0 either way — a seated figure, so anchoring to the bottom keeps his feet/chair grounded at the section's base. */}
-      <div className="relative hidden w-full lg:block" style={{ height: "85vh" }}>
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
+      <div className="relative z-10 hidden w-full lg:block" style={{ height: "85vh" }}>
+        <Image
           data-reveal
           src={cutoutImage}
           alt="Ryan Saghian seated, surrounded by a mosaic of textures and references for the Fragments collaboration"
           width={1082}
           height={834}
+          priority
+          sizes="57vw"
           className="absolute bottom-0 right-0 h-auto w-[56.35vw] max-w-[1082px]"
         />
 
