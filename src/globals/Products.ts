@@ -11,11 +11,6 @@ export const Products: GlobalConfig = {
   slug: "products-page",
   admin: {
     group: "Pages",
-    // Not wired to the live /products page in this deploy yet — that
-    // update to app/(frontend)/products/page.tsx is being held back for
-    // its own push, so editing this would currently have no visible
-    // effect. Remove this line once that page ships.
-    hidden: true,
     livePreview: {
       url: ({ req }) => {
         const host = req.headers.get("host") || "localhost:3000";

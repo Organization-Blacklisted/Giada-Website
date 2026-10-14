@@ -34,21 +34,20 @@ export default function HomePageClient({ initialData }: { initialData: Home }) {
   });
 
   const data = mapHomeData(raw);
-  const { visibility } = data;
 
   return (
     <>
-      {visibility.hero && <HeroSlideshowSection {...data.hero} />}
-      {visibility.collection && <CollectionSection {...data.collection} />}
-      {visibility.categoryGrid && <CategoryGridSection {...data.categoryGrid} />}
-      {visibility.values && <ValuesSection {...data.values} />}
-      {visibility.processStrip && <ProcessStripSection {...data.processStrip} />}
-      {visibility.collaborationsSlider && <CollaborationsSliderSection {...data.collaborationsSlider} />}
-      {visibility.pressFeature && <PressFeatureSection {...data.pressFeature} />}
-      {visibility.whyGiada && <WhyGiadaSection {...data.whyGiada} />}
-      {visibility.testimonials && <TestimonialsSection {...data.testimonials} />}
-      {visibility.closingCta && <ClosingCtaSection {...data.closingCta} />}
-      {visibility.imageReel && <ImageReelSection {...data.imageReel} />}
+      <HeroSlideshowSection {...data.hero} />
+      <CollectionSection {...data.collection} />
+      <CategoryGridSection {...data.categoryGrid} />
+      <ValuesSection {...data.values} />
+      <ProcessStripSection {...data.processStrip} />
+      <CollaborationsSliderSection {...data.collaborationsSlider} />
+      <WhyGiadaSection {...data.whyGiada} />
+      <PressFeatureSection {...data.pressFeature} />
+      <TestimonialsSection {...data.testimonials} />
+      <ClosingCtaSection {...data.closingCta} />
+      <ImageReelSection {...data.imageReel} />
     </>
   );
 }

@@ -71,6 +71,7 @@ export interface Config {
     media: Media;
     products: Product;
     collaborations: Collaboration;
+    posts: Post;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
@@ -82,6 +83,7 @@ export interface Config {
     media: MediaSelect<false> | MediaSelect<true>;
     products: ProductsSelect<false> | ProductsSelect<true>;
     collaborations: CollaborationsSelect<false> | CollaborationsSelect<true>;
+    posts: PostsSelect<false> | PostsSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
@@ -106,6 +108,7 @@ export interface Config {
     'rugs-page': RugsPage;
     'fragments-page': FragmentsPage;
     'of-earth-and-light-page': OfEarthAndLightPage;
+    'blog-page': BlogPage;
   };
   globalsSelect: {
     home: HomeSelect<false> | HomeSelect<true>;
@@ -122,6 +125,7 @@ export interface Config {
     'rugs-page': RugsPageSelect<false> | RugsPageSelect<true>;
     'fragments-page': FragmentsPageSelect<false> | FragmentsPageSelect<true>;
     'of-earth-and-light-page': OfEarthAndLightPageSelect<false> | OfEarthAndLightPageSelect<true>;
+    'blog-page': BlogPageSelect<false> | BlogPageSelect<true>;
   };
   locale: null;
   widgets: {
@@ -274,6 +278,30 @@ export interface Collaboration {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "posts".
+ */
+export interface Post {
+  id: number;
+  title: string;
+  /**
+   * Used for this post's /blog/[slug] URL. Matches the real site's existing URLs.
+   */
+  slug: string;
+  /**
+   * Shown on the blog card below the title.
+   */
+  excerpt: string;
+  pubDate: string;
+  coverImage: number | Media;
+  /**
+   * Shown as "Written by [Author]". Leave as "Giada" for studio-authored posts.
+   */
+  author?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv".
  */
 export interface PayloadKv {
@@ -311,6 +339,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'collaborations';
         value: number | Collaboration;
+      } | null)
+    | ({
+        relationTo: 'posts';
+        value: number | Post;
       } | null);
   globalSlug?: string | null;
   user: {
@@ -449,6 +481,20 @@ export interface CollaborationsSelect<T extends boolean = true> {
   heroImage?: T;
   productCount?: T;
   designerName?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "posts_select".
+ */
+export interface PostsSelect<T extends boolean = true> {
+  title?: T;
+  slug?: T;
+  excerpt?: T;
+  pubDate?: T;
+  coverImage?: T;
+  author?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -635,22 +681,6 @@ export interface Home {
           id?: string | null;
         }[]
       | null;
-  };
-  /**
-   * Temporarily hide a section from the live homepage without deleting its content. Every section is visible by default.
-   */
-  visibility?: {
-    hero?: boolean | null;
-    collection?: boolean | null;
-    categoryGrid?: boolean | null;
-    values?: boolean | null;
-    processStrip?: boolean | null;
-    collaborationsSlider?: boolean | null;
-    pressFeature?: boolean | null;
-    whyGiada?: boolean | null;
-    testimonials?: boolean | null;
-    closingCta?: boolean | null;
-    imageReel?: boolean | null;
   };
   seo?: {
     /**
@@ -1475,6 +1505,40 @@ export interface OfEarthAndLightPage {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "blog-page".
+ */
+export interface BlogPage {
+  id: number;
+  hero: {
+    eyebrow: string;
+    heading: string;
+    description: string;
+  };
+  closingCta: {
+    eyebrow: string;
+    heading: string;
+    description: string;
+  };
+  seo?: {
+    /**
+     * Leave blank to use the default ("Journal | Giada").
+     */
+    metaTitle?: string | null;
+    /**
+     * Leave blank to use the default description.
+     */
+    metaDescription?: string | null;
+    ogImage?: (number | null) | Media;
+    /**
+     * Tells Google and other search engines not to list this page. Leave unchecked for normal pages.
+     */
+    noIndex?: boolean | null;
+  };
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "home_select".
  */
 export interface HomeSelect<T extends boolean = true> {
@@ -1634,21 +1698,6 @@ export interface HomeSelect<T extends boolean = true> {
               alt?: T;
               id?: T;
             };
-      };
-  visibility?:
-    | T
-    | {
-        hero?: T;
-        collection?: T;
-        categoryGrid?: T;
-        values?: T;
-        processStrip?: T;
-        collaborationsSlider?: T;
-        pressFeature?: T;
-        whyGiada?: T;
-        testimonials?: T;
-        closingCta?: T;
-        imageReel?: T;
       };
   seo?:
     | T
@@ -2317,6 +2366,37 @@ export interface OfEarthAndLightPageSelect<T extends boolean = true> {
     | {
         bio?: T;
         portrait?: T;
+      };
+  seo?:
+    | T
+    | {
+        metaTitle?: T;
+        metaDescription?: T;
+        ogImage?: T;
+        noIndex?: T;
+      };
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "blog-page_select".
+ */
+export interface BlogPageSelect<T extends boolean = true> {
+  hero?:
+    | T
+    | {
+        eyebrow?: T;
+        heading?: T;
+        description?: T;
+      };
+  closingCta?:
+    | T
+    | {
+        eyebrow?: T;
+        heading?: T;
+        description?: T;
       };
   seo?:
     | T

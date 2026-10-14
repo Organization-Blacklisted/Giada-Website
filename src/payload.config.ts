@@ -10,6 +10,7 @@ import { Users } from "./collections/Users";
 import { Media } from "./collections/Media";
 import { Products as ProductsCollection } from "./collections/Products";
 import { Collaborations as CollaborationsCollection } from "./collections/Collaborations";
+import { BlogPosts } from "./collections/BlogPosts";
 import { Home } from "./globals/Home";
 import { Faq } from "./globals/Faq";
 import { Gallery } from "./globals/Gallery";
@@ -24,6 +25,7 @@ import { Glass } from "./globals/Glass";
 import { Rugs } from "./globals/Rugs";
 import { FragmentsPage } from "./globals/FragmentsPage";
 import { OfEarthAndLightPage } from "./globals/OfEarthAndLightPage";
+import { Blog } from "./globals/Blog";
 
 const filename = fileURLToPath(import.meta.url);
 const dirname = path.dirname(filename);
@@ -31,6 +33,11 @@ const dirname = path.dirname(filename);
 export default buildConfig({
   admin: {
     user: Users.slug,
+    // Default is " - Payload" (e.g. browser tab reads "Dashboard -
+    // Payload") — swapped for the real site name.
+    meta: {
+      titleSuffix: " - Giada",
+    },
     // Fixed dark mode, not OS-dependent — default is 'all' (follows OS
     // preference, user-togglable). Setting a fixed value here short-
     // circuits both the server-side initial-render theme check
@@ -60,8 +67,8 @@ export default buildConfig({
       providers: ["@/components/admin/AdminStyles#AdminStyles"],
     },
   },
-  collections: [Users, Media, ProductsCollection, CollaborationsCollection],
-  globals: [Home, Faq, Gallery, Contact, Products, Privacy, Terms, Shipping, OurStory, Collaborations, Glass, Rugs, FragmentsPage, OfEarthAndLightPage],
+  collections: [Users, Media, ProductsCollection, CollaborationsCollection, BlogPosts],
+  globals: [Home, Faq, Gallery, Contact, Products, Privacy, Terms, Shipping, OurStory, Collaborations, Glass, Rugs, FragmentsPage, OfEarthAndLightPage, Blog],
   editor: lexicalEditor(),
   secret: process.env.PAYLOAD_SECRET || "",
   typescript: {

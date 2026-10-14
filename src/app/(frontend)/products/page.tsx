@@ -1,20 +1,25 @@
-import ProductCategoriesSection from "@/components/sections/products/ProductCategoriesSection";
-import { getProductsPage } from "@/lib/api/products";
+import type { Metadata } from "next";
+import ProductsPageClient from "@/components/sections/products/ProductsPageClient";
+import { getProductsPage, getProductsRaw } from "@/lib/api/products";
 
-export const metadata = {
-  title: "Products",
-  description: "Explore Giada's handcrafted rugs and art glass, each made to order.",
-};
+const DEFAULT_TITLE = "Products";
+const DEFAULT_DESCRIPTION = "Explore Giada's handcrafted rugs and art glass, each made to order.";
+
+// CMS-editable now (the "SEO" tab on the products-page global) — these
+// constants stay as the fallback when those fields are left blank, same
+// real copy this page always had before the SEO tab existed.
+export async function generateMetadata(): Promise<Metadata> {
+  const { seo } = await getProductsPage();
+  return {
+    title: seo.metaTitle || DEFAULT_TITLE,
+    description: seo.metaDescription || DEFAULT_DESCRIPTION,
+    ...(seo.ogImage ? { openGraph: { images: [{ url: seo.ogImage }] } } : {}),
+    ...(seo.noIndex ? { robots: { index: false, follow: false } } : {}),
+  };
+}
 
 export default async function ProductsPage() {
-  const { hero, categories, galleryCta } = await getProductsPage();
+  const raw = await getProductsRaw();
 
-  return (
-    <ProductCategoriesSection
-      {...hero}
-      categories={categories}
-      galleryCtaLabel={galleryCta.label}
-      galleryCtaHref={galleryCta.href}
-    />
-  );
+  return <ProductsPageClient initialData={raw} />;
 }
