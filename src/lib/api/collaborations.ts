@@ -62,7 +62,11 @@ export const getAllCollaborationSlugs = unstable_cache(
   { tags: ["collaborations"] }
 );
 
-export async function getCollaborationBySlug(slug: string): Promise<CollaborationItemData | null> {
+// Caches the RAW document, not the mapped CollaborationItemData — Live
+// Preview (OfEarthAndLightPageClient.tsx) needs the raw shape as
+// `useLivePreview`'s `initialData`, same reasoning as every other
+// getXRaw in this file.
+export async function getCollaborationBySlugRaw(slug: string): Promise<Collaboration | null> {
   return unstable_cache(
     async () => {
       const payload = await getPayload({ config });
@@ -72,9 +76,14 @@ export async function getCollaborationBySlug(slug: string): Promise<Collaboratio
         limit: 1,
         depth: 1,
       });
-      return result.docs[0] ? mapCollaborationItem(result.docs[0]) : null;
+      return result.docs[0] ?? null;
     },
-    ["collaboration", slug],
+    ["collaboration-raw", slug],
     { tags: ["collaborations"] }
   )();
+}
+
+export async function getCollaborationBySlug(slug: string): Promise<CollaborationItemData | null> {
+  const doc = await getCollaborationBySlugRaw(slug);
+  return doc ? mapCollaborationItem(doc) : null;
 }

@@ -18,23 +18,32 @@
 }
 
 /*
- * overflow-x: hidden on both html and body — confirmed from the real
- * source's global.css. Missed when this file was first set up; the gap
- * only became visible once a genuinely full-bleed section existed
- * (ImageReelSection's `width: 100vw` full-bleed trick overflows by
- * exactly the vertical scrollbar's width, since 100vw includes the
- * scrollbar track — a well-known side effect of that technique, which
- * is exactly why the real source has this rule in the first place).
+ * Horizontal clipping on both html and body — confirmed from the real
+ * source's global.css, which used overflow-x: hidden. Missed when this
+ * file was first set up; the gap only became visible once a genuinely
+ * full-bleed section existed (ImageReelSection's `width: 100vw`
+ * full-bleed trick overflows by exactly the vertical scrollbar's width,
+ * since 100vw includes the scrollbar track — a well-known side effect
+ * of that technique, which is exactly why the real source has this
+ * rule in the first place).
+ *
+ * Uses `clip` rather than `hidden`: per the CSS overflow spec, setting
+ * only overflow-x to a non-`visible` value forces the browser to also
+ * compute overflow-y as `auto`, silently turning body into its own
+ * scroll container — which breaks `position: sticky` for everything
+ * nested inside it (the Blog detail page's sticky TOC sidebar hit this
+ * exactly). `overflow-x: clip` clips the same horizontal overflow
+ * without that coupling.
  */
 html {
-  overflow-x: hidden;
+  overflow-x: clip;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-body);
-  overflow-x: hidden;
+  overflow-x: clip;
 }
 
 /*

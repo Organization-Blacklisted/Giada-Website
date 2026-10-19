@@ -1,17 +1,23 @@
-import Container from "@/components/layouts/Container";
+import type { Metadata } from "next";
+import ShippingPageClient from "@/components/ui/LegalDocumentSection/ShippingPageClient";
+import { getShippingPage, getShippingRaw } from "@/lib/api/shipping";
 
-export const metadata = { title: "Shipping Policy" };
+const DEFAULT_TITLE = "Shipping Policy";
+const DEFAULT_DESCRIPTION =
+  "How Giada handles production, delivery, and customs — all products are handmade to order and shipped worldwide.";
 
-export default function ShippingPage() {
-  return (
-    <Container className="py-24">
-      <h1 className="text-3xl font-semibold tracking-tight">Shipping Policy</h1>
-      <p className="mt-4 text-stone-600">
-        TODO: real content, ported from the Astro source&apos;s
-        ShippingPolicy.astro. Note: the live site&apos;s &quot;Download
-        PDF&quot; link is currently broken (filename mismatch) — fix as
-        part of this port, not carry the bug forward.
-      </p>
-    </Container>
-  );
+export async function generateMetadata(): Promise<Metadata> {
+  const { seo } = await getShippingPage();
+  return {
+    title: seo.metaTitle || DEFAULT_TITLE,
+    description: seo.metaDescription || DEFAULT_DESCRIPTION,
+    ...(seo.ogImage ? { openGraph: { images: [{ url: seo.ogImage }] } } : {}),
+    ...(seo.noIndex ? { robots: { index: false, follow: false } } : {}),
+  };
+}
+
+export default async function ShippingPage() {
+  const raw = await getShippingRaw();
+
+  return <ShippingPageClient initialData={raw} />;
 }

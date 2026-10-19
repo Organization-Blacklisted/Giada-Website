@@ -297,6 +297,52 @@ export interface Post {
    * Shown as "Written by [Author]". Leave as "Giada" for studio-authored posts.
    */
   author?: string | null;
+  /**
+   * The article body. Use Heading 2 for each major section — those headings automatically become the page's table of contents, in the order they appear here. Insert a single image via the toolbar's image button, an "Image Pair" block for two images side by side, or a "Feature List" block for a bulleted list of bold-lead-in tips (with optional nested sub-points).
+   */
+  content: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  };
+  /**
+   * Questions specific to this article — rendered as an accordion at the bottom of the page.
+   */
+  faqs?:
+    | {
+        question: string;
+        answer: string;
+        id?: string | null;
+      }[]
+    | null;
+  seo?: {
+    /**
+     * Leave blank to use this post's own title.
+     */
+    metaTitle?: string | null;
+    /**
+     * Leave blank to use this post's excerpt.
+     */
+    metaDescription?: string | null;
+    /**
+     * Leave blank to use this post's cover image.
+     */
+    ogImage?: (number | null) | Media;
+    /**
+     * Tells Google and other search engines not to list this post. Leave unchecked for normal posts.
+     */
+    noIndex?: boolean | null;
+  };
   updatedAt: string;
   createdAt: string;
 }
@@ -495,6 +541,22 @@ export interface PostsSelect<T extends boolean = true> {
   pubDate?: T;
   coverImage?: T;
   author?: T;
+  content?: T;
+  faqs?:
+    | T
+    | {
+        question?: T;
+        answer?: T;
+        id?: T;
+      };
+  seo?:
+    | T
+    | {
+        metaTitle?: T;
+        metaDescription?: T;
+        ogImage?: T;
+        noIndex?: T;
+      };
   updatedAt?: T;
   createdAt?: T;
 }

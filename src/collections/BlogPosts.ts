@@ -1,5 +1,8 @@
 import type { CollectionConfig } from "payload";
 import { revalidateTag } from "next/cache";
+import { lexicalEditor, HeadingFeature, UploadFeature, BlocksFeature, FixedToolbarFeature } from "@payloadcms/richtext-lexical";
+import { ImagePairBlock } from "./blocks/ImagePairBlock";
+import { FeatureListBlock } from "./blocks/FeatureListBlock";
 
 // Ported from the real source's Astro content collection (src/assets/
 // data/blog/*.mdx, defined in content.config.ts: title, description,
@@ -7,20 +10,21 @@ import { revalidateTag } from "next/cache";
 // same reasoning as Products/Collaborations: many like-shaped documents,
 // not one page's content.
 //
-// Deliberately NOT including a body/content field yet — this collection
-// only needs to support the /blog LISTING page for now. The /blog/[slug]
-// detail page is being rebuilt from a new Figma design (separate, later
-// task), and whatever body-content shape that design actually needs
-// should be added then, not guessed at now.
+// `content`/`faqs` added once the real Figma detail-page design
+// confirmed what body-content shape was actually needed (per-post FAQ,
+// a real rich-text article body with embedded images) rather than
+// guessing earlier. No separate `readTime` or `toc` field — both are
+// derived at render time from `content` itself (word count, and the
+// heading nodes actually present), so there's nothing for an editor to
+// forget to keep in sync. No `heroImage` either — the detail page's
+// banner reuses `coverImage`, the same photo the listing/related-posts
+// card already shows, just cropped differently.
 export const BlogPosts: CollectionConfig = {
   slug: "posts",
   admin: {
     useAsTitle: "title",
     defaultColumns: ["title", "coverImage", "slug", "pubDate"],
     group: "Catalog",
-    // Not ready to reveal to the client yet — the /blog listing page
-    // isn't part of this deploy. Remove this line when it ships.
-    hidden: true,
     livePreview: {
       url: ({ data, req }) => {
         const host = req.headers.get("host") || "localhost:3000";
@@ -38,27 +42,99 @@ export const BlogPosts: CollectionConfig = {
     read: () => true,
   },
   fields: [
-    { name: "title", type: "text", required: true },
     {
-      name: "slug",
-      type: "text",
-      required: true,
-      unique: true,
-      admin: { description: "Used for this post's /blog/[slug] URL. Matches the real site's existing URLs." },
-    },
-    {
-      name: "excerpt",
-      type: "textarea",
-      required: true,
-      admin: { description: "Shown on the blog card below the title." },
-    },
-    { name: "pubDate", type: "date", required: true, admin: { date: { pickerAppearance: "dayOnly" } } },
-    { name: "coverImage", type: "upload", relationTo: "media", required: true },
-    {
-      name: "author",
-      type: "text",
-      defaultValue: "Giada",
-      admin: { description: 'Shown as "Written by [Author]". Leave as "Giada" for studio-authored posts.' },
+      type: "tabs",
+      tabs: [
+        {
+          label: "Content",
+          fields: [
+            { name: "title", type: "text", required: true },
+            {
+              name: "slug",
+              type: "text",
+              required: true,
+              unique: true,
+              admin: { description: "Used for this post's /blog/[slug] URL. Matches the real site's existing URLs." },
+            },
+            {
+              name: "excerpt",
+              type: "textarea",
+              required: true,
+              admin: { description: "Shown on the blog card below the title." },
+            },
+            { name: "pubDate", type: "date", required: true, admin: { date: { pickerAppearance: "dayOnly" } } },
+            { name: "coverImage", type: "upload", relationTo: "media", required: true },
+            {
+              name: "author",
+              type: "text",
+              defaultValue: "Giada",
+              admin: { description: 'Shown as "Written by [Author]". Leave as "Giada" for studio-authored posts.' },
+            },
+            {
+              name: "content",
+              type: "richText",
+              required: true,
+              admin: {
+                description:
+                  "The article body. Use Heading 2 for each major section — those headings automatically become the page's table of contents, in the order they appear here. Insert a single image via the toolbar's image button, an \"Image Pair\" block for two images side by side, or a \"Feature List\" block for a bulleted list of bold-lead-in tips (with optional nested sub-points).",
+              },
+              editor: lexicalEditor({
+                features: ({ defaultFeatures }) => [
+                  ...defaultFeatures.filter(
+                    (feature) => !["heading", "upload", "relationship"].includes(feature.key)
+                  ),
+                  HeadingFeature({ enabledHeadingSizes: ["h2"] }),
+                  UploadFeature({ collections: { media: { fields: [] } } }),
+                  BlocksFeature({ blocks: [ImagePairBlock, FeatureListBlock] }),
+                  FixedToolbarFeature(),
+                ],
+              }),
+            },
+            {
+              name: "faqs",
+              type: "array",
+              label: "FAQs",
+              admin: { description: "Questions specific to this article — rendered as an accordion at the bottom of the page." },
+              fields: [
+                { name: "question", type: "text", required: true },
+                { name: "answer", type: "textarea", required: true },
+              ],
+            },
+          ],
+        },
+        {
+          label: "SEO",
+          fields: [
+            {
+              name: "seo",
+              type: "group",
+              fields: [
+                {
+                  name: "metaTitle",
+                  type: "text",
+                  admin: { description: "Leave blank to use this post's own title." },
+                },
+                {
+                  name: "metaDescription",
+                  type: "textarea",
+                  admin: { description: "Leave blank to use this post's excerpt." },
+                },
+                { name: "ogImage", type: "upload", relationTo: "media", admin: { description: "Leave blank to use this post's cover image." } },
+                {
+                  name: "noIndex",
+                  type: "checkbox",
+                  defaultValue: false,
+                  label: "Hide from search engines (noindex)",
+                  admin: {
+                    description:
+                      "Tells Google and other search engines not to list this post. Leave unchecked for normal posts.",
+                  },
+                },
+              ],
+            },
+          ],
+        },
+      ],
     },
   ],
   hooks: {

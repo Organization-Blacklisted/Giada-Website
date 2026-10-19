@@ -1,19 +1,10 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import FragmentsHeroSection from "@/components/sections/collaborations/FragmentsHeroSection";
-import FragmentsArtistSection from "@/components/sections/collaborations/FragmentsArtistSection";
-import FragmentsInspirationSection from "@/components/sections/collaborations/FragmentsInspirationSection";
-import FragmentsMemoriesSection from "@/components/sections/collaborations/FragmentsMemoriesSection";
-import FragmentsMeetingSection from "@/components/sections/collaborations/FragmentsMeetingSection";
-import FragmentsClosingCtaSection from "@/components/sections/collaborations/FragmentsClosingCtaSection";
-import CollaborationHeroSection from "@/components/sections/collaborations/CollaborationHeroSection";
-import CollaborationStatementSection from "@/components/sections/collaborations/CollaborationStatementSection";
-import CollaborationProductsSection from "@/components/sections/collaborations/CollaborationProductsSection";
-import CollaborationDesignerSection from "@/components/sections/collaborations/CollaborationDesignerSection";
-import ContactCtaBanner from "@/components/ui/ContactCtaBanner";
-import { getAllCollaborationSlugs, getCollaborationBySlug } from "@/lib/api/collaborations";
-import { getFragmentsPage } from "@/lib/api/fragments-page";
-import { getOfEarthAndLightPage } from "@/lib/api/of-earth-and-light-page";
+import FragmentsPageClient from "@/components/sections/collaborations/FragmentsPageClient";
+import OfEarthAndLightPageClient from "@/components/sections/collaborations/OfEarthAndLightPageClient";
+import { getAllCollaborationSlugs, getCollaborationBySlug, getCollaborationBySlugRaw } from "@/lib/api/collaborations";
+import { getFragmentsPage, getFragmentsPageRaw } from "@/lib/api/fragments-page";
+import { getOfEarthAndLightPage, getOfEarthAndLightPageRaw } from "@/lib/api/of-earth-and-light-page";
 import { getProductsByCollectionSlug } from "@/lib/api/products-catalog";
 
 // Every collaboration gets a real page regardless of `active` — matches
@@ -67,88 +58,19 @@ export default async function CollaborationDetailPage({ params }: { params: Prom
   const collaboration = await getCollaborationBySlug(slug);
   if (!collaboration) notFound();
 
-  const canonicalPath = `/collaborations/${slug}`;
-  const breadcrumbSchema = {
-    "@context": "https://schema.org",
-    "@type": "BreadcrumbList",
-    itemListElement: [
-      { "@type": "ListItem", position: 1, name: "Collaborations", item: "/collaborations" },
-      { "@type": "ListItem", position: 2, name: collaboration.name, item: canonicalPath },
-    ],
-  };
-  const breadcrumbScript = (
-    <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }} />
-  );
-
   if (slug === "fragments") {
-    const fragments = await getFragmentsPage();
-    return (
-      <>
-        {breadcrumbScript}
-        <FragmentsHeroSection
-          eyebrow={fragments.hero.eyebrow}
-          headline={fragments.hero.headline}
-          paragraph={fragments.hero.paragraph}
-          unveilingLines={fragments.hero.unveilingLines}
-          backdropImage={fragments.hero.backdropImage}
-          cutoutImage={fragments.hero.cutoutImage}
-        />
-        <FragmentsArtistSection
-          eyebrow={fragments.artist.eyebrow}
-          name={fragments.artist.name}
-          subheadline={fragments.artist.subheadline}
-          bioParagraphGroup1={fragments.artist.bioParagraphGroup1}
-          bioParagraphGroup2={fragments.artist.bioParagraphGroup2}
-          portrait={fragments.artist.portrait}
-        />
-        <FragmentsInspirationSection
-          eyebrow={fragments.inspiration.eyebrow}
-          heading={fragments.inspiration.heading}
-          paragraph={fragments.inspiration.paragraph}
-          cards={fragments.inspiration.cards}
-          quote={fragments.inspiration.quote}
-          quoteAttribution={fragments.inspiration.quoteAttribution}
-        />
-        <FragmentsMemoriesSection
-          eyebrow={fragments.memories.eyebrow}
-          heading={fragments.memories.heading}
-          paragraph={fragments.memories.paragraph}
-          strips={fragments.memories.strips}
-        />
-        <FragmentsMeetingSection
-          eyebrow={fragments.meeting.eyebrow}
-          heading={fragments.meeting.heading}
-          subheadline={fragments.meeting.subheadline}
-          paragraph={fragments.meeting.paragraph}
-          imageLeft={fragments.meeting.imageLeft}
-          imageRight={fragments.meeting.imageRight}
-        />
-        <FragmentsClosingCtaSection
-          heading={fragments.closingCta.heading}
-          paragraph={fragments.closingCta.paragraph}
-          linkText={fragments.closingCta.linkText}
-        />
-      </>
-    );
+    const fragmentsRaw = await getFragmentsPageRaw();
+    return <FragmentsPageClient initialData={fragmentsRaw} collaborationName={collaboration.name} />;
   }
 
   if (slug === "of-earth-and-light") {
-    const page = await getOfEarthAndLightPage();
-    const products = await getProductsByCollectionSlug(slug);
-    return (
-      <>
-        {breadcrumbScript}
-        <CollaborationHeroSection name={collaboration.name} tagline={collaboration.tagline} heroImage={collaboration.heroImage} />
-        <CollaborationStatementSection tagline={collaboration.tagline} description={page.statement.description} />
-        {products.length > 0 && <CollaborationProductsSection products={products} />}
-        <CollaborationDesignerSection name={collaboration.designerName} bio={page.designer.bio} portrait={page.designer.portrait} />
-        <ContactCtaBanner
-          eyebrow="Bespoke Service"
-          heading="Looking for something unique?"
-          description="Every piece can be made to your exact specifications: size, colour, composition, and more. Reach out to begin your custom project."
-        />
-      </>
-    );
+    const [pageRaw, collaborationRaw, products] = await Promise.all([
+      getOfEarthAndLightPageRaw(),
+      getCollaborationBySlugRaw(slug),
+      getProductsByCollectionSlug(slug),
+    ]);
+    if (!collaborationRaw) notFound();
+    return <OfEarthAndLightPageClient initialCollaboration={collaborationRaw} initialPage={pageRaw} products={products} />;
   }
 
   notFound();

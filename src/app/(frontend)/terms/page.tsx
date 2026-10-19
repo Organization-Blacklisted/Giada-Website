@@ -1,17 +1,22 @@
-import Container from "@/components/layouts/Container";
+import type { Metadata } from "next";
+import TermsPageClient from "@/components/ui/LegalDocumentSection/TermsPageClient";
+import { getTermsPage, getTermsRaw } from "@/lib/api/terms";
 
-export const metadata = { title: "Terms & Conditions" };
+const DEFAULT_TITLE = "Terms & Conditions";
+const DEFAULT_DESCRIPTION = "The General Terms & Conditions that govern all sales by Giada Inc.";
 
-export default function TermsPage() {
-  return (
-    <Container className="py-24">
-      <h1 className="text-3xl font-semibold tracking-tight">Terms &amp; Conditions</h1>
-      <p className="mt-4 text-stone-600">
-        TODO: real content, ported from the Astro source&apos;s
-        TermsConditions.astro. Note: the live site&apos;s &quot;Download
-        PDF&quot; link is currently broken (filename mismatch) — fix as
-        part of this port, not carry the bug forward.
-      </p>
-    </Container>
-  );
+export async function generateMetadata(): Promise<Metadata> {
+  const { seo } = await getTermsPage();
+  return {
+    title: seo.metaTitle || DEFAULT_TITLE,
+    description: seo.metaDescription || DEFAULT_DESCRIPTION,
+    ...(seo.ogImage ? { openGraph: { images: [{ url: seo.ogImage }] } } : {}),
+    ...(seo.noIndex ? { robots: { index: false, follow: false } } : {}),
+  };
+}
+
+export default async function TermsPage() {
+  const raw = await getTermsRaw();
+
+  return <TermsPageClient initialData={raw} />;
 }
