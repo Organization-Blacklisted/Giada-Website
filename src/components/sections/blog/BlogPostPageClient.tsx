@@ -47,7 +47,7 @@ export default function BlogPostPageClient({
         readTime={post.readTime}
         coverImage={post.coverImage}
       />
-      <BlogArticleSection content={post.content} headings={post.headings} />
+      <BlogArticleSection content={post.content} headings={post.headings} sidebarCta={post.sidebarCta} />
       <BlogRelatedSection posts={relatedPosts} />
       {post.faqs.length > 0 && <BlogFaqSection faqs={post.faqs} />}
     </>

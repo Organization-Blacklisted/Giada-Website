@@ -70,12 +70,20 @@ function formatPubDate(pubDate: string): string {
   return new Date(pubDate).toLocaleDateString("en-US", { day: "numeric", month: "long", year: "numeric" });
 }
 
+// Matches what BlogTableOfContents' CollectionsCta always hardcoded
+// before this became per-post editable — unset posts look identical to
+// before.
+const DEFAULT_SIDEBAR_CTA_TITLE = "Explore the latest Rugs collections by GIADA";
+const DEFAULT_SIDEBAR_CTA_LINK_TEXT = "Our Collections";
+const DEFAULT_SIDEBAR_CTA_HREF = "/rugs";
+
 export type BlogPostDetailData = BlogPostData & {
   pubDateFormatted: string;
   readTime: number;
   headings: HeadingEntry[];
   content: Post["content"];
   faqs: AccordionItem[];
+  sidebarCta: { title: string; description: string; linkText: string; href: string };
   seo: SeoData;
 };
 
@@ -91,6 +99,12 @@ export function mapBlogPostDetail(doc: Post): BlogPostDetailData {
     headings: extractHeadings(doc.content),
     content: doc.content,
     faqs: (doc.faqs ?? []).map((faq) => ({ title: faq.question, content: faq.answer })),
+    sidebarCta: {
+      title: doc.sidebarCta?.title || DEFAULT_SIDEBAR_CTA_TITLE,
+      description: doc.sidebarCta?.description ?? "",
+      linkText: doc.sidebarCta?.linkText || DEFAULT_SIDEBAR_CTA_LINK_TEXT,
+      href: doc.sidebarCta?.href || DEFAULT_SIDEBAR_CTA_HREF,
+    },
     seo: {
       metaTitle: doc.seo?.metaTitle ?? "",
       metaDescription: doc.seo?.metaDescription ?? "",

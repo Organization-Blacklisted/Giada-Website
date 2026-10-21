@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { Link } from "next-view-transitions";
-import type { HeadingEntry } from "@/lib/richtext-utils";
+import { toInternalHref, type HeadingEntry } from "@/lib/richtext-utils";
 
 type TocItem = { text: string; slug: string };
 type MarkerRect = { top: number; height: number };
@@ -83,7 +83,24 @@ function TocNav({
   );
 }
 
-function CollectionsCta() {
+function CollectionsCta({
+  title,
+  description,
+  linkText,
+  href,
+}: {
+  title: string;
+  description: string;
+  linkText: string;
+  href: string;
+}) {
+  // Editor-entered href, same habit seen in rich-text links (see
+  // toInternalHref's own comment): could be a relative path or the full
+  // absolute production URL. Normalize either to a relative Link so an
+  // internal destination still gets client-side nav; a genuinely
+  // external href falls through to a plain <a>.
+  const internalHref = toInternalHref(href);
+
   return (
     <div className="relative mt-[60px] h-[280px] w-[324px] max-w-full overflow-hidden">
       {/* scale-105: the source image is exactly the container's native
@@ -92,16 +109,29 @@ function CollectionsCta() {
           — a small overdraw guarantees full coverage regardless. */}
       <Image src="/images/blog/collections-cta-bg.png" alt="" fill sizes="324px" className="scale-105 object-cover" />
       <div className="absolute inset-0 bg-black/30" aria-hidden="true" />
-      <p className="absolute left-5 right-5 top-9 font-heading text-[28px] capitalize italic text-white">
-        Explore the latest Rugs collections by GIADA
-      </p>
-      <Link
-        href="/rugs"
-        className="group absolute bottom-9 left-5 flex items-center gap-[clamp(0.75rem,1.25vw,1.5rem)] text-[12px] font-semibold uppercase tracking-[3px] text-white no-underline"
-      >
-        Our Collections
-        <span aria-hidden="true" className="h-px w-10 origin-left bg-white transition-transform duration-300 group-hover:scale-x-125" />
-      </Link>
+      <div className="absolute left-5 right-5 top-9 flex flex-col gap-2">
+        <p className="font-heading text-[28px] capitalize italic text-white">{title}</p>
+        {description && <p className="text-[14px] leading-5 text-white/80">{description}</p>}
+      </div>
+      {internalHref ? (
+        <Link
+          href={internalHref}
+          className="group absolute bottom-9 left-5 flex items-center gap-[clamp(0.75rem,1.25vw,1.5rem)] text-[12px] font-semibold uppercase tracking-[3px] text-white no-underline"
+        >
+          {linkText}
+          <span aria-hidden="true" className="h-px w-10 origin-left bg-white transition-transform duration-300 group-hover:scale-x-125" />
+        </Link>
+      ) : (
+        <a
+          href={href}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="group absolute bottom-9 left-5 flex items-center gap-[clamp(0.75rem,1.25vw,1.5rem)] text-[12px] font-semibold uppercase tracking-[3px] text-white no-underline"
+        >
+          {linkText}
+          <span aria-hidden="true" className="h-px w-10 origin-left bg-white transition-transform duration-300 group-hover:scale-x-125" />
+        </a>
+      )}
     </div>
   );
 }
@@ -114,7 +144,13 @@ function CollectionsCta() {
 // the Collections CTA (Torque's only holds the TOC list — asked for here
 // explicitly), and this adds Escape-to-close + a body scroll lock, which
 // Torque's version doesn't have.
-export default function BlogTableOfContents({ headings }: { headings: HeadingEntry[] }) {
+export default function BlogTableOfContents({
+  headings,
+  sidebarCta,
+}: {
+  headings: HeadingEntry[];
+  sidebarCta: { title: string; description: string; linkText: string; href: string };
+}) {
   // "Introduction" (the intro paragraphs before the first h2) is always
   // entry 0 — not a real heading in `content`, just this sidebar's own
   // label for "you're at the top of the article."
@@ -195,7 +231,7 @@ export default function BlogTableOfContents({ headings }: { headings: HeadingEnt
       {/* Desktop sidebar */}
       <div className="hidden flex-col items-start lg:flex" data-reveal>
         <TocNav items={items} activeIndex={activeIndex} onItemClick={handleItemClick} />
-        <CollectionsCta />
+        <CollectionsCta title={sidebarCta.title} description={sidebarCta.description} linkText={sidebarCta.linkText} href={sidebarCta.href} />
       </div>
 
       {/* Mobile: floating pill trigger */}
@@ -238,7 +274,7 @@ export default function BlogTableOfContents({ headings }: { headings: HeadingEnt
           </button>
         </div>
         <TocNav items={items} activeIndex={activeIndex} onItemClick={handleItemClick} />
-        <CollectionsCta />
+        <CollectionsCta title={sidebarCta.title} description={sidebarCta.description} linkText={sidebarCta.linkText} href={sidebarCta.href} />
       </div>
     </>
   );

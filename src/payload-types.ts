@@ -331,6 +331,27 @@ export interface Post {
         id?: string | null;
       }[]
     | null;
+  /**
+   * The dark card shown below the table of contents on this article's page. Leave all fields blank to use the site default (promotes the rug catalog) — set them per post when a specific article should point somewhere else instead (e.g. a specific collection or product).
+   */
+  sidebarCta?: {
+    /**
+     * Leave blank to use the default ("Explore the latest Rugs collections by GIADA").
+     */
+    title?: string | null;
+    /**
+     * Optional supporting line shown below the title. Leave blank to omit it.
+     */
+    description?: string | null;
+    /**
+     * Leave blank to use the default ("Our Collections").
+     */
+    linkText?: string | null;
+    /**
+     * Where the link goes. Leave blank to use the default ("/rugs"). Use a relative path (e.g. "/products/thar-dusk") for pages on this site, or a full URL for an external link.
+     */
+    href?: string | null;
+  };
   seo?: {
     /**
      * Leave blank to use this post's own title.
@@ -659,6 +680,14 @@ export interface PostsSelect<T extends boolean = true> {
         question?: T;
         answer?: T;
         id?: T;
+      };
+  sidebarCta?:
+    | T
+    | {
+        title?: T;
+        description?: T;
+        linkText?: T;
+        href?: T;
       };
   seo?:
     | T

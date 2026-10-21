@@ -100,6 +100,40 @@ export const BlogPosts: CollectionConfig = {
                 { name: "answer", type: "textarea", required: true },
               ],
             },
+            {
+              name: "sidebarCta",
+              type: "group",
+              label: "Sidebar CTA Card",
+              admin: {
+                description:
+                  "The dark card shown below the table of contents on this article's page. Leave all fields blank to use the site default (promotes the rug catalog) — set them per post when a specific article should point somewhere else instead (e.g. a specific collection or product).",
+              },
+              fields: [
+                {
+                  name: "title",
+                  type: "text",
+                  admin: { description: 'Leave blank to use the default ("Explore the latest Rugs collections by GIADA").' },
+                },
+                {
+                  name: "description",
+                  type: "textarea",
+                  admin: { description: "Optional supporting line shown below the title. Leave blank to omit it." },
+                },
+                {
+                  name: "linkText",
+                  type: "text",
+                  admin: { description: 'Leave blank to use the default ("Our Collections").' },
+                },
+                {
+                  name: "href",
+                  type: "text",
+                  admin: {
+                    description:
+                      'Where the link goes. Leave blank to use the default ("/rugs"). Use a relative path (e.g. "/products/thar-dusk") for pages on this site, or a full URL for an external link.',
+                  },
+                },
+              ],
+            },
           ],
         },
         {
