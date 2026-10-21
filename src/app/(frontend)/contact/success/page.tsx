@@ -1,10 +1,12 @@
 import { Link } from "next-view-transitions";
+import { buildPageMetadata } from "@/lib/metadata";
 
-export const metadata = {
+export const metadata = buildPageMetadata({
   title: "Message Sent",
   description: "Thank you for your enquiry. Our team will respond within one business day.",
-  robots: { index: false, follow: false },
-};
+  path: "/contact/success",
+  noIndex: true,
+});
 
 export default function ContactSuccessPage() {
   return (

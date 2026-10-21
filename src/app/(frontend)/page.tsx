@@ -2,21 +2,23 @@ import type { Metadata } from "next";
 import HomePageClient from "@/components/sections/home/HomePageClient";
 import { getHomeRaw } from "@/lib/api/home";
 import { mapHomeData } from "@/lib/api/home-map";
+import { buildPageMetadata } from "@/lib/metadata";
+import { siteConfig } from "@/data/site";
 
-// CMS-editable via the "SEO" tab on the Home global. Keys are omitted
-// (not set to `undefined`) when left blank in the CMS, rather than
-// hardcoding a fallback here — Home never had its own metadata export
-// before this, relying entirely on the root layout's site-wide default
-// (siteConfig.name/description), so leaving the CMS fields blank should
-// keep producing exactly that, not some new Home-specific default.
+// CMS-editable via the "SEO" tab on the Home global — blank fields fall
+// back to the site-wide defaults (siteConfig.name/description), same
+// behavior as before, now routed through buildPageMetadata (lib/
+// metadata.ts) so Home also gets real openGraph/twitter title+
+// description+type+siteName instead of just an image.
 export async function generateMetadata(): Promise<Metadata> {
   const { seo } = mapHomeData(await getHomeRaw());
-  return {
-    ...(seo.metaTitle ? { title: seo.metaTitle } : {}),
-    ...(seo.metaDescription ? { description: seo.metaDescription } : {}),
-    ...(seo.ogImage ? { openGraph: { images: [{ url: seo.ogImage }] } } : {}),
-    ...(seo.noIndex ? { robots: { index: false, follow: false } } : {}),
-  };
+  return buildPageMetadata({
+    title: seo.metaTitle || siteConfig.name,
+    description: seo.metaDescription || siteConfig.description,
+    path: "",
+    image: seo.ogImage || undefined,
+    noIndex: seo.noIndex,
+  });
 }
 
 // Real source's home page (pages/index.astro) order, fully built, plus

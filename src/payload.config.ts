@@ -11,6 +11,9 @@ import { Media } from "./collections/Media";
 import { Products as ProductsCollection } from "./collections/Products";
 import { Collaborations as CollaborationsCollection } from "./collections/Collaborations";
 import { BlogPosts } from "./collections/BlogPosts";
+import { Events } from "./collections/Events";
+import { EventRegistrations } from "./collections/EventRegistrations";
+import { Enquiries } from "./collections/Enquiries";
 import { Home } from "./globals/Home";
 import { Faq } from "./globals/Faq";
 import { Gallery } from "./globals/Gallery";
@@ -67,7 +70,7 @@ export default buildConfig({
       providers: ["@/components/admin/AdminStyles#AdminStyles"],
     },
   },
-  collections: [Users, Media, ProductsCollection, CollaborationsCollection, BlogPosts],
+  collections: [Users, Media, ProductsCollection, CollaborationsCollection, BlogPosts, Events, EventRegistrations, Enquiries],
   globals: [Home, Faq, Gallery, Contact, Products, Privacy, Terms, Shipping, OurStory, Collaborations, Glass, Rugs, FragmentsPage, OfEarthAndLightPage, Blog],
   editor: lexicalEditor(),
   secret: process.env.PAYLOAD_SECRET || "",

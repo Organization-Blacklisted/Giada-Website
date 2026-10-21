@@ -6,6 +6,7 @@ import { getAllCollaborationSlugs, getCollaborationBySlug, getCollaborationBySlu
 import { getFragmentsPage, getFragmentsPageRaw } from "@/lib/api/fragments-page";
 import { getOfEarthAndLightPage, getOfEarthAndLightPageRaw } from "@/lib/api/of-earth-and-light-page";
 import { getProductsByCollectionSlug } from "@/lib/api/products-catalog";
+import { buildPageMetadata } from "@/lib/metadata";
 
 // Every collaboration gets a real page regardless of `active` — matches
 // the real source's own getStaticPaths() (one page per JSON file, no
@@ -32,22 +33,24 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 
   if (slug === "fragments") {
     const fragments = await getFragmentsPage();
-    return {
+    return buildPageMetadata({
       title: fragments.seo.metaTitle || collaboration.name,
       description: fragments.seo.metaDescription || fragments.hero.paragraph,
-      ...(fragments.seo.ogImage ? { openGraph: { images: [{ url: fragments.seo.ogImage }] } } : {}),
-      ...(fragments.seo.noIndex ? { robots: { index: false, follow: false } } : {}),
-    };
+      path: `/collaborations/${slug}`,
+      image: fragments.seo.ogImage || collaboration.heroImage || undefined,
+      noIndex: fragments.seo.noIndex,
+    });
   }
 
   if (slug === "of-earth-and-light") {
     const page = await getOfEarthAndLightPage();
-    return {
+    return buildPageMetadata({
       title: page.seo.metaTitle || collaboration.name,
       description: page.seo.metaDescription || collaboration.tagline,
-      ...(page.seo.ogImage ? { openGraph: { images: [{ url: page.seo.ogImage }] } } : {}),
-      ...(page.seo.noIndex ? { robots: { index: false, follow: false } } : {}),
-    };
+      path: `/collaborations/${slug}`,
+      image: page.seo.ogImage || collaboration.heroImage || undefined,
+      noIndex: page.seo.noIndex,
+    });
   }
 
   return {};

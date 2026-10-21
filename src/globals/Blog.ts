@@ -59,7 +59,7 @@ export const Blog: GlobalConfig = {
                 {
                   name: "metaTitle",
                   type: "text",
-                  admin: { description: 'Leave blank to use the default ("Journal | Giada").' },
+                  admin: { description: 'Leave blank to use the default ("Journal").' },
                 },
                 {
                   name: "metaDescription",

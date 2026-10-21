@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import BlogPostPageClient from "@/components/sections/blog/BlogPostPageClient";
 import { getAllBlogSlugs, getPostBySlug, getPostBySlugRaw, getRelatedPosts } from "@/lib/api/blog";
+import { buildPageMetadata } from "@/lib/metadata";
 
 export async function generateStaticParams() {
   const slugs = await getAllBlogSlugs();
@@ -13,12 +14,13 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const post = await getPostBySlug(slug);
   if (!post) return {};
   const { seo } = post;
-  return {
+  return buildPageMetadata({
     title: seo.metaTitle || post.title,
     description: seo.metaDescription || post.excerpt,
-    ...((seo.ogImage || post.coverImage) ? { openGraph: { images: [{ url: seo.ogImage || post.coverImage }] } } : {}),
-    ...(seo.noIndex ? { robots: { index: false, follow: false } } : {}),
-  };
+    path: `/blog/${slug}`,
+    image: seo.ogImage || post.coverImage || undefined,
+    noIndex: seo.noIndex,
+  });
 }
 
 export default async function BlogPostPage({ params }: { params: Promise<{ slug: string }> }) {

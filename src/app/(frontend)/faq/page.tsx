@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import FaqPageClient from "@/components/sections/faq/FaqPageClient";
 import { getFaqPage } from "@/lib/api/faq";
+import { buildPageMetadata } from "@/lib/metadata";
 
 const DEFAULT_TITLE = "FAQ";
 const DEFAULT_DESCRIPTION =
@@ -10,12 +11,13 @@ const DEFAULT_DESCRIPTION =
 
 export async function generateMetadata(): Promise<Metadata> {
   const { seo } = await getFaqPage();
-  return {
+  return buildPageMetadata({
     title: seo.metaTitle || DEFAULT_TITLE,
     description: seo.metaDescription || DEFAULT_DESCRIPTION,
-    ...(seo.ogImage ? { openGraph: { images: [{ url: seo.ogImage }] } } : {}),
-    ...(seo.noIndex ? { robots: { index: false, follow: false } } : {}),
-  };
+    path: "/faq",
+    image: seo.ogImage || undefined,
+    noIndex: seo.noIndex,
+  });
 }
 
 export default async function FaqPage() {

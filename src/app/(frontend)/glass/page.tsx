@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import GlassPageClient from "@/components/sections/glass/GlassPageClient";
 import { getGlassPage, getGlassRaw } from "@/lib/api/glass";
+import { buildPageMetadata } from "@/lib/metadata";
 
 const DEFAULT_TITLE = "Textile in Glass";
 const DEFAULT_DESCRIPTION =
@@ -11,12 +12,13 @@ const DEFAULT_DESCRIPTION =
 // real copy this page always had before the SEO tab existed.
 export async function generateMetadata(): Promise<Metadata> {
   const { seo } = await getGlassPage();
-  return {
+  return buildPageMetadata({
     title: seo.metaTitle || DEFAULT_TITLE,
     description: seo.metaDescription || DEFAULT_DESCRIPTION,
-    ...(seo.ogImage ? { openGraph: { images: [{ url: seo.ogImage }] } } : {}),
-    ...(seo.noIndex ? { robots: { index: false, follow: false } } : {}),
-  };
+    path: "/glass",
+    image: seo.ogImage || undefined,
+    noIndex: seo.noIndex,
+  });
 }
 
 export default async function GlassPage() {

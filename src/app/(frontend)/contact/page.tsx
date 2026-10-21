@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import ContactPageClient from "@/components/sections/contact/ContactPageClient";
 import { siteConfig } from "@/data/site";
 import { getContactPage, getContactRaw } from "@/lib/api/contact";
+import { buildPageMetadata } from "@/lib/metadata";
 
 const DEFAULT_TITLE = "Contact";
 const DEFAULT_DESCRIPTION =
@@ -12,12 +13,13 @@ const DEFAULT_DESCRIPTION =
 // real copy this page always had before the SEO tab existed.
 export async function generateMetadata(): Promise<Metadata> {
   const { seo } = await getContactPage();
-  return {
+  return buildPageMetadata({
     title: seo.metaTitle || DEFAULT_TITLE,
     description: seo.metaDescription || DEFAULT_DESCRIPTION,
-    ...(seo.ogImage ? { openGraph: { images: [{ url: seo.ogImage }] } } : {}),
-    ...(seo.noIndex ? { robots: { index: false, follow: false } } : {}),
-  };
+    path: "/contact",
+    image: seo.ogImage || undefined,
+    noIndex: seo.noIndex,
+  });
 }
 
 // LocalBusiness JSON-LD per showroom, confirmed from the real source's

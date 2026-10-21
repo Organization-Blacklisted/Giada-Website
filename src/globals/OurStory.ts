@@ -14,9 +14,6 @@ export const OurStory: GlobalConfig = {
   slug: "our-story-page",
   admin: {
     group: "Pages",
-    // Not ready to reveal to the client yet — frontend isn't part of
-    // this deploy. Remove this line when /our-story is ready to go live.
-    hidden: true,
     livePreview: {
       url: ({ req }) => {
         const host = req.headers.get("host") || "localhost:3000";

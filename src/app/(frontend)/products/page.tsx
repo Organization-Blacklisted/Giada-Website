@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import ProductsPageClient from "@/components/sections/products/ProductsPageClient";
 import { getProductsPage, getProductsRaw } from "@/lib/api/products";
+import { buildPageMetadata } from "@/lib/metadata";
 
 const DEFAULT_TITLE = "Products";
 const DEFAULT_DESCRIPTION = "Explore Giada's handcrafted rugs and art glass, each made to order.";
@@ -10,12 +11,13 @@ const DEFAULT_DESCRIPTION = "Explore Giada's handcrafted rugs and art glass, eac
 // real copy this page always had before the SEO tab existed.
 export async function generateMetadata(): Promise<Metadata> {
   const { seo } = await getProductsPage();
-  return {
+  return buildPageMetadata({
     title: seo.metaTitle || DEFAULT_TITLE,
     description: seo.metaDescription || DEFAULT_DESCRIPTION,
-    ...(seo.ogImage ? { openGraph: { images: [{ url: seo.ogImage }] } } : {}),
-    ...(seo.noIndex ? { robots: { index: false, follow: false } } : {}),
-  };
+    path: "/products",
+    image: seo.ogImage || undefined,
+    noIndex: seo.noIndex,
+  });
 }
 
 export default async function ProductsPage() {

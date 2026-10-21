@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import CollaborationsPageClient from "@/components/sections/collaborations/CollaborationsPageClient";
 import { getCollaborationsPage, getCollaborationsRaw, getCollaborationItemsRaw, mapCollaborationItem } from "@/lib/api/collaborations";
+import { buildPageMetadata } from "@/lib/metadata";
 
 const DEFAULT_TITLE = "Collaborations";
 const DEFAULT_DESCRIPTION =
@@ -11,12 +12,13 @@ const DEFAULT_DESCRIPTION =
 // blank, same real copy this page always had before the SEO tab existed.
 export async function generateMetadata(): Promise<Metadata> {
   const { seo } = await getCollaborationsPage();
-  return {
+  return buildPageMetadata({
     title: seo.metaTitle || DEFAULT_TITLE,
     description: seo.metaDescription || DEFAULT_DESCRIPTION,
-    ...(seo.ogImage ? { openGraph: { images: [{ url: seo.ogImage }] } } : {}),
-    ...(seo.noIndex ? { robots: { index: false, follow: false } } : {}),
-  };
+    path: "/collaborations",
+    image: seo.ogImage || undefined,
+    noIndex: seo.noIndex,
+  });
 }
 
 export default async function CollaborationsPage() {

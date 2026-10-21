@@ -72,6 +72,9 @@ export interface Config {
     products: Product;
     collaborations: Collaboration;
     posts: Post;
+    events: Event;
+    'event-registrations': EventRegistration;
+    enquiries: Enquiry;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
@@ -84,6 +87,9 @@ export interface Config {
     products: ProductsSelect<false> | ProductsSelect<true>;
     collaborations: CollaborationsSelect<false> | CollaborationsSelect<true>;
     posts: PostsSelect<false> | PostsSelect<true>;
+    events: EventsSelect<false> | EventsSelect<true>;
+    'event-registrations': EventRegistrationsSelect<false> | EventRegistrationsSelect<true>;
+    enquiries: EnquiriesSelect<false> | EnquiriesSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
@@ -348,6 +354,99 @@ export interface Post {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "events".
+ */
+export interface Event {
+  id: number;
+  /**
+   * E.g. "Art Basel Miami".
+   */
+  title: string;
+  /**
+   * Used for this event's /events/[slug] URL.
+   */
+  slug: string;
+  /**
+   * Small label above the logo, e.g. "Art Basel Miami . Private Preview".
+   */
+  eyebrow: string;
+  /**
+   * The event's lockup/brand image.
+   */
+  logo: number | Media;
+  /**
+   * Main heading above the intro copy.
+   */
+  heading: string;
+  /**
+   * Intro copy below the heading. Line breaks are preserved.
+   */
+  description: string;
+  eventDate: string;
+  /**
+   * Free-text time range, e.g. "05:00 - 08:00 PM".
+   */
+  timeLabel: string;
+  /**
+   * E.g. "Miami Art Week".
+   */
+  location: string;
+  formHeading: string;
+  confirmButtonLabel: string;
+  seo?: {
+    /**
+     * Leave blank to use this event's own title.
+     */
+    metaTitle?: string | null;
+    /**
+     * Leave blank to use this event's description.
+     */
+    metaDescription?: string | null;
+    /**
+     * Leave blank to use this event's logo.
+     */
+    ogImage?: (number | null) | Media;
+    noIndex?: boolean | null;
+  };
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "event-registrations".
+ */
+export interface EventRegistration {
+  id: number;
+  event: number | Event;
+  fullName: string;
+  companyName: string;
+  email: string;
+  mobileNumber: string;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "enquiries".
+ */
+export interface Enquiry {
+  id: number;
+  firstName: string;
+  lastName: string;
+  email: string;
+  type:
+    | 'bespoke-rug-project'
+    | 'textile-in-glass-project'
+    | 'designer-architect-partnership'
+    | 'trade-programme'
+    | 'showroom-visit'
+    | 'general-enquiry';
+  message: string;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv".
  */
 export interface PayloadKv {
@@ -389,6 +488,18 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'posts';
         value: number | Post;
+      } | null)
+    | ({
+        relationTo: 'events';
+        value: number | Event;
+      } | null)
+    | ({
+        relationTo: 'event-registrations';
+        value: number | EventRegistration;
+      } | null)
+    | ({
+        relationTo: 'enquiries';
+        value: number | Enquiry;
       } | null);
   globalSlug?: string | null;
   user: {
@@ -557,6 +668,59 @@ export interface PostsSelect<T extends boolean = true> {
         ogImage?: T;
         noIndex?: T;
       };
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "events_select".
+ */
+export interface EventsSelect<T extends boolean = true> {
+  title?: T;
+  slug?: T;
+  eyebrow?: T;
+  logo?: T;
+  heading?: T;
+  description?: T;
+  eventDate?: T;
+  timeLabel?: T;
+  location?: T;
+  formHeading?: T;
+  confirmButtonLabel?: T;
+  seo?:
+    | T
+    | {
+        metaTitle?: T;
+        metaDescription?: T;
+        ogImage?: T;
+        noIndex?: T;
+      };
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "event-registrations_select".
+ */
+export interface EventRegistrationsSelect<T extends boolean = true> {
+  event?: T;
+  fullName?: T;
+  companyName?: T;
+  email?: T;
+  mobileNumber?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "enquiries_select".
+ */
+export interface EnquiriesSelect<T extends boolean = true> {
+  firstName?: T;
+  lastName?: T;
+  email?: T;
+  type?: T;
+  message?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -1583,7 +1747,7 @@ export interface BlogPage {
   };
   seo?: {
     /**
-     * Leave blank to use the default ("Journal | Giada").
+     * Leave blank to use the default ("Journal").
      */
     metaTitle?: string | null;
     /**

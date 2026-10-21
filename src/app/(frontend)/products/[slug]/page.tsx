@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import ProductDetail from "@/components/sections/products/ProductDetail";
 import { getAllProductSlugs, getProductBySlug } from "@/lib/api/products-catalog";
+import { buildPageMetadata } from "@/lib/metadata";
 
 // Every product gets a real static page regardless of `active` —
 // matches the real source's own getStaticPaths() exactly (inactive
@@ -16,10 +17,12 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const product = await getProductBySlug(slug);
   if (!product) return {};
 
-  return {
+  return buildPageMetadata({
     title: product.title,
     description: product.description,
-  };
+    path: `/products/${slug}`,
+    image: product.images[0] || undefined,
+  });
 }
 
 export default async function ProductDetailPage({ params }: { params: Promise<{ slug: string }> }) {

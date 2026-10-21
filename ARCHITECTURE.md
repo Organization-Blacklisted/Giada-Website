@@ -20,7 +20,7 @@ the project — keep it updated as decisions get made.
 - [x] Contact page built in full (title/lead, `EnquiryForm`, showroom section with map embeds, `/contact/success`) — see "Contact page" below, verified in a real browser including the GSAP field-stagger animation and mobile stacking
 - [x] Contact/FAQ/Home retrofitted to a consistent API-ready architecture — `lib/api/<page>.ts` mock-data layer + thin `page.tsx` + prop-driven section components, standing rule for every page from now on (2026-10-01)
 - [x] Image reel (craftsmanship photo strip) built, GSAP-driven infinite scroll — see "Image reel (craftsmanship strip)" below. Home page now has two real sections (Testimonials + Image reel), rest still placeholder
-- [x] Category grid (Rugs/Glass) built — `CategoryCard` reusable primitive + Home's `CategoryGridSection` + the Products page built out for real (`ProductCategoriesSection`) — see "Category grid (Rugs / Glass)" below. Products page is no longer a placeholder (though full catalog/filtering by category isn't built yet)
+- [x] Category grid (Rugs/Glass) built — `CategoryCard` reusable primitive + Home's `CategoryGridSection` + the Products page built out for real (`ProductCategoriesSection`) — see "Category grid (Rugs / Glass)" below. Products page is no longer a placeholder (though full catalog/filtering by category isn't built yet). **Revealed to production 2026-10-14** (`admin.hidden` removed from the Products/Glass/Rugs Globals) alongside the full `/rugs` catalog and `/glass` landing page — see "CMS" below ("Products/Rugs/Glass revealed...")
 - [x] Hero slideshow built (`HeroSlideshowSection`) — GSAP entrance timeline, character-split title, Ken Burns, scroll parallax, full carousel machinery (currently one real slide, matching the real source) — see "Hero slideshow" below.
 - [x] Press feature built (`ZoomCard` reusable primitive + `PressFeatureSection`) — cursor-tracked magnifying zoom, verified via measured `transform`/`transform-origin`, not just visual — see "Press feature (zoom cards)" below. Home now has five real sections, in real page order
 - [x] Page-transition crossfade shipped (`next-view-transitions`, real browser View Transitions API) — see "Page transitions" below. Two prior Framer Motion attempts failed for a confirmed structural reason (App Router's single `children` slot isn't a stable snapshot); switching to the real browser API the live site itself uses resolved it
@@ -30,9 +30,14 @@ the project — keep it updated as decisions get made.
 - [x] Process strip built (`ProcessStripSection`, 5-step "Crafted With Purpose", fourth section on Home) — see "Process strip (5-step "Crafted With Purpose")" below. Home now has seven real sections, in real page order
 - [x] Why Giada built (`WhyGiadaSection`, 3 pillars + closing hover-zoom image, sixth section on Home) — see "Why Giada (pillars + closing image)" below. Home page matches the real source's complete section order: HeroSlideshow, Collection, CategoryGrid, ProcessStrip, PressFeature, WhyGiada, Testimonials, ClosingCTA, ImageBar
 - [x] Values section built (`ValuesSection`, "Living Art Beyond Simple Decor") — see "Values section (\"Living Art Beyond Simple Decor\") — first client-designed section" below. **First section built from new client-provided Figma content rather than the real Astro source** — placed between CategoryGrid and ProcessStrip, built as a genuine reusable `ui/` primitive from the start per explicit client instruction (for eventual reuse on Our Story's real "Values That Endure" section)
+- [x] Products/Rugs/Glass revealed to production, 2026-10-14 (`63e06e9`) — `admin.hidden` removed from all three Globals; `/products` switched from a long-stale hardcoded mock to actually reading its own CMS Global for the first time; a live production bug in Home (stale `visibility_*` "Appearance" columns) fixed in the same push — see "CMS" below ("Products/Rugs/Glass revealed...")
+- [x] Fragments hero images optimized, orphaned static assets removed, 2026-10-14 (`57cf697`) — `FragmentsHeroSection`'s backdrop/cutout switched from unoptimized `<img>`/CSS `background-image` to `next/image`, fixing a real CSS stacking-order bug it exposed; ~37 orphaned files (~11MB) deleted from `public/images/` — see "CMS" below ("Fragments hero images optimized...")
+- [x] Blog detail page built (`/blog/[slug]` — TOC with mobile off-canvas drawer, rich article body via two custom Lexical blocks, per-post FAQ accordion, related posts) and Blog revealed (`admin.hidden` removed from both `posts` and the `blog-page` Global) — see "Blog detail page" below, verified in a real browser including the sticky-TOC CSS fix. All 7 real/demo posts seeded with real content.
+- [x] Live Preview audited across all 17 Payload configs declaring `admin.livePreview` (2026-10-19) — found and fixed two pages with no `useLivePreview` wiring at all (Blog detail, Collaborations detail covering Fragments/Of Earth And Light); the other 14 confirmed already correct — see "Blog detail page" below and "Live Preview audit" in "CMS" below
 - [ ] Neon database created (client-owned org, per the agency's multi-project Neon plan) and `DATABASE_URL` set — `/admin` 500s until this exists, confirmed expected behavior, not a bug
 - [ ] Real content model/collections designed for Products, Collaborations, Gallery, Blog, FAQ, Testimonials, Enquiries
 - [ ] Real content ported page by page
+- [ ] **Our Story and the 3 legal pages (Privacy/Terms/Shipping) real CMS-wiring — built once this session, then deleted, not dormant.** Full Payload-backed components (`OurStoryPageClient.tsx`, `FoundersSection`, `StoryHeroSection`, `StoryOriginSection`, `StoryBeliefsSection`, `StoryPresentSection`, `LegalDocumentSection` + 3 page-specific client wrappers) and their `lib/api/*` files were built, then accidentally shipped alongside the Blog push (`56d88ac`) before they were meant to go live. Per explicit user correction, `e30c6d8` reverted all 4 pages' `page.tsx` back to the TODO-placeholder state and deleted the new components/`lib/api/` files outright (not hidden — removed from the repo, since none of it had a prior committed version to fall back to). **Do not assume this work still exists anywhere — it needs to be rebuilt from scratch.** See "Blog detail page" below.
 - [ ] Enquiry form wired to Payload (still posts to a guessed `/enquiries` path against a Laravel API that no longer exists — see "Contact page" below; needs an Enquiries collection + a Local API call)
 - [ ] SEO parity check (metadata, sitemap, 301s from old URLs — legacy redirect table found in the Astro source, needs porting) — see "SEO" section below for the current audit (what's real vs. gaps), deferred by explicit request
 - [ ] Staging deploy / client UAT
@@ -90,7 +95,10 @@ src/app/
     gallery/page.tsx
     our-story/page.tsx
     blog/page.tsx             Post list
-    blog/[slug]/page.tsx      Single post
+    blog/[slug]/page.tsx      Single post — full detail page built
+                             2026-10-19 (TOC, rich content blocks, FAQ
+                             accordion), see "Blog detail page" below;
+                             was a TODO stub before this
     faq/page.tsx
     contact/page.tsx          Enquiry form
     privacy/, terms/, shipping/page.tsx   Legal pages (footer links here)
@@ -148,8 +156,31 @@ src/collections/           Payload collection configs — one file per
                              than Payload's own blank-template default —
                              no Folders/Tags organizational layer, not
                              needed at this content volume yet.
-  (Products.ts, Collaborations.ts, Gallery.ts, Blog.ts, Faq.ts,
-  Testimonials.ts, Enquiries.ts — not built yet, next real step)
+  Products.ts                Real collection, 75 rug products — see
+                             "CMS" below ("Products scope investigation").
+  Collaborations.ts          Real collection, but card-only fields for
+                             the /collaborations listing (name/slug/
+                             tagline/active/heroImage/productCount/
+                             designerName) — each collaboration's own
+                             page content lives in a dedicated Global
+                             instead, see "CMS" below ("Collaborations
+                             moved...").
+  BlogPosts.ts                Real collection (`posts`) — title/slug/
+                             excerpt/pubDate/coverImage/author plus
+                             `content` (richText: h2-only headings +
+                             inline images + ImagePairBlock/
+                             FeatureListBlock), `faqs` (array), and a
+                             per-item `seo` tab — see "Blog detail page"
+                             below. This stale note used to list
+                             Blog.ts/Faq.ts/etc. as "not built yet" —
+                             no longer accurate.
+  blocks/                     `ImagePairBlock.ts`/`FeatureListBlock.ts`
+                             — Lexical Blocks used only by BlogPosts.ts's
+                             `content` field, see "Blog detail page"
+                             below.
+  (Enquiries.ts — still not built. Gallery/FAQ/Testimonials content
+  lives in page Globals, not collections — see "CMS" below — since
+  each is one page's content, not many like-shaped documents.)
 
 src/payload.config.ts      Registers collections, the Postgres (Neon) db
                              adapter, the rich text editor, and the
@@ -212,10 +243,12 @@ src/types/                  One file per content shape: product.ts,
 
 ## Known pages (from live site audit)
 
-Products, Collaborations, Gallery, Our Story, Blog, FAQ, Contact — all
-scaffolded as placeholder routes already. Home page sections seen on the
-live site that still need building once we have real content: hero,
-collection feature, testimonial carousel, press feature, image bar.
+Products, Collaborations, Gallery, Our Story, FAQ, Contact — all
+scaffolded as placeholder routes already (Blog has since been built in
+full — see "Blog detail page" below — no longer just a placeholder
+route). Home page sections seen on the live site that still need
+building once we have real content: hero, collection feature,
+testimonial carousel, press feature, image bar.
 
 ## EnquiryForm (`components/sections/contact/EnquiryForm`)
 
@@ -1796,6 +1829,149 @@ fade still mid-transition, not a real bug — confirmed by re-shooting at
 - `noindex` set via Next's `metadata.robots` on the success page,
   equivalent to the real source's `<Layout noindex={true}>` prop.
 
+## Blog detail page
+
+`/blog/[slug]` — previously a TODO stub, same as every page not yet
+built. `components/sections/blog/BlogPostPageClient.tsx` (thin Live
+Preview wrapper) + `BlogDetailHeroSection` + `BlogArticleSection`
+(renders `content` via `BlogContent.tsx`) + `BlogTableOfContents` +
+`BlogRelatedSection` + `BlogFaqSection` + `lib/api/blog.ts`/`blog-map.ts`.
+New fields on the `posts` collection (`src/collections/BlogPosts.ts`):
+`content` (richText, Lexical, h2-only headings via `HeadingFeature` +
+`UploadFeature` for inline images + two custom Blocks), `faqs` (array,
+question/answer, rendered as an accordion), and a new `seo` tab
+(metaTitle/metaDescription/ogImage/noIndex — same shape as every
+page-level Global's SEO tab) — the first time a *collection item*, not
+just a page Global, has gotten this.
+
+- **Two custom Lexical Blocks modeled explicitly, not inferred from
+  formatting** — `ImagePairBlock` (`collections/blocks/ImagePairBlock.ts`,
+  two side-by-side required `upload` fields) and `FeatureListBlock`
+  (`collections/blocks/FeatureListBlock.ts`, an array of items each with
+  a `title`/`description` plus optional `subItems` and a `closingText`)
+  — because the Figma design's bold-Didot "lead" line sitting distinct
+  from its body text genuinely can't be expressed with plain Lexical
+  text formatting; an editor inserts these deliberately from the
+  toolbar rather than the renderer guessing at adjacent images or bold
+  runs.
+- **TOC and read time are both derived at render time from `content`,
+  never stored as separate fields** — `lib/richtext-utils.ts`'s
+  `extractHeadings` (walks every node, not just top-level, looking for
+  `h2` headings) and `estimateReadTime` (200 wpm, walks every text
+  node) — same reasoning as Home's upload-field width/height: nothing
+  for an editor to forget to keep in sync.
+- **Mobile TOC ported from Torque Pharma's blog pattern** (this
+  project's structural reference) — a fixed pill below `lg` that opens
+  a backdrop + left-sliding off-canvas drawer holding the same
+  scroll-spy TOC list, hand-rolled CSS transitions, no Framer
+  Motion/headless-UI dependency, matching Torque's own approach. Two
+  deliberate differences from the reference, flagged rather than
+  silently added: the drawer also holds the "Explore the latest Rugs
+  collections" CTA card (Torque's reference only ever holds the TOC —
+  explicit request here), and Escape-to-close + a body-scroll lock,
+  neither of which Torque's version has.
+- **Desktop sidebar and the mobile drawer mount two independent
+  `TocNav` instances**, not a shared one, each with its own
+  measurement refs — the active-section marker's position comes from
+  real DOM `offsetTop`/`offsetHeight`, not an assumed fixed row pitch,
+  since different posts have different numbers of headings and some
+  headings wrap to two lines.
+- **Real CSS bug found and fixed, site-wide**: `html`/`body`'s
+  `overflow-x: hidden` (ported from the real Astro source, there to
+  stop `ImageReelSection`'s full-bleed trick from adding a horizontal
+  scrollbar — see "Image reel" above) silently turned `body` into its
+  own scroll container. Per the CSS Overflow spec, setting only one
+  axis to a non-`visible` value forces the browser to compute the
+  other axis as `auto` — this broke `position: sticky` for the new TOC
+  sidebar (and potentially anything else using sticky project-wide,
+  though nothing else used it before now). Fixed in
+  `app/(frontend)/globals.css` by switching both `html`/`body` to
+  `overflow-x: clip` instead of `hidden` — same visual clipping for the
+  one real full-bleed use case, but `clip` doesn't trigger the x/y
+  coupling rule. Confirmed via Playwright screenshots before/after: TOC
+  not sticking at all, then correctly pinning through the scroll.
+- **Second Live Preview wiring gap found and fixed** — see "Live
+  Preview audit" in "CMS" below for the full story; the short version
+  is this page and the Collaborations detail page
+  (`/collaborations/[slug]`, covering both Fragments and Of Earth And
+  Light) had no `useLivePreview` wiring at all before this, fixed with
+  `BlogPostPageClient.tsx`/`FragmentsPageClient.tsx`/
+  `OfEarthAndLightPageClient.tsx` following the established pattern.
+- **A slug collision resolved by explicit user decision**: the Figma
+  mockup's demo article ("What Are the Main Benefits of Having Rugs at
+  Home?" — built as the full showcase for the TOC/FAQ/ImagePairBlock/
+  FeatureListBlock template) had been seeded under the slug
+  `the-bespoke-process`, but the real Astro-source article of that same
+  literal title is a different, shorter piece (3 sections, no FAQ)
+  about the custom-rug design process. Kept both: the Figma demo moved
+  to `rug-benefits-at-home`, and "The Bespoke Process" now lives at its
+  correct `the-bespoke-process` slug. All 6 real Astro-source posts are
+  seeded with their real content (2 full multi-section articles, 3
+  short 2-paragraph pieces matching the source exactly) plus this one
+  bonus demo article — 7 posts total.
+- **`admin.hidden: true` removed from both `posts` and the `blog-page`
+  Global** — admin-panel visibility only. The public `/blog` route and
+  its nav link already existed in `data/nav.config.ts` from the start,
+  so Blog was never actually unreachable to visitors, just thin-content
+  until this session.
+
+**Image optimization, several passes.** All via re-encoding to WebP and
+resizing oversized originals with `sharp`, then re-uploading through
+Payload's Local API — preserves the same Media doc id, so no content
+reference breaks:
+- The Figma-demo article's 5 inline images (raw Figma PNG exports,
+  ~16.4MB total): 91–95% reduction, ~1MB total.
+- Product catalog: scanned the real `products` collection for every
+  referenced Media doc (199 unique across 75 products), compressed the
+  111 over 300KB to a 1800px long edge — derived from
+  `ProductGallery.tsx`'s fixed `width={800}` slide, which never needs
+  more than ~1600px even at 2x retina — the 88 already-small ones left
+  untouched. 74.57MB → 46.48MB.
+- A further batch of 13 confirmed-in-use files elsewhere (Our Story
+  process photography, the other 4 blog cover images reused from
+  existing media, 3 Fragments-page assets, Home's image reel, Of Earth
+  And Light's hero/designer portrait) — each confirmed actually
+  referenced by scanning every Global/collection for the Media id
+  before touching it, not just going by filename — 2048px cap this
+  time (matches one of `next.config`'s own `deviceSizes` breakpoints,
+  more headroom for genuine full-bleed hero usage). 20.79MB → 5.31MB.
+- 3 Media docs confirmed referenced nowhere (`Group 199.png`,
+  `hero-backdrop.png`, `Ryan-Saghian.jpg` — the last apparently
+  superseded by `artist-portrait.png`, same subject) deleted outright
+  rather than compressed.
+- **Deployment lesson worth remembering**: Payload's upload handler
+  renames a file on collision (re-uploading content to the
+  `image-bar-1.webp` doc got silently renamed to `image-bar-2.webp`) —
+  each doc's own `url`/`filename` field stays internally consistent,
+  but this broke the **already-deployed Vercel production site**,
+  which had stale cached HTML still referencing the pre-rename
+  filename, 404ing until the "home" cache tag was manually revalidated
+  against the *live* URL — not just localhost, a mistake made initially
+  worth flagging: local dev and the deployed Vercel instance have
+  entirely separate Next.js data caches even though they share the same
+  Neon database/S3 media bucket, so an `/api/revalidate` call during
+  local work doesn't reach the deployed site.
+
+**Deployment mistake and revert.** This was the first real production
+push since `57cf697` (commit `56d88ac`), meant to ship only the Blog
+work — but the working tree also had substantial uncommitted work from
+earlier in the engagement, Our Story and the 3 legal pages (Privacy/
+Terms/Shipping) fully wired to Payload with real components
+(`OurStoryPageClient.tsx`, `FoundersSection`, `StoryHeroSection`,
+`StoryOriginSection`, `StoryBeliefsSection`, `StoryPresentSection`,
+`LegalDocumentSection` + its 3 page-specific client wrappers), and all
+of it went out together by mistake. **Per explicit user correction, a
+follow-up commit (`e30c6d8`) reverted those 4 pages' `page.tsx` files
+back to their previous plain TODO-placeholder state and deleted all the
+newly-built Our Story/legal components and `lib/api/` files outright**
+— not just hidden, removed from the repo entirely, since none of it had
+ever been committed before this session so there was no earlier
+committed version to fall back to other than the placeholder. **This
+means the Our Story/Privacy/Terms/Shipping CMS-wiring work still needs
+to be redone from scratch whenever it's actually wanted — it is not
+sitting dormant anywhere, it was deleted.** Also tracked in "Status"
+above.
+
 ## CMS
 
 Confirmed: no headless CMS on the current site (plain Astro, static
@@ -2146,7 +2322,9 @@ way Home's are. Verified end-to-end (toggled `collaborationsSlider`
 off, forced revalidation, confirmed the section's heading no longer
 appears in the rendered HTML — only in the hydration data payload
 passed to the client component, which is expected and correct, not a
-leak — then restored it and reconfirmed).
+leak — then restored it and reconfirmed). **Removed outright 2026-10-14**
+as part of the Products/Rugs/Glass reveal push — see "Products/Rugs/Glass
+revealed..." below for why.
 
 **SEO `noIndex` toggle, 2026-10-07.** Added a "Hide from search engines
 (noindex)" checkbox to both globals' SEO group, defaulting to
@@ -2338,6 +2516,113 @@ be fully isolated from the Products work, since each collaboration's
 depend on the `products` Collection. The full `/rugs` catalog *listing*
 page has no such dependency and was held back cleanly.
 
+**Products/Rugs/Glass revealed, Home visibility bug fixed, 2026-10-14
+(`63e06e9`).** The actual reveal step the entry above already promised:
+`admin.hidden: true` removed from the `Products`, `Glass`, and `Rugs`
+Globals, and the frontend files that every prior commit had deliberately
+left out of git (`/rugs/page.tsx`, `/glass/page.tsx`, `RugsListing`,
+`GlassPageClient` and its 8 section components, etc.) committed and
+shipped for the first time. The catalog/filtering/landing-page work
+itself was already built and is documented above under "Products
+collection, Rugs catalog, and Glass landing page built" — this commit
+didn't change any of that, just finally let it reach git and production.
+
+One real gap this surfaced: `/products` itself (the 2-card hub) has had
+a `products-page` Global in Payload since the 2026-10-08 investigation
+above, but `lib/api/products.ts` was never actually touched after that —
+confirmed via `git log --oneline -- src/lib/api/products.ts`, whose only
+two commits are the original Home-page-build commit and this one. It
+had been serving the exact same hardcoded mock object (`eyebrow: "The
+Complete Collection"`, two hardcoded category cards pointing at
+`/public/images/categories/*.webp`) the whole time — editing the Global
+in the admin panel had silently done nothing for six days. Fixed the
+same way as Glass/Rugs: mapping logic split into a pure `products-map.ts`
+(no `getPayload`/`unstable_cache` imports, so it can be imported by a
+Client Component) plus `products.ts`'s new `getProductsRaw()`/
+`getProductsPage()`, and a new `ProductsPageClient.tsx` wired to
+`useLivePreview` — the same raw-doc-cached-plus-pure-mapper split every
+other page in this project already uses.
+
+Also fixes a real live-production bug, bundled into the same push
+because it touches the same shared `globals` array in `payload.config.ts`
+(see "What it *did* require" above): Home's "Appearance" per-section
+show/hide feature (added 2026-10-07, see "Section show/hide toggles"
+above) was removed outright — the `visibility` field group deleted from
+`Home.ts`, the corresponding `VisibilityData` type and mapping deleted
+from `home-map.ts`, `HomePageClient.tsx` reverted to rendering every
+section unconditionally. This is framed in the commit message as a bug
+fix, not just a feature removal, for a specific reason: local dev and
+the deployed Vercel site share one Neon database (per the entry above),
+and Payload's postgres adapter auto-pushes schema on every local
+`npm run dev` outside `production` — so the `visibility_*` columns had
+already been dropped from the live database by an earlier local schema
+push, while the still-deployed production Home page code kept reading
+`home.visibility.hero` etc. on every request. Left unfixed, the next
+cache-busting edit to the Home global in production would have read a
+now-nonexistent column and 500'd.
+
+**Fragments hero images optimized, orphaned static assets removed,
+2026-10-14 (`57cf697`).** `FragmentsHeroSection`'s backdrop
+(`hero-backdrop.png`, a CSS `background-image`) and cutout
+(`hero-right-panel.png`, a plain `<img>`) skipping `next/image` entirely
+was a deliberate earlier decision for this one bespoke hero (the
+component's own top-of-file comment recorded it as "explicit request, no
+srcset/optimization pipeline for this image") — which meant every
+visitor downloaded the full raw 2.3MB backdrop PNG and 505KB cutout PNG
+regardless of viewport, no resizing, no compression. Both switched to
+`next/image`'s `<Image>`: the backdrop to an absolutely-positioned
+`<Image fill>` (`object-cover object-left lg:object-center` reproduces
+the original `bg-cover bg-left lg:bg-center` exactly — a plain CSS
+`url()` can't be intercepted by Next's optimizer, which is why this
+needed `fill` rather than staying a background-image), the cutout to a
+sized `<Image>` keeping the same `width={1082} height={834}` it already
+had.
+
+Real bug this surfaced: an absolutely-positioned element with no
+explicit `z-index` still paints above static in-flow content in CSS
+stacking order, so once the backdrop moved from `background-image`
+(which painted behind everything by definition) to an `<Image fill>`
+sibling, it started covering the hero's own text. Fixed by adding
+`relative z-10` to both the mobile and desktop content wrapper divs —
+same technique `CollaborationHeroSection`'s own background+content
+layering already uses, per the component's updated comment — not by
+touching the backdrop's own stacking, since it's the text that needs to
+sit above the image, not the other way around.
+
+Same commit deleted ~37 orphaned files (~11MB total) from
+`public/images/`: the Gallery folder's 16 WebPs (5 `behind-the-craft-*`,
+11 `inspirations-*`), the `category-rugs.webp`/`category-glass.webp`
+pair (dead since `products-map.ts`/`home-map.ts` started pulling category
+images from Payload Media instead of `/public`, per "Category grid"
+above), and 19 Fragments-folder source PNGs (artist portrait, hero
+backdrop/panel, inspiration/meeting/memories images) — every one
+confirmed unreferenced in code first, same `grep`-before-delete
+discipline as the "Image compression pass" work above, just applied to
+`/public` rather than Payload Media. Only `giada-logo.webp`
+(`Header`/admin `Logo`) and `giada-ryan-logo.png` (this same
+`FragmentsHeroSection`'s CSS-mask logo lockup) were confirmed still
+actually referenced and kept — reverified directly, both still resolve
+via a repo-wide grep after the deletion.
+
+**Live Preview audit, 2026-10-19.** Checked all 17 Payload configs
+declaring `admin.livePreview` (every page Global plus the `posts` and
+`collaborations` collections) against their actual frontend routes.
+Found two real gaps: the Blog detail page (`/blog/[slug]`) was a plain
+Server Component with no `useLivePreview` wiring at all — admin edits
+never reflected in the preview iframe, only ever showed the last-saved
+version — and the identical bug independently on
+`/collaborations/[slug]` (covers both Fragments and Of Earth And
+Light). Fixed with `BlogPostPageClient.tsx` (one `useLivePreview`
+instance) and two new client components for Collaborations:
+`FragmentsPageClient.tsx` (one instance) and
+`OfEarthAndLightPageClient.tsx` (two independent instances, since that
+page draws from two separately-editable documents — the
+`collaborations` collection item and the `of-earth-and-light-page`
+Global — whichever is actually open in the admin updates live, the
+other stays static). All other 14 of the 17 configs were confirmed
+already correctly wired, not touched. See "Blog detail page" above for
+the rest of this session's Blog work.
+
 ## Astro source audit (`giada-studio.com-handover.zip`, extracted 2026-09-29)
 
 Full analysis done, extracted source kept out of this repo (scratch
@@ -2398,19 +2683,20 @@ dir only). Key facts that change/confirm the plan:
 
 ## SEO
 
-Status as of 2026-10-05, from an explicit audit ("are we taking care of
-SEO things as well?"). Deferred — user said "we will do this later" —
-this section is the record of what's already real vs. what's an open
-gap, so the later pass starts from facts instead of re-auditing.
+Audited 2026-10-05 ("are we taking care of SEO things as well?"),
+deferred at the time ("we will do this later"). Picked back up and
+**closed out 2026-10-21** — every gap found in that original audit is
+now fixed; this section is kept as the record of what was done and why,
+not an open punch list anymore.
 
-**Already real, verified by reading the actual files, not assumed:**
+**Already real as of the original audit, still true:**
 
 - [robots.ts](../src/app/robots.ts) + [sitemap.ts](../src/app/sitemap.ts)
   exist and use the real production domain (`siteConfig.url`), not a
   placeholder.
-- Every page **except Home** exports its own `title`/`description`,
-  resolved through the layout's `%s | Giada` template
-  (`app/layout.tsx`'s `metadata.title.template`).
+- Every page exports its own `title`/`description`, resolved through the
+  layout's `%s | Giada` template (`app/layout.tsx`'s
+  `metadata.title.template`).
 - Real `LocalBusiness` JSON-LD per showroom on the Contact page
   (`app/contact/page.tsx`'s `buildLocalBusinessSchemas()`), including
   real geo coordinates — ported from the Astro source's
@@ -2422,35 +2708,91 @@ gap, so the later pass starts from facts instead of re-auditing.
 - Alt-text discipline already established on every image across every
   section built so far (see per-section notes throughout this doc).
 
-**Gaps — real, not yet addressed:**
+**Fixed 2026-10-21 — every gap from the original audit:**
 
-1. **No Open Graph / Twitter Card metadata anywhere.** Zero
-   `openGraph`/`twitter` fields on any page. For a luxury rug/textile
-   brand, link-preview quality (Pinterest, Instagram, WhatsApp, iMessage)
-   is a real commercial concern, not a nice-to-have — right now every
-   shared link renders a blank/generic card.
-2. **No `metadataBase`** set in `app/layout.tsx` — a prerequisite for
-   resolving relative OG image paths to absolute URLs, and also silences
-   a real Next.js build warning that will appear the moment any image
-   path is added to metadata.
-3. **No favicon beyond the bare `app/favicon.ico`** — no apple-touch-icon,
-   no `manifest.ts`/`icon.tsx` for proper mobile/PWA/bookmark icons.
-4. **No sitewide `Organization`/`WebSite` JSON-LD.** `siteConfig.social`
-   (`data/site.ts`) already has the real Instagram/LinkedIn URLs sitting
-   unused for a `sameAs` field — the data exists, just isn't wired into a
-   schema yet.
-5. **Home page has no explicit metadata export** — silently falls back to
-   the layout default. The default title is fine for Home specifically,
-   but the description is generic site copy, not written for the home
-   route.
-6. **No canonical tags** (follows from the missing `metadataBase`) — low
-   priority today, but `CategoryGridSection`'s `/products?category=rugs`
-   style hrefs (see "Category grid" above) could become a real
-   duplicate-content question once the Products page actually filters by
-   that query param instead of ignoring it.
+1. **Open Graph / Twitter Card metadata.** Every page now emits a full,
+   real set (`title`/`description`/`url`/`type`/`siteName`/`locale`/
+   `image`, plus matching Twitter Card tags) via one shared helper,
+   `lib/metadata.ts`'s `buildPageMetadata()` — not left to Next's parent/
+   child metadata merging, which replaces a child route's `openGraph`/
+   `twitter` object wholesale rather than deep-merging per field (the
+   two pages built earlier, Blog and Events, had each independently hit
+   this: they set `openGraph.images` and silently shipped with no
+   `title`/`description`/`type`/`siteName` at all). Applied across all 20
+   routes that export metadata, each passing its own real
+   title/description/image/path into the one helper. Root layout also
+   carries matching sitewide `openGraph`/`twitter` defaults, covering the
+   one route with no CMS-backed metadata (`not-found.tsx`).
+2. **`metadataBase`** added to `app/layout.tsx` (`new URL(siteConfig.url)`)
+   — silenced the build warning seen in every build log this entire
+   engagement, and is what makes every relative OG image path resolve to
+   a real absolute URL (confirmed via curl: `og:image` now reads
+   `https://www.giada-studio.com/api/media/file/...`, not
+   `http://localhost:3000/...`).
+3. **Favicon/manifest.** `app/apple-icon.png` (180×180) and `app/
+   manifest.ts` (→ `/manifest.webmanifest`, with 192×192/512×512 icons in
+   `public/icons/`) added at the true app root — same lesson already
+   learned from `robots.ts` (Next's file-convention routes resolve at the
+   real app root regardless of route groups). All three icons are the
+   same Didot "G" monogram already in `favicon.ico`, but **re-rendered
+   crisp from the real Didot font file** at each target size rather than
+   upscaled from the source `.ico`'s single tiny 32×32 embedded bitmap
+   (extracted and inspected directly — confirmed it really was just
+   32×32, upscaling it to 512×512 would've been visibly blurry). Verified
+   regular weight (not bold/title) by rendering all three Didot weights
+   at 512×512 via .NET's `PrivateFontCollection` and comparing against
+   the extracted original side by side.
+4. **Sitewide `Organization`/`WebSite` JSON-LD**, rendered once in the
+   root layout (not per-page — both describe the business/site itself,
+   unlike Contact's `LocalBusiness` or FAQ's `FAQPage` schema, which are
+   genuinely page-specific). `sameAs` wires in the real Instagram/
+   LinkedIn URLs from `siteConfig.social` — previously used only for the
+   footer's icons, now also telling Google these profiles and this
+   website are the same entity.
+5. **Canonical tags** — came along for free as part of `buildPageMetadata`
+   (`alternates: { canonical: url }` on every page), not a separate pass.
+6. **Legacy redirect table** ported from the real Astro source's
+   `astro.config.mjs` into `next.config.ts`'s `redirects()` (~100
+   entries: static pages, WooCommerce shop/attribute archives, old
+   project-showcase pages, blog taxonomy archives, 3 blog posts, 31
+   still-current products, 23 discontinued products). **Cross-checked
+   against this project's actual live data before porting, not copied
+   blind**: all 31 "still exists" product slugs and none of the 23
+   "discontinued" ones are in the current Products collection, and the
+   surviving blog-post redirect target resolves. **Found and fixed one
+   real bug in the source table itself** in the process: one entry
+   redirected to `/blog/choosing-a-rug-for-your-space`, a post that
+   doesn't exist anywhere — not even in the Astro reference site, just an
+   orphaned image folder left over after it was apparently retired
+   pre-handover. Redirected to `/blog` instead, the same fallback the
+   table's own author already used one line below for a different post
+   with "no equivalent yet." Verified live: a representative sample
+   across every category (static, product, discontinued product, both
+   blog redirects) all 308 to the correct destination (`permanent: true`
+   issues 308, not 301 — Next's HTTP/1.1-correct permanent redirect,
+   treated identically to 301 for SEO ranking transfer).
+7. Home page's metadata gap (no explicit export) had actually already
+   been closed before this pass — it already reads its own `seo` tab from
+   the Home global — just needed the same `buildPageMetadata` upgrade as
+   every other page for its OG/Twitter completeness.
 
-Also tracked in "Status" above ("SEO parity check") and "Astro source
-audit" (legacy redirect table, analytics — neither ported/added yet).
+**Deliberately left alone, discussed and declined:** CMS-editable
+redirects via Next middleware + a Payload `Redirects` collection (e.g.
+`@payloadcms/plugin-redirects`) — real trade-off (self-service editing
+for the client vs. a database/cache lookup on every request), but this
+specific ~100-entry table is one-time migration history, not an ongoing
+editing need, so it stays static in `next.config.ts`. If the client needs
+to add an ad-hoc redirect later, the same file is where it goes.
+
+**Analytics — closed 2026-10-21, after this pass.** Client confirmed GTM
+(container `GTM-WCGH9SJW`) over GA4-direct/Pixel. Wired via Next's
+official `@next/third-parties`' `<GoogleTagManager>` in `app/layout.tsx`,
+gated on `NEXT_PUBLIC_GTM_ID` (set in `.env`/`.env.example` — not a
+secret, GTM container IDs are always visible in page source) so a
+missing value just no-ops instead of firing a broken container. Verified
+live: `gtm.js?id=GTM-WCGH9SJW` renders in the page HTML. No GA4/Pixel
+tags configured directly — those go inside the GTM container itself if/
+when the client wants them, not as separate code changes here.
 
 ## Env vars
 
