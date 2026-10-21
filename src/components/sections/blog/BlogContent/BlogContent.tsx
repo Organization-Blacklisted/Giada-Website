@@ -1,11 +1,12 @@
 import Image from "next/image";
+import { Link } from "next-view-transitions";
 import {
   RichText,
   defaultJSXConverters,
   type JSXConvertersFunction,
 } from "@payloadcms/richtext-lexical/react";
 import type { Post } from "@/payload-types";
-import { slugify } from "@/lib/richtext-utils";
+import { slugify, toInternalHref } from "@/lib/richtext-utils";
 
 type ImagePairBlockProps = {
   blockType: "imagePair";
@@ -82,6 +83,42 @@ const converters: JSXConvertersFunction<ArticleBlockProps> = ({ defaultConverter
     );
   },
   listitem: ({ node, nodesToJSX }) => <li className="pl-1">{nodesToJSX({ nodes: node.children })}</li>,
+  // Payload's default link converter always renders a plain <a> — even
+  // for a link pointing back at this same site (see toInternalHref's own
+  // comment for why that's a real problem, not cosmetic). Anything
+  // resolving to this site's own host renders through next-view-
+  // transitions' Link instead, matching every other internal link in the
+  // app; genuine external links (and mailto:/tel:, which toInternalHref
+  // can't parse as same-host) keep the plain <a>.
+  link: ({ node, nodesToJSX }) => {
+    const children = nodesToJSX({ nodes: node.children });
+    const rawUrl = node.fields.linkType === "internal" ? undefined : node.fields.url;
+    const internalHref = rawUrl ? toInternalHref(rawUrl) : null;
+    if (internalHref) {
+      return <Link href={internalHref}>{children}</Link>;
+    }
+    const rel = node.fields.newTab ? "noopener noreferrer" : undefined;
+    const target = node.fields.newTab ? "_blank" : undefined;
+    return (
+      <a href={rawUrl ?? "#"} rel={rel} target={target}>
+        {children}
+      </a>
+    );
+  },
+  autolink: ({ node, nodesToJSX }) => {
+    const children = nodesToJSX({ nodes: node.children });
+    const internalHref = toInternalHref(node.fields.url);
+    if (internalHref) {
+      return <Link href={internalHref}>{children}</Link>;
+    }
+    const rel = node.fields.newTab ? "noopener noreferrer" : undefined;
+    const target = node.fields.newTab ? "_blank" : undefined;
+    return (
+      <a href={node.fields.url} rel={rel} target={target}>
+        {children}
+      </a>
+    );
+  },
   upload: ({ node }) => {
     const value = node.value as { url?: string | null; alt?: string | null; width?: number | null; height?: number | null };
     return (

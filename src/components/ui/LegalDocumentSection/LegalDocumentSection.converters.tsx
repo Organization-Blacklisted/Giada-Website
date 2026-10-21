@@ -1,5 +1,7 @@
+import { Link } from "next-view-transitions";
 import type { JSXConvertersFunction } from "@payloadcms/richtext-lexical/react";
 import type { DefaultNodeTypes } from "@payloadcms/richtext-lexical";
+import { toInternalHref } from "@/lib/richtext-utils";
 
 // Custom rendering for the `content` richText field so a real Lexical
 // bullet list / heading still produces the exact same visual design the
@@ -41,6 +43,39 @@ export const legalConverters: JSXConvertersFunction<DefaultNodeTypes> = ({ defau
         <span className="mt-2.5 h-px w-3 shrink-0 bg-stone-300" aria-hidden="true" />
         <span>{children}</span>
       </li>
+    );
+  },
+  // Same fix as BlogContent.tsx's link/autolink converters — Payload's
+  // default always renders a plain <a>, even for a link back at this
+  // same site. See toInternalHref's own comment for why that's a real
+  // problem, not cosmetic.
+  link: ({ node, nodesToJSX }) => {
+    const children = nodesToJSX({ nodes: node.children });
+    const rawUrl = node.fields.linkType === "internal" ? undefined : node.fields.url;
+    const internalHref = rawUrl ? toInternalHref(rawUrl) : null;
+    if (internalHref) {
+      return <Link href={internalHref}>{children}</Link>;
+    }
+    const rel = node.fields.newTab ? "noopener noreferrer" : undefined;
+    const target = node.fields.newTab ? "_blank" : undefined;
+    return (
+      <a href={rawUrl ?? "#"} rel={rel} target={target}>
+        {children}
+      </a>
+    );
+  },
+  autolink: ({ node, nodesToJSX }) => {
+    const children = nodesToJSX({ nodes: node.children });
+    const internalHref = node.fields.url ? toInternalHref(node.fields.url) : null;
+    if (internalHref) {
+      return <Link href={internalHref}>{children}</Link>;
+    }
+    const rel = node.fields.newTab ? "noopener noreferrer" : undefined;
+    const target = node.fields.newTab ? "_blank" : undefined;
+    return (
+      <a href={node.fields.url ?? "#"} rel={rel} target={target}>
+        {children}
+      </a>
     );
   },
 });

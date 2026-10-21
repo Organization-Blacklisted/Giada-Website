@@ -9,6 +9,36 @@
 // Payload itself only types as a generic Lexical root) rather than
 // pulling in Lexical's full node types for what's just a plain-object
 // tree walk.
+import { siteConfig } from "@/data/site";
+
+// Payload's own default link converter always renders a plain <a href>,
+// even for a link that points back at this same site — e.g. an editor
+// pasting the full "https://www.giada-studio.com/blog/..." URL instead
+// of a relative path (confirmed by reading
+// @payloadcms/richtext-lexical's link converter source directly, not
+// assumed). That bypasses Next's client-side navigation (forces a full
+// page reload on every internal link) and would point at the live site
+// even when the content is being previewed on a different host
+// (localhost, a Vercel preview URL) before go-live. Used by both
+// BlogContent.tsx and LegalDocumentSection.converters.tsx to normalize
+// any link whose host matches the site's own — relative already, or any
+// http/https/www variant of the absolute form — down to a relative path
+// rendered through next-view-transitions' Link, matching every other
+// internal link in the app. Returns null for a genuinely external URL
+// (or mailto:/tel:), which both callers then fall through to a plain
+// <a> for, unchanged.
+export function toInternalHref(rawUrl: string): string | null {
+  try {
+    const url = new URL(rawUrl, siteConfig.url);
+    const siteHost = new URL(siteConfig.url).hostname.replace(/^www\./, "");
+    const linkHost = url.hostname.replace(/^www\./, "");
+    if (linkHost !== siteHost) return null;
+    return `${url.pathname}${url.search}${url.hash}` || "/";
+  } catch {
+    return null;
+  }
+}
+
 type LexicalNode = {
   type?: string;
   tag?: string;
