@@ -81,6 +81,13 @@ export default buildConfig({
     pool: {
       connectionString: process.env.DATABASE_URL,
     },
+    // Explicit, not relying on the implicit default — this project ran on
+    // dev-mode schema auto-push only (no migrations) until 2026-10-21,
+    // when that gap broke a production build (push only runs in dev;
+    // Vercel's production build needs a real migration and none existed
+    // yet). See src/migrations/ — the baseline migration there documents
+    // the full story.
+    migrationDir: path.resolve(dirname, "migrations"),
   }),
   sharp,
   // Neon Object Storage (S3-compatible, see neon.ts's `buckets` declaration
