@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
 import TermsPageClient from "@/components/ui/LegalDocumentSection/TermsPageClient";
 import { getTermsPage, getTermsRaw } from "@/lib/api/terms";
 import { buildPageMetadata } from "@/lib/metadata";
@@ -19,12 +18,6 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function TermsPage() {
-  // Not ready to reveal to the client yet. Code ships with this push,
-  // but the route 404s publicly. Remove this line when /terms is ready
-  // to go live (matches Payload's own hidden: true on Privacy.ts,
-  // Terms.ts, Shipping.ts).
-  notFound();
-
   const raw = await getTermsRaw();
 
   return <TermsPageClient initialData={raw} />;

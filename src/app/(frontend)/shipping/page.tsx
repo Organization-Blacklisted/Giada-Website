@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
 import ShippingPageClient from "@/components/ui/LegalDocumentSection/ShippingPageClient";
 import { getShippingPage, getShippingRaw } from "@/lib/api/shipping";
 import { buildPageMetadata } from "@/lib/metadata";
@@ -20,12 +19,6 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function ShippingPage() {
-  // Not ready to reveal to the client yet. Code ships with this push,
-  // but the route 404s publicly. Remove this line when /shipping is
-  // ready to go live (matches Payload's own hidden: true on Privacy.ts,
-  // Terms.ts, Shipping.ts).
-  notFound();
-
   const raw = await getShippingRaw();
 
   return <ShippingPageClient initialData={raw} />;
