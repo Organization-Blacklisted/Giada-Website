@@ -413,6 +413,40 @@ export const Home: GlobalConfig = {
                     },
                   ],
                 },
+                {
+                  label: "Journal Newsletter",
+                  fields: [
+                    {
+                      name: "journalNewsletter",
+                      type: "group",
+                      admin: {
+                        description:
+                          "The closing newsletter signup strip at the very bottom of the homepage. Visual only for now — the Subscribe button has no email-sending wired up yet (same as the real site before this rebuild; see ARCHITECTURE.md's \"newsletter real-or-drop\" open decision).",
+                      },
+                      fields: [
+                        { name: "eyebrow", type: "text", required: true },
+                        { name: "heading", type: "text", required: true },
+                        {
+                          name: "description",
+                          type: "textarea",
+                          required: true,
+                        },
+                        {
+                          name: "emailPlaceholder",
+                          type: "text",
+                          required: true,
+                          defaultValue: "Your Email Address",
+                        },
+                        {
+                          name: "buttonLabel",
+                          type: "text",
+                          required: true,
+                          defaultValue: "Subscribe",
+                        },
+                      ],
+                    },
+                  ],
+                },
               ],
             },
           ],

@@ -937,6 +937,16 @@ export interface Home {
         }[]
       | null;
   };
+  /**
+   * The closing newsletter signup strip at the very bottom of the homepage. Visual only for now — the Subscribe button has no email-sending wired up yet (same as the real site before this rebuild; see ARCHITECTURE.md's "newsletter real-or-drop" open decision).
+   */
+  journalNewsletter: {
+    eyebrow: string;
+    heading: string;
+    description: string;
+    emailPlaceholder: string;
+    buttonLabel: string;
+  };
   seo?: {
     /**
      * Leave blank to use the default site title ("Giada").
@@ -1953,6 +1963,15 @@ export interface HomeSelect<T extends boolean = true> {
               alt?: T;
               id?: T;
             };
+      };
+  journalNewsletter?:
+    | T
+    | {
+        eyebrow?: T;
+        heading?: T;
+        description?: T;
+        emailPlaceholder?: T;
+        buttonLabel?: T;
       };
   seo?:
     | T

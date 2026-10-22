@@ -7,6 +7,7 @@ import CollaborationsSliderSection from "@/components/sections/home/Collaboratio
 import CollectionSection from "@/components/sections/home/CollectionSection";
 import HeroSlideshowSection from "@/components/sections/home/HeroSlideshowSection";
 import ImageReelSection from "@/components/sections/home/ImageReelSection";
+import JournalNewsletterSection from "@/components/sections/home/JournalNewsletterSection";
 import PressFeatureSection from "@/components/sections/home/PressFeatureSection";
 import ProcessStripSection from "@/components/sections/home/ProcessStripSection";
 import TestimonialsSection from "@/components/sections/home/TestimonialsSection";
@@ -48,6 +49,7 @@ export default function HomePageClient({ initialData }: { initialData: Home }) {
       <TestimonialsSection {...data.testimonials} />
       <ClosingCtaSection {...data.closingCta} />
       <ImageReelSection {...data.imageReel} />
+      <JournalNewsletterSection {...data.journalNewsletter} />
     </>
   );
 }

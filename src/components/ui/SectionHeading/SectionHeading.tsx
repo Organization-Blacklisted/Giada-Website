@@ -7,7 +7,7 @@ const justifyStyles = { center: "justify-center", left: "" };
 const descriptionWidthByAlign = { center: "mx-auto max-w-xl", left: "max-w-2xl" };
 const eyebrowColors = { "stone-400": "text-stone-400", "stone-500": "text-stone-500" };
 const descriptionColors = { "stone-500": "text-stone-500", "stone-600": "text-stone-600" };
-const descriptionFontSizes = { "15px": "text-[15px]", "16px": "text-[16px]" };
+const descriptionFontSizes = { "14px": "text-[14px]", "15px": "text-[15px]", "16px": "text-[16px]" };
 
 /**
  * Confirmed real, repeated pattern — eyebrow (flanked by two lines) +

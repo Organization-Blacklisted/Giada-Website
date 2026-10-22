@@ -41,8 +41,11 @@ export interface SectionHeadingProps {
    * overrides above, but wrongly judged "close enough to 15px" and left
    * unfixed in that same pass; the user caught it live afterward. Lesson
    * for next time: apply exact Figma values, don't round differences
-   * away as tolerance calls the user never asked for.
+   * away as tolerance calls the user never asked for. `14px` added
+   * 2026-10-22 for JournalNewsletterSection, same reasoning — confirmed
+   * via direct Figma design-context data (text-[14px]), not rounded to
+   * the existing 15px default this time.
    */
-  descriptionFontSize?: "15px" | "16px";
+  descriptionFontSize?: "14px" | "15px" | "16px";
   className?: string;
 }

@@ -133,6 +133,14 @@ export type ClosingCtaSectionData = {
   href: string;
 };
 
+export type JournalNewsletterSectionData = {
+  eyebrow: string;
+  heading: string;
+  description: string;
+  emailPlaceholder: string;
+  buttonLabel: string;
+};
+
 export type CollectionSectionData = {
   image: string;
   alt: string;
@@ -173,6 +181,7 @@ export type HomePageData = {
   testimonials: TestimonialsSectionData;
   closingCta: ClosingCtaSectionData;
   imageReel: ImageReelSectionData;
+  journalNewsletter: JournalNewsletterSectionData;
   seo: SeoData;
 };
 
@@ -295,6 +304,13 @@ export function mapHomeData(home: Home): HomePageData {
         src: mediaUrl(img.image),
         alt: img.alt ?? "",
       })),
+    },
+    journalNewsletter: {
+      eyebrow: home.journalNewsletter.eyebrow,
+      heading: home.journalNewsletter.heading,
+      description: home.journalNewsletter.description,
+      emailPlaceholder: home.journalNewsletter.emailPlaceholder,
+      buttonLabel: home.journalNewsletter.buttonLabel,
     },
     seo: {
       metaTitle: home.seo?.metaTitle ?? "",
