@@ -2623,6 +2623,71 @@ other stays static). All other 14 of the 17 configs were confirmed
 already correctly wired, not touched. See "Blog detail page" above for
 the rest of this session's Blog work.
 
+**Migrations introduced; local dev moved off the shared production
+database, 2026-10-21/22.** This project ran entirely on Payload's
+dev-mode schema auto-push from day one (first recorded push:
+2026-10-06) — no migration had ever existed. Auto-push only runs in
+development and is deliberately disabled in production, so Vercel's
+build has only ever assumed the live database was already correct. That
+assumption had already caused one near-miss (the "Also fixes a real
+live-production bug" entry above, 2026-10-14 — a local push had already
+dropped `visibility_*` columns the still-deployed production code was
+still reading). On 2026-10-21 it caused a real outage: new `sidebarCta`
+fields on `BlogPosts.ts` never got auto-pushed, so Vercel's build broke
+prerendering `/blog/[slug]` (`column posts.sidebar_cta_title does not
+exist`). Fixed by establishing `src/migrations/` (a no-op baseline
+migration matching the schema as it already existed, generated from the
+pre-sidebarCta collection config and confirmed to match the live
+database table-for-table — not assumed; then the real incremental
+migration adding the 4 new columns) and changing the build script to
+`payload migrate && next build`, so every future schema change is
+applied automatically before each build instead of silently depending
+on the dev server having been running first.
+
+That alone wasn't sufficient — the build script's `payload migrate`
+step kept hitting an interactive "you've run Payload in dev mode, data
+loss may occur" confirmation (production builds have no terminal to
+answer it, so the build just hangs for minutes: confirmed directly in a
+Vercel build log, a 7m06s gap between the prompt appearing and the next
+line). The dev-mode marker row (`payload_migrations`, `batch: -1`) that
+triggers this isn't written once — Payload's push-mode re-inserts it
+every time the local dev server starts, regardless of whether a real
+schema change happened. Since local dev and Vercel production shared
+one Neon database (`production`, the project's only branch until this
+point), that meant every future deploy would hang the same way, forever
+— this wasn't a one-time glitch, it was structural.
+
+Real fix: created a `development` Neon branch (instant copy-on-write
+clone of `production`, confirmed via `neon branches list` that
+`production` was genuinely the only branch beforehand) and repointed
+local `.env`'s `DATABASE_URL`/`DATABASE_URL_UNPOOLED`/`NEON_BRANCH` at
+it. Local dev's auto-push now only ever touches the isolated branch —
+production is reached exclusively through committed, reviewed
+migrations from here on, the same way it's always supposed to work.
+Push mode itself is left enabled for local dev (harmless now that it
+can't reach production) rather than disabled, since it's still a real
+convenience during active development. One remaining manual step this
+session: the stray `-1` marker already on the live `production` branch
+needs a one-time `DELETE FROM payload_migrations WHERE batch = -1;` —
+after that, with dev no longer able to reach `production` at all, it
+should never reappear.
+
+Also fixed as part of the same incident: `payload.config.ts`'s Postgres
+adapter was routing `payload migrate` through the **pooled** connection
+string — Neon's own guidance is explicit that schema migrations over a
+pooled (PgBouncer transaction-mode) connection are unreliable. Now
+conditional on `PAYLOAD_MIGRATING` (set internally by Payload's own
+`migrate` command): the direct/unpooled connection for migrations, the
+pooled one for everything else, unchanged.
+
+**Workflow going forward:** building a new section/collection field
+locally is unchanged — push mode still auto-syncs instantly while
+developing, same as always, just against the isolated `development`
+branch now. The one new step is at the point of pushing to git: run
+`payload migrate:create <name>` once the field is finalized, review the
+generated migration, commit it alongside the component/collection code.
+Vercel's build applies it automatically from there.
+
 ## Astro source audit (`giada-studio.com-handover.zip`, extracted 2026-09-29)
 
 Full analysis done, extracted source kept out of this repo (scratch
