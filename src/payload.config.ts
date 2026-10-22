@@ -79,7 +79,18 @@ export default buildConfig({
   },
   db: postgresAdapter({
     pool: {
-      connectionString: process.env.DATABASE_URL,
+      // Direct (unpooled) connection specifically for `payload migrate`
+      // (which sets this env var itself, see @payloadcms/db-postgres's
+      // bin/migrate.js), pooled for everything else. Neon's own guidance:
+      // migrations over the pooled (PgBouncer transaction-mode) connection
+      // are unreliable — prepared-statement errors, SET not persisting,
+      // intermittent read-only-transaction failures — the pooled
+      // connection is for the app's normal request traffic, not schema
+      // changes.
+      connectionString:
+        process.env.PAYLOAD_MIGRATING === "true"
+          ? process.env.DATABASE_URL_UNPOOLED
+          : process.env.DATABASE_URL,
     },
     // Explicit, not relying on the implicit default — this project ran on
     // dev-mode schema auto-push only (no migrations) until 2026-10-21,
