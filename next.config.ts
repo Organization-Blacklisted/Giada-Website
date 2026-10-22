@@ -4,6 +4,17 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   poweredByHeader: false,
 
+  // Off by default in 16.3.6 (confirmed in config-schema.js) — needed so
+  // app/global-not-found.tsx actually renders for a URL that matches no
+  // route at all (e.g. /events, which has a [slug] child but no page.tsx
+  // of its own). Without this, those genuinely-unmatched paths fell
+  // through to Next's bare default 404 instead of the site's own —
+  // app/(frontend)/not-found.tsx only ever covered an explicit
+  // notFound() call inside a route Next had already matched.
+  experimental: {
+    globalNotFound: true,
+  },
+
   // 301s from the legacy WordPress/WooCommerce site (giada-studio.com
   // pre-Astro-cutover), ported from the real Astro source's
   // astro.config.mjs (same table, carried through this second
