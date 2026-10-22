@@ -2688,6 +2688,20 @@ branch now. The one new step is at the point of pushing to git: run
 generated migration, commit it alongside the component/collection code.
 Vercel's build applies it automatically from there.
 
+**`development` doesn't stay in sync with `production` on its own** —
+it's a point-in-time snapshot taken when it was created (2026-10-22),
+not a continuous mirror. Real content added to the live site afterward
+(new blog posts, products, etc. via the production admin) won't appear
+locally until the branch is explicitly refreshed:
+`neon branches reset development --parent` (copy-on-write again, same
+low cost as creating it) — a full overwrite of `development`'s current
+state back to whatever `production` looks like at that moment, not a
+merge. Safe to do any time: actual schema changes live in the committed
+migration files in git, not in the branch itself, so a reset never
+loses real work — at most it means re-running local-only migrations
+that hadn't been committed yet. No automatic schedule set up for this;
+do it on demand when local content looks stale.
+
 ## Astro source audit (`giada-studio.com-handover.zip`, extracted 2026-09-29)
 
 Full analysis done, extracted source kept out of this repo (scratch
