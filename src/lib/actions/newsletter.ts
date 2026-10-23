@@ -13,9 +13,9 @@ import { buildNewsletterConfirmationEmail, buildNewsletterTeamNotificationEmail,
 // still say "subscribed" forever). See ARCHITECTURE.md if this decision
 // needs revisiting.
 //
-// `name` collected and passed through to Brevo (as FIRSTNAME) since
-// 2026-10-23, per explicit request — email copy using it is a separate,
-// still-pending discussion, not wired into the templates yet.
+// `name` collected and passed through to Brevo (as FIRSTNAME) and into
+// both email templates since 2026-10-23 — see newsletter-emails.ts for
+// the real client-provided copy.
 export async function subscribeToNewsletter(
   name: string,
   email: string
@@ -41,13 +41,13 @@ export async function subscribeToNewsletter(
     const cms = await getPayload({ config });
     await cms.sendEmail({
       to: email,
-      subject: "You're subscribed — Giada Studio",
-      html: buildNewsletterConfirmationEmail(),
+      subject: "A Personal Note from Giada",
+      html: buildNewsletterConfirmationEmail(name),
     });
     await cms.sendEmail({
       to: NEWSLETTER_TEAM_RECIPIENT,
-      subject: "New Newsletter Subscriber",
-      html: buildNewsletterTeamNotificationEmail(email),
+      subject: "New Newsletter Subscription – Giada Studio",
+      html: buildNewsletterTeamNotificationEmail(name, email),
     });
   } catch (err) {
     console.error("Subscriber added to Brevo, but sending notification email failed:", err);
