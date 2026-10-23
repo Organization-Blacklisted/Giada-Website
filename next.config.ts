@@ -139,6 +139,11 @@ const nextConfig: NextConfig = {
         pathname: "/api/media/file/**",
       },
     ],
+    // 31 days — safe because Payload gives every upload a brand-new
+    // filename (never reuses one), so a changed image is always a new
+    // URL next/image has never cached before; the old URL's cache entry
+    // just goes unused rather than needing to be invalidated.
+    minimumCacheTTL: 2678400,
   },
 
   // HTTP response headers applied to every route
