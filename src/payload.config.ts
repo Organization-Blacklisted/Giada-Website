@@ -4,6 +4,7 @@ import sharp from "sharp";
 import { lexicalEditor } from "@payloadcms/richtext-lexical";
 import { postgresAdapter } from "@payloadcms/db-postgres";
 import { s3Storage } from "@payloadcms/storage-s3";
+import { nodemailerAdapter } from "@payloadcms/email-nodemailer";
 import { buildConfig } from "payload";
 
 import { Users } from "./collections/Users";
@@ -99,6 +100,24 @@ export default buildConfig({
     // yet). See src/migrations/ — the baseline migration there documents
     // the full story.
     migrationDir: path.resolve(dirname, "migrations"),
+  }),
+  // Brevo SMTP — used by the Contact form's Server Action
+  // (lib/actions/enquiry.ts) to send the team notification + client
+  // confirmation emails via payload.sendEmail(). Brevo's domain
+  // authentication (SPF/DKIM/DMARC) is still pending as of 2026-10-23 —
+  // sending works regardless, but expect spam-folder/deliverability
+  // issues until that finishes verifying.
+  email: nodemailerAdapter({
+    defaultFromAddress: "noreply@giada-studio.com",
+    defaultFromName: "Giada Studio",
+    transportOptions: {
+      host: process.env.BREVO_SMTP_HOST,
+      port: Number(process.env.BREVO_SMTP_PORT) || 587,
+      auth: {
+        user: process.env.BREVO_SMTP_LOGIN,
+        pass: process.env.BREVO_SMTP_KEY,
+      },
+    },
   }),
   sharp,
   // Neon Object Storage (S3-compatible, see neon.ts's `buckets` declaration

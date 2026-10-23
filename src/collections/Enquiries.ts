@@ -3,9 +3,10 @@ import type { CollectionConfig } from "payload";
 // Stores EnquiryForm submissions (components/sections/contact/EnquiryForm) —
 // previously posted to a guessed Laravel `/enquiries` endpoint that never
 // existed, now saved via Payload's Local API instead (see
-// lib/actions/enquiry.ts). No email notification yet — that's pending the
-// Resend/Brevo decision; for now this just makes sure nothing submitted is
-// lost, visible in admin like any other content.
+// lib/actions/enquiry.ts, which also sends the team notification + client
+// confirmation emails via Brevo, added 2026-10-23). Still saved here
+// regardless of whether the email sends successfully, so nothing
+// submitted is ever lost.
 export const Enquiries: CollectionConfig = {
   slug: "enquiries",
   admin: {
