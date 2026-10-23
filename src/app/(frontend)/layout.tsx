@@ -4,6 +4,7 @@ import { ViewTransitions } from "next-view-transitions";
 import Header from "@/components/layouts/Header";
 import Footer from "@/components/layouts/Footer";
 import ScrollReveal from "@/components/ui/ScrollReveal";
+import ViewTransitionGuard from "@/components/ui/ViewTransitionGuard";
 import { siteConfig } from "@/data/site";
 import { avenir, didot } from "@/fonts";
 import "./globals.css";
@@ -93,6 +94,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           </main>
           <Footer />
           <ScrollReveal />
+          <ViewTransitionGuard />
         </body>
       </html>
     </ViewTransitions>
