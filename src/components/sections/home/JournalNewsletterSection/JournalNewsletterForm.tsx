@@ -52,8 +52,14 @@ export default function JournalNewsletterForm({
 
   return (
     <div className="mx-auto max-w-[587px]" data-reveal>
-      <form onSubmit={handleSubmit} className="flex flex-col gap-3">
-        <div className="flex flex-col sm:flex-row">
+      <form onSubmit={handleSubmit} className="flex flex-col gap-3 lg:flex-row lg:gap-0">
+        {/* `lg:contents` dissolves this wrapper at the one-line breakpoint
+            so the two inputs become direct flex items alongside the
+            button below, sharing a single row instead of a row-then-row
+            stack. Below `lg` it stays a real flex box (stacked on mobile,
+            side-by-side from `sm`) — the layout this section shipped
+            with, untouched. */}
+        <div className="flex flex-col sm:flex-row lg:contents">
           <input
             type="text"
             name="name"
@@ -63,7 +69,7 @@ export default function JournalNewsletterForm({
             aria-label="Your Name"
             required
             disabled={isSubmitting}
-            className="h-12 w-full border border-stone-200 bg-white px-4 text-[16px] text-stone-900 placeholder:text-stone-400 focus:outline-none focus:ring-1 focus:ring-stone-900 disabled:opacity-60 sm:flex-1 sm:border-r-0"
+            className="relative h-12 w-full border border-stone-200 bg-white px-4 text-[16px] text-stone-900 placeholder:text-stone-400 focus:z-10 focus:outline-none focus:ring-1 focus:ring-stone-900 disabled:opacity-60 sm:flex-1 sm:border-r-0"
           />
           <input
             type="email"
@@ -74,16 +80,16 @@ export default function JournalNewsletterForm({
             aria-label={emailPlaceholder}
             required
             disabled={isSubmitting}
-            className="h-12 w-full border border-stone-200 bg-white px-4 text-[16px] text-stone-900 placeholder:text-stone-400 focus:outline-none focus:ring-1 focus:ring-stone-900 disabled:opacity-60 sm:flex-1"
+            className="relative h-12 w-full border border-stone-200 bg-white px-4 text-[16px] text-stone-900 placeholder:text-stone-400 focus:z-10 focus:outline-none focus:ring-1 focus:ring-stone-900 disabled:opacity-60 sm:flex-1 lg:border-r-0"
           />
         </div>
         <button
           type="submit"
           disabled={isSubmitting}
-          className="group flex h-12 w-full shrink-0 items-center justify-center gap-6 whitespace-nowrap bg-stone-900 px-8 text-[12px] font-semibold uppercase tracking-[1.92px] text-white disabled:opacity-60"
+          className="group flex h-12 w-full shrink-0 cursor-pointer items-center justify-center gap-6 whitespace-nowrap bg-stone-900 px-8 text-[12px] font-semibold uppercase tracking-[1.92px] text-white transition-colors duration-300 hover:bg-stone-700 disabled:cursor-not-allowed disabled:opacity-60 lg:w-auto"
         >
           {isSubmitting ? "Subscribing…" : buttonLabel}
-          <span aria-hidden="true" className="h-px w-10 bg-white" />
+          <span aria-hidden="true" className="h-px w-10 origin-left bg-white transition-transform duration-300 group-hover:scale-x-125" />
         </button>
       </form>
       {status === "error" && <p className="mt-3 text-center text-[13px] text-red-600">{errorMessage}</p>}
