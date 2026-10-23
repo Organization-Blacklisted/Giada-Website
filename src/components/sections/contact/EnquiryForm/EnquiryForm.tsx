@@ -1,6 +1,7 @@
 "use client";
 
 import { Link, useTransitionRouter } from "next-view-transitions";
+import Script from "next/script";
 import { useEffect, useRef, useState } from "react";
 import { gsap } from "@/lib/gsap-init";
 import { submitEnquiry } from "@/lib/actions/enquiry";
@@ -71,9 +72,11 @@ export default function EnquiryForm() {
       message: String(formData.get("message") ?? ""),
     };
 
+    const turnstileToken = String(formData.get("cf-turnstile-response") ?? "");
+
     setIsSubmitting(true);
     setServerError("");
-    const result = await submitEnquiry(payload);
+    const result = await submitEnquiry(payload, turnstileToken);
 
     if (result.success) {
       router.push("/contact/success");
@@ -179,10 +182,15 @@ export default function EnquiryForm() {
           />
         </div>
 
-        {/* TODO: real source gates submission on a Cloudflare Turnstile
-            token here — currently non-functional in the live site too
-            (empty site key). Anti-spam approach is still an open Phase 0
-            decision; not wired up until that's resolved. */}
+        {/* Implicit rendering: Cloudflare's script auto-renders the
+            widget into this div and injects a hidden
+            `cf-turnstile-response` input as a sibling, which the
+            existing FormData-based handleSubmit above already picks up
+            — no extra React state/callback needed. Added 2026-10-23;
+            the real Astro source had this gated but never actually
+            wired up live (empty site key). */}
+        <div className="cf-turnstile" data-sitekey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY} />
+        <Script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer />
 
         {serverError && (
           <p className="rounded bg-red-50 px-4 py-3 text-sm text-red-600">{serverError}</p>
