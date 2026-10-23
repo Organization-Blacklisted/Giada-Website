@@ -24,7 +24,7 @@ export default function BlogDetailHeroSection({
           </div>
 
           <div className="flex w-full flex-col items-start gap-2 lg:w-[220px] lg:items-end" data-reveal>
-            <div className="flex flex-col items-start gap-2 whitespace-nowrap text-[16px] leading-[1.8] text-stone-600 lg:items-end lg:text-right">
+            <div className="flex flex-col items-start gap-2 text-[16px] leading-[1.8] text-stone-600 lg:items-end lg:text-right lg:whitespace-nowrap">
               <p>Written by - {author}</p>
               <p>Published on - {pubDateFormatted}</p>
             </div>
