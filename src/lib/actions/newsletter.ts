@@ -12,15 +12,23 @@ import { buildNewsletterConfirmationEmail, buildNewsletterTeamNotificationEmail,
 // that can drift (someone unsubscribes in Brevo, a Payload copy would
 // still say "subscribed" forever). See ARCHITECTURE.md if this decision
 // needs revisiting.
+//
+// `name` collected and passed through to Brevo (as FIRSTNAME) since
+// 2026-10-23, per explicit request — email copy using it is a separate,
+// still-pending discussion, not wired into the templates yet.
 export async function subscribeToNewsletter(
+  name: string,
   email: string
 ): Promise<{ success: boolean; error?: string }> {
+  if (!name.trim()) {
+    return { success: false, error: "Please enter your name." };
+  }
   if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     return { success: false, error: "Please enter a valid email address." };
   }
 
   try {
-    await addContactToNewsletterList(email);
+    await addContactToNewsletterList(email, name);
   } catch (err) {
     console.error("Newsletter signup failed:", err);
     return { success: false, error: "Something went wrong. Please try again." };
