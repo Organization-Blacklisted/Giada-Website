@@ -30,6 +30,7 @@ import { Rugs } from "./globals/Rugs";
 import { FragmentsPage } from "./globals/FragmentsPage";
 import { OfEarthAndLightPage } from "./globals/OfEarthAndLightPage";
 import { Blog } from "./globals/Blog";
+import { EventPopup } from "./globals/EventPopup";
 
 const filename = fileURLToPath(import.meta.url);
 const dirname = path.dirname(filename);
@@ -72,7 +73,7 @@ export default buildConfig({
     },
   },
   collections: [Users, Media, ProductsCollection, CollaborationsCollection, BlogPosts, Events, EventRegistrations, Enquiries],
-  globals: [Home, Faq, Gallery, Contact, Products, Privacy, Terms, Shipping, OurStory, Collaborations, Glass, Rugs, FragmentsPage, OfEarthAndLightPage, Blog],
+  globals: [Home, Faq, Gallery, Contact, Products, Privacy, Terms, Shipping, OurStory, Collaborations, Glass, Rugs, FragmentsPage, OfEarthAndLightPage, Blog, EventPopup],
   editor: lexicalEditor(),
   secret: process.env.PAYLOAD_SECRET || "",
   typescript: {

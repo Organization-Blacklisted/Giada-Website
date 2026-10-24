@@ -5,6 +5,8 @@ import Header from "@/components/layouts/Header";
 import Footer from "@/components/layouts/Footer";
 import ScrollReveal from "@/components/ui/ScrollReveal";
 import ViewTransitionGuard from "@/components/ui/ViewTransitionGuard";
+import EventPopup from "@/components/ui/EventPopup";
+import { getEventPopup } from "@/lib/api/event-popup";
 import { siteConfig } from "@/data/site";
 import { avenir, didot } from "@/fonts";
 import "./globals.css";
@@ -73,7 +75,9 @@ const websiteSchema = {
 // it configured) just no-ops instead of firing a broken container.
 const gtmId = process.env.NEXT_PUBLIC_GTM_ID;
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default async function RootLayout({ children }: LayoutProps<"/">) {
+  const eventPopup = await getEventPopup();
+
   return (
     <ViewTransitions>
       <html lang="en" className={`h-full antialiased ${avenir.variable} ${didot.variable}`}>
@@ -95,6 +99,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           <Footer />
           <ScrollReveal />
           <ViewTransitionGuard />
+          {eventPopup && <EventPopup popup={eventPopup} />}
         </body>
       </html>
     </ViewTransitions>

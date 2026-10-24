@@ -115,6 +115,7 @@ export interface Config {
     'fragments-page': FragmentsPage;
     'of-earth-and-light-page': OfEarthAndLightPage;
     'blog-page': BlogPage;
+    'event-popup': EventPopup;
   };
   globalsSelect: {
     home: HomeSelect<false> | HomeSelect<true>;
@@ -132,6 +133,7 @@ export interface Config {
     'fragments-page': FragmentsPageSelect<false> | FragmentsPageSelect<true>;
     'of-earth-and-light-page': OfEarthAndLightPageSelect<false> | OfEarthAndLightPageSelect<true>;
     'blog-page': BlogPageSelect<false> | BlogPageSelect<true>;
+    'event-popup': EventPopupSelect<false> | EventPopupSelect<true>;
   };
   locale: null;
   widgets: {
@@ -1803,6 +1805,38 @@ export interface BlogPage {
   createdAt?: string | null;
 }
 /**
+ * The site-wide invite popup shown ~5s after a visitor lands on the site.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "event-popup".
+ */
+export interface EventPopup {
+  id: number;
+  /**
+   * Turn the popup on or off site-wide without deleting its content.
+   */
+  enabled?: boolean | null;
+  /**
+   * Which event this popup promotes — its logo, date, time, and location are reused directly.
+   */
+  event?: (number | null) | Event;
+  heading?: string | null;
+  /**
+   * Invite copy shown in the popup. Line breaks are preserved.
+   */
+  description?: string | null;
+  /**
+   * Button label. Links to the event's own /events/[slug] page.
+   */
+  ctaLabel?: string | null;
+  /**
+   * How many seconds after page load the popup appears.
+   */
+  delaySeconds?: number | null;
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "home_select".
  */
@@ -2680,6 +2714,21 @@ export interface BlogPageSelect<T extends boolean = true> {
         ogImage?: T;
         noIndex?: T;
       };
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "event-popup_select".
+ */
+export interface EventPopupSelect<T extends boolean = true> {
+  enabled?: T;
+  event?: T;
+  heading?: T;
+  description?: T;
+  ctaLabel?: T;
+  delaySeconds?: T;
   updatedAt?: T;
   createdAt?: T;
   globalType?: T;

@@ -9,7 +9,7 @@ function mediaUrl(image: number | Media | null | undefined): string {
 // exactly, not the month-first "December 2, 2026" US-locale default
 // used elsewhere (e.g. blog's formatPubDate) — this page's own design
 // uses a different date convention and should match it.
-function formatEventDate(date: string): string {
+export function formatEventDate(date: string): string {
   return new Date(date).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" });
 }
 
