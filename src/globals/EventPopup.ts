@@ -57,6 +57,13 @@ export const EventPopup: GlobalConfig = {
       min: 0,
       admin: { description: "How many seconds after page load the popup appears." },
     },
+    {
+      name: "cooldownDays",
+      type: "number",
+      defaultValue: 7,
+      min: 0,
+      admin: { description: "After a visitor closes the popup, how many days before it can show again (for the same event). 0 shows it every visit." },
+    },
   ],
   hooks: {
     afterChange: [

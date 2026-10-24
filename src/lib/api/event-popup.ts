@@ -10,6 +10,7 @@ export type EventPopupData = {
   description: string;
   ctaLabel: string;
   delaySeconds: number;
+  cooldownDays: number;
   // Keyed to the linked event, not a static string — switching which
   // event this popup promotes naturally re-shows it to visitors who
   // already dismissed the previous one, with no separate "reset" field.
@@ -43,6 +44,7 @@ export const getEventPopup = unstable_cache(
       description: doc.description || "",
       ctaLabel: doc.ctaLabel || "Reserve Your Place",
       delaySeconds: doc.delaySeconds ?? 5,
+      cooldownDays: doc.cooldownDays ?? 7,
       dismissKey: `giada-event-popup-${event.id}`,
       event,
     };

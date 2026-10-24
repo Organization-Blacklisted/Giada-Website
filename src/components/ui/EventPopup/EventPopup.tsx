@@ -10,37 +10,42 @@ import type { EventPopupProps } from "./EventPopup.types";
 // GalleryWallSection's lightbox — Escape key and backdrop-click dismissal
 // come for free from the browser, no modal library needed.
 //
-// Shown once per browser, not once per page load: dismissal is recorded
-// in localStorage under `popup.dismissKey` (keyed to the linked event's
-// id — see lib/api/event-popup.ts), so switching which event this popup
-// promotes naturally re-shows it, but closing/registering doesn't bring
-// it back every single page visit.
+// Dismissal records a TIMESTAMP in localStorage under `popup.dismissKey`
+// (keyed to the linked event's id — see lib/api/event-popup.ts), not a
+// permanent flag: a visitor who closes it sees it again after
+// `cooldownDays`, same event or not. Switching which event this popup
+// promotes also re-shows it immediately, since that changes the key
+// entirely. `cooldownDays: 0` shows it on every visit.
 export default function EventPopup({ popup }: EventPopupProps) {
   const dialogRef = useRef<HTMLDialogElement>(null);
   const { event } = popup;
 
   useEffect(() => {
-    let dismissed = false;
+    let withinCooldown = false;
     try {
-      dismissed = localStorage.getItem(popup.dismissKey) === "1";
+      const dismissedAt = Number(localStorage.getItem(popup.dismissKey));
+      if (dismissedAt) {
+        const elapsedMs = Date.now() - dismissedAt;
+        withinCooldown = elapsedMs < popup.cooldownDays * 24 * 60 * 60 * 1000;
+      }
     } catch {
       // Private browsing / storage disabled — treat as not dismissed.
     }
-    if (dismissed) return;
+    if (withinCooldown) return;
 
     const timer = setTimeout(() => {
       dialogRef.current?.showModal();
     }, popup.delaySeconds * 1000);
 
     return () => clearTimeout(timer);
-  }, [popup.dismissKey, popup.delaySeconds]);
+  }, [popup.dismissKey, popup.delaySeconds, popup.cooldownDays]);
 
   useEffect(() => {
     const dialog = dialogRef.current;
     if (!dialog) return;
     const onClose = () => {
       try {
-        localStorage.setItem(popup.dismissKey, "1");
+        localStorage.setItem(popup.dismissKey, String(Date.now()));
       } catch {
         // Nothing to persist to — it'll just show again next visit.
       }

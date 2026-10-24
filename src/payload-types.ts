@@ -1837,6 +1837,10 @@ export interface EventPopup {
    * How many seconds after page load the popup appears.
    */
   delaySeconds?: number | null;
+  /**
+   * After a visitor closes the popup, how many days before it can show again (for the same event). 0 shows it every visit.
+   */
+  cooldownDays?: number | null;
   updatedAt?: string | null;
   createdAt?: string | null;
 }
@@ -2734,6 +2738,7 @@ export interface EventPopupSelect<T extends boolean = true> {
   description?: T;
   ctaLabel?: T;
   delaySeconds?: T;
+  cooldownDays?: T;
   updatedAt?: T;
   createdAt?: T;
   globalType?: T;

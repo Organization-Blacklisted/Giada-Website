@@ -3,6 +3,7 @@ import * as migration_20261021_131332_add_blog_sidebar_cta from './20261021_1313
 import * as migration_20261022_104325_add_home_journal_newsletter from './20261022_104325_add_home_journal_newsletter';
 import * as migration_20261024_110306_add_event_popup from './20261024_110306_add_event_popup';
 import * as migration_20261024_110911_add_event_popup_eyebrow from './20261024_110911_add_event_popup_eyebrow';
+import * as migration_20261024_111629_add_event_popup_cooldown from './20261024_111629_add_event_popup_cooldown';
 
 export const migrations = [
   {
@@ -28,6 +29,11 @@ export const migrations = [
   {
     up: migration_20261024_110911_add_event_popup_eyebrow.up,
     down: migration_20261024_110911_add_event_popup_eyebrow.down,
-    name: '20261024_110911_add_event_popup_eyebrow'
+    name: '20261024_110911_add_event_popup_eyebrow',
+  },
+  {
+    up: migration_20261024_111629_add_event_popup_cooldown.up,
+    down: migration_20261024_111629_add_event_popup_cooldown.down,
+    name: '20261024_111629_add_event_popup_cooldown'
   },
 ];
