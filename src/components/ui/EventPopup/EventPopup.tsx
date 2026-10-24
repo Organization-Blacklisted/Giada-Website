@@ -76,7 +76,7 @@ export default function EventPopup({ popup }: EventPopupProps) {
 
         <div className="mt-8 flex items-center gap-4">
           <span className="h-px w-12 bg-stone-300" aria-hidden="true" />
-          <p className="text-[11px] font-semibold uppercase tracking-[3.85px] text-stone-400">{event.eyebrow}</p>
+          <p className="text-[11px] font-semibold uppercase tracking-[3.85px] text-stone-400">{popup.eyebrow}</p>
           <span className="h-px w-12 bg-stone-300" aria-hidden="true" />
         </div>
 

@@ -5,6 +5,7 @@ import type { Event } from "@/payload-types";
 import { mapEvent, type EventData } from "./events-map";
 
 export type EventPopupData = {
+  eyebrow: string;
   heading: string;
   description: string;
   ctaLabel: string;
@@ -23,7 +24,12 @@ export type EventPopupData = {
 export const getEventPopup = unstable_cache(
   async (): Promise<EventPopupData | null> => {
     const payload = await getPayload({ config });
-    const doc = await payload.findGlobal({ slug: "event-popup", depth: 1 });
+    // depth: 2, not 1 — depth: 1 only populates `event` itself as a full
+    // Event document; the event's own `logo` relation (a further level
+    // of nesting) would still come back as a bare media id, which
+    // mapEvent's mediaUrl() silently turns into "" (confirmed as the
+    // cause of the popup rendering with no image).
+    const doc = await payload.findGlobal({ slug: "event-popup", depth: 2 });
 
     if (!doc.enabled || !doc.event || typeof doc.event !== "object") {
       return null;
@@ -32,6 +38,7 @@ export const getEventPopup = unstable_cache(
     const event = mapEvent(doc.event as Event);
 
     return {
+      eyebrow: doc.eyebrow || event.eyebrow,
       heading: doc.heading || "You're Invited",
       description: doc.description || "",
       ctaLabel: doc.ctaLabel || "Reserve Your Place",

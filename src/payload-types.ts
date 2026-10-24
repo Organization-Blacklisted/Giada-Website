@@ -1820,6 +1820,10 @@ export interface EventPopup {
    * Which event this popup promotes — its logo, date, time, and location are reused directly.
    */
   event?: (number | null) | Event;
+  /**
+   * Small label above the heading, e.g. "Miami Art Week". Independent of the event's own eyebrow.
+   */
+  eyebrow?: string | null;
   heading?: string | null;
   /**
    * Invite copy shown in the popup. Line breaks are preserved.
@@ -2725,6 +2729,7 @@ export interface BlogPageSelect<T extends boolean = true> {
 export interface EventPopupSelect<T extends boolean = true> {
   enabled?: T;
   event?: T;
+  eyebrow?: T;
   heading?: T;
   description?: T;
   ctaLabel?: T;

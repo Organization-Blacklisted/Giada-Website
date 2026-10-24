@@ -30,6 +30,11 @@ export const EventPopup: GlobalConfig = {
       admin: { description: "Which event this popup promotes — its logo, date, time, and location are reused directly." },
     },
     {
+      name: "eyebrow",
+      type: "text",
+      admin: { description: 'Small label above the heading, e.g. "Miami Art Week". Independent of the event\'s own eyebrow.' },
+    },
+    {
       name: "heading",
       type: "text",
       defaultValue: "You're Invited",
