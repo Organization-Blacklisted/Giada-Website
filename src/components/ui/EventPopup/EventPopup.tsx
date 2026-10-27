@@ -67,7 +67,7 @@ export default function EventPopup({ popup }: EventPopupProps) {
         type="button"
         onClick={() => dialogRef.current?.close()}
         aria-label="Close"
-        className="absolute right-4 top-4 cursor-pointer border-none bg-transparent p-2 leading-none text-stone-400 transition-colors duration-200 hover:text-stone-900"
+        className="absolute right-4 top-4 cursor-pointer border-none bg-transparent p-2 leading-none text-stone-400 outline-none transition-colors duration-200 hover:text-stone-900 focus-visible:text-stone-900"
       >
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} aria-hidden="true">
           <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
