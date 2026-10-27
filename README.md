@@ -26,3 +26,5 @@ Open [http://localhost:3000](http://localhost:3000).
 - `npm run build` — production build
 - `npm run start` — run the production build
 - `npm run lint` — ESLint
+
+<!-- deploy test 2026-10-27T12:21:54Z -->
