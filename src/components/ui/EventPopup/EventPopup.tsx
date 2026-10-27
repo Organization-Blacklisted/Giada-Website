@@ -40,18 +40,44 @@ export default function EventPopup({ popup }: EventPopupProps) {
     return () => clearTimeout(timer);
   }, [popup.dismissKey, popup.delaySeconds, popup.cooldownDays]);
 
+  // showModal()'s own background-scroll lock isn't reliable across
+  // browsers (notably mobile Safari), so it's enforced explicitly here —
+  // same save/restore-previous-value approach as
+  // BlogTableOfContents.tsx's off-canvas drawer, rather than Header's
+  // simpler set/clear, in case something else on the page is also
+  // managing body overflow when this closes.
   useEffect(() => {
     const dialog = dialogRef.current;
     if (!dialog) return;
+    let previousOverflow = "";
+
+    const onOpen = () => {
+      previousOverflow = document.body.style.overflow;
+      document.body.style.overflow = "hidden";
+    };
     const onClose = () => {
+      document.body.style.overflow = previousOverflow;
       try {
         localStorage.setItem(popup.dismissKey, String(Date.now()));
       } catch {
         // Nothing to persist to — it'll just show again next visit.
       }
     };
+
     dialog.addEventListener("close", onClose);
-    return () => dialog.removeEventListener("close", onClose);
+    // No native "open" event on <dialog> — a MutationObserver on the
+    // `open` attribute catches it regardless of what triggers
+    // showModal(), rather than duplicating the lock call at every call
+    // site that might open it.
+    const observer = new MutationObserver(() => {
+      if (dialog.open) onOpen();
+    });
+    observer.observe(dialog, { attributes: true, attributeFilter: ["open"] });
+
+    return () => {
+      dialog.removeEventListener("close", onClose);
+      observer.disconnect();
+    };
   }, [popup.dismissKey]);
 
   return (
