@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Script from "next/script";
 import { subscribeToNewsletter } from "@/lib/actions/newsletter";
 
 // Extracted from JournalNewsletterSection (which stays a server
@@ -25,11 +26,14 @@ export default function JournalNewsletterForm({
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    const formData = new FormData(e.currentTarget);
+    const turnstileToken = String(formData.get("cf-turnstile-response") ?? "");
+
     setIsSubmitting(true);
     setStatus("idle");
     setErrorMessage("");
 
-    const result = await subscribeToNewsletter(name, email);
+    const result = await subscribeToNewsletter(name, email, turnstileToken);
 
     setIsSubmitting(false);
     if (result.success) {
@@ -52,45 +56,59 @@ export default function JournalNewsletterForm({
 
   return (
     <div className="mx-auto max-w-[587px]" data-reveal>
-      <form onSubmit={handleSubmit} className="flex flex-col gap-3 lg:flex-row lg:gap-0">
-        {/* `lg:contents` dissolves this wrapper at the one-line breakpoint
-            so the two inputs become direct flex items alongside the
-            button below, sharing a single row instead of a row-then-row
-            stack. Below `lg` it stays a real flex box (stacked on mobile,
-            side-by-side from `sm`) — the layout this section shipped
-            with, untouched. */}
-        <div className="flex flex-col sm:flex-row lg:contents">
-          <input
-            type="text"
-            name="name"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="Your Name"
-            aria-label="Your Name"
-            required
+      <form onSubmit={handleSubmit} className="flex flex-col gap-3">
+        <div className="flex flex-col gap-3 lg:flex-row lg:gap-0">
+          {/* `lg:contents` dissolves this wrapper at the one-line
+              breakpoint so the two inputs become direct flex items
+              alongside the button below, sharing a single row instead of
+              a row-then-row stack. Below `lg` it stays a real flex box
+              (stacked on mobile, side-by-side from `sm`) — the layout
+              this section shipped with, untouched. Turnstile's widget
+              (below) is a sibling of this row now, not a child of it —
+              it previously would have landed as a third flex item in the
+              one-line row itself, breaking that layout. */}
+          <div className="flex flex-col sm:flex-row lg:contents">
+            <input
+              type="text"
+              name="name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="Your Name"
+              aria-label="Your Name"
+              required
+              disabled={isSubmitting}
+              className="relative h-12 w-full border border-stone-200 bg-white px-4 text-[16px] text-stone-900 placeholder:text-stone-400 focus:z-10 focus:outline-none focus:ring-1 focus:ring-stone-900 disabled:opacity-60 sm:flex-1 sm:border-r-0"
+            />
+            <input
+              type="email"
+              name="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder={emailPlaceholder}
+              aria-label={emailPlaceholder}
+              required
+              disabled={isSubmitting}
+              className="relative h-12 w-full border border-stone-200 bg-white px-4 text-[16px] text-stone-900 placeholder:text-stone-400 focus:z-10 focus:outline-none focus:ring-1 focus:ring-stone-900 disabled:opacity-60 sm:flex-1 lg:border-r-0"
+            />
+          </div>
+          <button
+            type="submit"
             disabled={isSubmitting}
-            className="relative h-12 w-full border border-stone-200 bg-white px-4 text-[16px] text-stone-900 placeholder:text-stone-400 focus:z-10 focus:outline-none focus:ring-1 focus:ring-stone-900 disabled:opacity-60 sm:flex-1 sm:border-r-0"
-          />
-          <input
-            type="email"
-            name="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder={emailPlaceholder}
-            aria-label={emailPlaceholder}
-            required
-            disabled={isSubmitting}
-            className="relative h-12 w-full border border-stone-200 bg-white px-4 text-[16px] text-stone-900 placeholder:text-stone-400 focus:z-10 focus:outline-none focus:ring-1 focus:ring-stone-900 disabled:opacity-60 sm:flex-1 lg:border-r-0"
-          />
+            className="group flex h-12 w-full shrink-0 cursor-pointer items-center justify-center gap-6 whitespace-nowrap bg-stone-900 px-8 text-[12px] font-semibold uppercase tracking-[1.92px] text-white transition-colors duration-300 hover:bg-stone-700 disabled:cursor-not-allowed disabled:opacity-60 lg:w-auto"
+          >
+            {isSubmitting ? "Subscribing…" : buttonLabel}
+            <span aria-hidden="true" className="h-px w-10 origin-left bg-white transition-transform duration-300 group-hover:scale-x-125" />
+          </button>
         </div>
-        <button
-          type="submit"
-          disabled={isSubmitting}
-          className="group flex h-12 w-full shrink-0 cursor-pointer items-center justify-center gap-6 whitespace-nowrap bg-stone-900 px-8 text-[12px] font-semibold uppercase tracking-[1.92px] text-white transition-colors duration-300 hover:bg-stone-700 disabled:cursor-not-allowed disabled:opacity-60 lg:w-auto"
-        >
-          {isSubmitting ? "Subscribing…" : buttonLabel}
-          <span aria-hidden="true" className="h-px w-10 origin-left bg-white transition-transform duration-300 group-hover:scale-x-125" />
-        </button>
+
+        {/* Same implicit-rendering pattern as EnquiryForm/
+            EventRegistrationForm — added 2026-10-29 pre-launch audit
+            (this form had no bot protection, despite emailing a real
+            subscriber and adding them to the live Brevo list). A
+            separate row below the input/button row rather than a flex
+            item within it — see comment above. */}
+        <div className="cf-turnstile" data-sitekey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY} />
+        <Script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer />
       </form>
       {status === "error" && <p className="mt-3 text-center text-[13px] text-red-600">{errorMessage}</p>}
     </div>

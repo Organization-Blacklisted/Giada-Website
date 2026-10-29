@@ -18,7 +18,12 @@ export const Enquiries: CollectionConfig = {
     // Submitted by anonymous site visitors via a Server Action, not an
     // authenticated admin session — same reasoning as EventRegistrations.
     create: () => true,
-    read: () => true,
+    // Fixed 2026-10-29, pre-launch audit: this was `() => true` — publicly
+    // readable via the REST/GraphQL API with zero authentication, meaning
+    // anyone could fetch every visitor's name, email, phone number, and
+    // message straight from `/api/enquiries`. Gated to logged-in admin
+    // users only, same pattern as Users.ts's own read access.
+    read: ({ req: { user } }) => Boolean(user),
   },
   fields: [
     { name: "firstName", type: "text", required: true },

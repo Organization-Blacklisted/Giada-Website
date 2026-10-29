@@ -1,9 +1,11 @@
 "use server";
 
+import { headers } from "next/headers";
 import { getPayload } from "payload";
 import config from "@payload-config";
 import { addContactToNewsletterList } from "@/lib/brevo";
 import { buildNewsletterConfirmationEmail, buildNewsletterTeamNotificationEmail, NEWSLETTER_TEAM_RECIPIENT } from "@/lib/email/newsletter-emails";
+import { verifyTurnstile } from "@/lib/turnstile";
 
 // Deliberately Brevo-only, no Payload collection — discussed and agreed
 // 2026-10-23: the subscriber list needs to live wherever the client will
@@ -16,15 +18,30 @@ import { buildNewsletterConfirmationEmail, buildNewsletterTeamNotificationEmail,
 // `name` collected and passed through to Brevo (as FIRSTNAME) and into
 // both email templates since 2026-10-23 — see newsletter-emails.ts for
 // the real client-provided copy.
+//
+// Turnstile verification (added 2026-10-29, pre-launch audit) — this
+// form had zero bot/spam protection despite adding submitters directly
+// to the real Brevo contact list and sending two real emails per
+// signup. Same gate-before-anything-else pattern as submitEnquiry.
 export async function subscribeToNewsletter(
   name: string,
-  email: string
+  email: string,
+  turnstileToken: string
 ): Promise<{ success: boolean; error?: string }> {
   if (!name.trim()) {
     return { success: false, error: "Please enter your name." };
   }
   if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     return { success: false, error: "Please enter a valid email address." };
+  }
+  if (!turnstileToken) {
+    return { success: false, error: "Verification failed. Please try again." };
+  }
+
+  const headerList = await headers();
+  const ip = headerList.get("x-forwarded-for")?.split(",")[0].trim() ?? null;
+  if (!(await verifyTurnstile(turnstileToken, ip))) {
+    return { success: false, error: "Verification failed. Please try again." };
   }
 
   try {

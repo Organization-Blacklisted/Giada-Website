@@ -9,6 +9,7 @@ import EventPopup from "@/components/ui/EventPopup";
 import { getEventPopup } from "@/lib/api/event-popup";
 import { siteConfig } from "@/data/site";
 import { avenir, didot } from "@/fonts";
+import { safeJsonLd } from "@/lib/json-ld";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -83,8 +84,8 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
       <html lang="en" className={`h-full antialiased ${avenir.variable} ${didot.variable}`}>
         <body className="min-h-full flex flex-col">
           {gtmId && <GoogleTagManager gtmId={gtmId} />}
-          <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema) }} />
-          <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteSchema) }} />
+          <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(organizationSchema) }} />
+          <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(websiteSchema) }} />
           {/* Skip-to-content — invisible until focused, first tab stop for keyboard/screen-reader users */}
           <a
             href="#main-content"

@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import ProductDetail from "@/components/sections/products/ProductDetail";
 import { getAllProductSlugs, getProductBySlug } from "@/lib/api/products-catalog";
 import { buildPageMetadata } from "@/lib/metadata";
+import { safeJsonLd } from "@/lib/json-ld";
 
 // Every product gets a real static page regardless of `active` —
 // matches the real source's own getStaticPaths() exactly (inactive
@@ -58,8 +59,8 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
 
   return (
     <>
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(productSchema) }} />
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(productSchema) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(breadcrumbSchema) }} />
       <ProductDetail
         title={product.title}
         description={product.description}

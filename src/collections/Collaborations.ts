@@ -47,6 +47,17 @@ export const Collaborations: CollectionConfig = {
       ],
     },
   },
+  // Added 2026-10-29, pre-launch audit: this had no access block at all,
+  // defaulting to Payload's admin-only read on the public REST/GraphQL
+  // API — inconsistent with every other public-content collection
+  // (Products, Events, BlogPosts, Media), all of which explicitly allow
+  // public reads. The site itself was unaffected (pages use the Local
+  // API, which isn't subject to this), but anything outside the site
+  // querying collaboration data directly would have been silently
+  // blocked. Matches the others now.
+  access: {
+    read: () => true,
+  },
   fields: [
     { name: "name", type: "text", required: true },
     {

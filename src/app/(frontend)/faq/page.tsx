@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import FaqPageClient from "@/components/sections/faq/FaqPageClient";
 import { getFaqPage } from "@/lib/api/faq";
 import { buildPageMetadata } from "@/lib/metadata";
+import { safeJsonLd } from "@/lib/json-ld";
 
 const DEFAULT_TITLE = "FAQ";
 const DEFAULT_DESCRIPTION =
@@ -35,7 +36,7 @@ export default async function FaqPage() {
 
   return (
     <>
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(faqSchema) }} />
 
       <FaqPageClient initialData={faqData} />
     </>

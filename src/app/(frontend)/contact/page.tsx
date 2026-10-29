@@ -3,6 +3,7 @@ import ContactPageClient from "@/components/sections/contact/ContactPageClient";
 import { siteConfig } from "@/data/site";
 import { getContactPage, getContactRaw } from "@/lib/api/contact";
 import { buildPageMetadata } from "@/lib/metadata";
+import { safeJsonLd } from "@/lib/json-ld";
 
 const DEFAULT_TITLE = "Contact";
 const DEFAULT_DESCRIPTION =
@@ -60,7 +61,7 @@ export default async function ContactPage() {
       <ContactPageClient initialData={raw} />
 
       {localBusinessSchemas.map((schema) => (
-        <script key={schema["@id"]} type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }} />
+        <script key={schema["@id"]} type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(schema) }} />
       ))}
     </>
   );

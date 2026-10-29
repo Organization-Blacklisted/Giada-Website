@@ -8,6 +8,7 @@ import CollaborationDesignerSection from "@/components/sections/collaborations/C
 import ContactCtaBanner from "@/components/ui/ContactCtaBanner";
 import { mapCollaborationItem } from "@/lib/api/collaborations-map";
 import { mapOfEarthAndLightPage } from "@/lib/api/of-earth-and-light-page-map";
+import { safeJsonLd } from "@/lib/json-ld";
 import type { Collaboration, OfEarthAndLightPage } from "@/payload-types";
 import type { ProductListItemData } from "@/lib/api/products-catalog-map";
 
@@ -54,7 +55,7 @@ export default function OfEarthAndLightPageClient({
 
   return (
     <>
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(breadcrumbSchema) }} />
       <CollaborationHeroSection name={collaboration.name} tagline={collaboration.tagline} heroImage={collaboration.heroImage} />
       <CollaborationStatementSection tagline={collaboration.tagline} description={page.statement.description} />
       {products.length > 0 && <CollaborationProductsSection products={products} />}

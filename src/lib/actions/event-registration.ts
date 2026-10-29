@@ -1,5 +1,6 @@
 "use server";
 
+import { headers } from "next/headers";
 import { getPayload } from "payload";
 import config from "@payload-config";
 import type { Event } from "@/payload-types";
@@ -9,6 +10,7 @@ import {
   buildClientEventRegistrationConfirmationEmail,
   EVENT_REGISTRATION_TEAM_RECIPIENTS,
 } from "@/lib/email/event-registration-emails";
+import { verifyTurnstile } from "@/lib/turnstile";
 
 export type EventRegistrationPayload = {
   eventId: number;
@@ -27,9 +29,25 @@ export type EventRegistrationPayload = {
 // lost, since it's already safely stored in Event Registrations either
 // way. Recipients deliberately skip nitin@ for this form specifically
 // (explicit instruction) — see EVENT_REGISTRATION_TEAM_RECIPIENTS.
+//
+// Turnstile verification (added 2026-10-29, pre-launch audit) — this
+// form had zero bot/spam protection, unlike Contact's enquiry form,
+// despite also firing two real outbound emails per submission. Same
+// gate-before-anything-else pattern as submitEnquiry.
 export async function submitEventRegistration(
-  payload: EventRegistrationPayload
+  payload: EventRegistrationPayload,
+  turnstileToken: string
 ): Promise<{ success: boolean; error?: string }> {
+  if (!turnstileToken) {
+    return { success: false, error: "Verification failed. Please try again." };
+  }
+
+  const headerList = await headers();
+  const ip = headerList.get("x-forwarded-for")?.split(",")[0].trim() ?? null;
+  if (!(await verifyTurnstile(turnstileToken, ip))) {
+    return { success: false, error: "Verification failed. Please try again." };
+  }
+
   let event: Event | null = null;
 
   try {

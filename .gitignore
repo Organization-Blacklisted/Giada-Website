@@ -46,3 +46,6 @@ next-env.d.ts
 /media
 .neon
 .mcp.json
+
+.vercel
+.env*

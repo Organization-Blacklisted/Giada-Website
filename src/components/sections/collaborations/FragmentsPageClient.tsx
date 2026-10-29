@@ -8,6 +8,7 @@ import FragmentsMemoriesSection from "@/components/sections/collaborations/Fragm
 import FragmentsMeetingSection from "@/components/sections/collaborations/FragmentsMeetingSection";
 import FragmentsClosingCtaSection from "@/components/sections/collaborations/FragmentsClosingCtaSection";
 import { mapFragmentsPage } from "@/lib/api/fragments-page-map";
+import { safeJsonLd } from "@/lib/json-ld";
 import type { FragmentsPage } from "@/payload-types";
 
 // Was missing entirely before — /collaborations/[slug]'s "fragments"
@@ -43,7 +44,7 @@ export default function FragmentsPageClient({
 
   return (
     <>
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(breadcrumbSchema) }} />
       <FragmentsHeroSection
         eyebrow={fragments.hero.eyebrow}
         headline={fragments.hero.headline}

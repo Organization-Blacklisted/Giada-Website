@@ -19,7 +19,11 @@ export const EventRegistrations: CollectionConfig = {
     // Submitted by anonymous site visitors via a Server Action, not an
     // authenticated admin session.
     create: () => true,
-    read: () => true,
+    // Fixed 2026-10-29, pre-launch audit: same issue as Enquiries.ts —
+    // this was `() => true`, publicly exposing every registrant's name,
+    // company, email, and phone number via the REST/GraphQL API with no
+    // authentication. Gated to logged-in admin users only.
+    read: ({ req: { user } }) => Boolean(user),
   },
   fields: [
     { name: "event", type: "relationship", relationTo: "events", required: true },

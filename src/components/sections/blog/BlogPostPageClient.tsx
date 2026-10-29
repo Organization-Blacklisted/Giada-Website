@@ -6,6 +6,7 @@ import BlogArticleSection from "@/components/sections/blog/BlogArticleSection";
 import BlogRelatedSection from "@/components/sections/blog/BlogRelatedSection";
 import BlogFaqSection from "@/components/sections/blog/BlogFaqSection";
 import { mapBlogPostDetail, type BlogPostData } from "@/lib/api/blog-map";
+import { safeJsonLd } from "@/lib/json-ld";
 import type { Post } from "@/payload-types";
 
 // Same split as BlogPageClient: only this post's own document is
@@ -38,7 +39,7 @@ export default function BlogPostPageClient({
 
   return (
     <>
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(breadcrumbSchema) }} />
       <BlogDetailHeroSection
         title={post.title}
         excerpt={post.excerpt}
