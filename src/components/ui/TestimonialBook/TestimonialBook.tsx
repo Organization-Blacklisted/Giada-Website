@@ -201,7 +201,11 @@ export default function TestimonialBook({
                   <p className={styles.attrCompany}>{t.company}</p>
                 </footer>
 
-                <p className={styles.pagenum} aria-hidden="true">
+                {/* translate="no" — same Google Translate + React desync
+                    fix as CollaborationsSliderSection's identical counter
+                    pattern (see its comment for the full explanation).
+                    Pure numbers, nothing lost by excluding translation. */}
+                <p className={`${styles.pagenum} notranslate`} aria-hidden="true" translate="no">
                   {String(i + 1).padStart(2, "0")} / {String(count).padStart(2, "0")}
                 </p>
               </div>

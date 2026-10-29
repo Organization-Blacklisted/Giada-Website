@@ -187,8 +187,16 @@ export default function GalleryWallSection({ items, className = "" }: GalleryWal
       <section className={`px-5 md:px-10 lg:px-16 ${className}`}>
         <div className="mx-auto max-w-7xl">
           <div className="flex flex-col items-center gap-2 pb-10 text-center">
+            {/* Only the number itself is isolated with translate="no" —
+                same Google Translate + React desync issue as
+                CollaborationsSliderSection's counter, but "image(s)"
+                genuinely has translation value, unlike a pure-number
+                counter, so only the live-updating digit is excluded. */}
             <p className="text-[11px] font-semibold uppercase tracking-[0.25em] text-stone-400">
-              {visibleCount} image{visibleCount === 1 ? "" : "s"}
+              <span className="notranslate" translate="no">
+                {visibleCount}
+              </span>{" "}
+              image{visibleCount === 1 ? "" : "s"}
             </p>
           </div>
 

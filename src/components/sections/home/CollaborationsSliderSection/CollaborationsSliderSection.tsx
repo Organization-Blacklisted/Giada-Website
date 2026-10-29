@@ -60,7 +60,15 @@ function CollaborationNav({
         </svg>
       </button>
 
-      <p className="text-base text-stone-400">
+      {/* translate="no" — Google Translate wraps this text node when
+          French is active, and React's later updates (clicking an
+          arrow) silently fail to show since they're updating a node
+          Google has already replaced, not the live one on screen. Pure
+          numbers gain nothing from translation anyway, so excluding it
+          from Google's processing entirely is a clean fix, not a
+          workaround — same technique as LanguageSwitcher's own "En"/"Fr"
+          labels. Found 2026-10-29: counter appeared stuck under French. */}
+      <p className="notranslate text-base text-stone-400" translate="no">
         {String(selected + 1).padStart(2, "0")} / {String(total).padStart(2, "0")}
       </p>
 
