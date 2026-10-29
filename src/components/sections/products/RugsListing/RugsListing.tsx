@@ -175,6 +175,9 @@ export default function RugsListing({ products, defaultCategory = "", className 
     body.left = "0";
     body.right = "0";
     body.width = "100%";
+    // Same scroll-lock technique as Header's mobile menu, same marker
+    // class — see that component's identical comment for why.
+    document.body.classList.add("scroll-locked");
 
     return () => {
       html.overflow = "";
@@ -185,6 +188,7 @@ export default function RugsListing({ products, defaultCategory = "", className 
       body.left = "";
       body.right = "";
       body.width = "";
+      document.body.classList.remove("scroll-locked");
       window.scrollTo(0, scrollY);
     };
   }, [filterPanelOpen]);

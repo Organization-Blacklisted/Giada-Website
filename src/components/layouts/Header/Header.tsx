@@ -5,6 +5,8 @@ import Image from "next/image";
 import { Link } from "next-view-transitions";
 import { usePathname } from "next/navigation";
 import { navItems } from "@/data/nav.config";
+import GoogleTranslateWidget from "@/components/ui/GoogleTranslateWidget";
+import LanguageSwitcher from "@/components/ui/LanguageSwitcher";
 
 const leftPages = navItems.slice(0, 3);
 const rightPages = navItems.slice(3);
@@ -54,6 +56,12 @@ export default function Header() {
     body.left = "0";
     body.right = "0";
     body.width = "100%";
+    // Marks this lock as active so globals.css's Google Translate
+    // `body { top/position }` override (which otherwise fights this
+    // exact technique with !important) knows to stand down — see that
+    // rule's own comment for the full story. RugsListing's mobile filter
+    // drawer uses the identical lock technique and the same class.
+    document.body.classList.add("scroll-locked");
 
     return () => {
       html.overflow = "";
@@ -64,6 +72,7 @@ export default function Header() {
       body.left = "";
       body.right = "";
       body.width = "";
+      document.body.classList.remove("scroll-locked");
       window.scrollTo(0, scrollY);
     };
   }, [open]);
@@ -153,12 +162,27 @@ export default function Header() {
           </div>
 
           {/* Right nav desktop */}
-          <div className="hidden flex-1 justify-end gap-8 lg:flex">
+          <div className="hidden flex-1 items-center justify-end gap-8 lg:flex">
             {rightPages.map((page) => (
               <Link key={page.href} href={page.href} className={linkClass(page.href)}>
                 {page.label}
               </Link>
             ))}
+            <LanguageSwitcher />
+            <GoogleTranslateWidget />
+          </div>
+
+          {/* Language switcher, mobile/tablet — the desktop one above is
+              hidden below `lg` along with the rest of "Right nav desktop",
+              so it needs its own visible-only-below-`lg` copy here,
+              opposite the burger button (the two are the only visible
+              flex children at this width, so `justify-between` on the
+              parent pushes them to either end). GoogleTranslateWidget
+              itself doesn't need a second copy — it's just the hidden
+              engine div/script, already present once on the page
+              regardless of breakpoint. */}
+          <div className="lg:hidden">
+            <LanguageSwitcher />
           </div>
         </div>
       </div>

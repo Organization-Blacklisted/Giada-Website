@@ -47,6 +47,56 @@ body {
 }
 
 /*
+ * Google Translate widget (GoogleTranslateWidget.tsx) — kept functioning
+ * but fully hidden; LanguageSwitcher.tsx drives its actual <select
+ * class="goog-te-combo"> programmatically instead of showing Google's own
+ * boxed "Select Language" dropdown, which doesn't match this site's
+ * styling at all. Google also injects a full-width "Powered by Google"
+ * banner iframe at the very top of the page the moment a visitor picks a
+ * language (pushing all content down via an inline `body { top: Npx }`
+ * it sets itself — the `body:not(.scroll-locked) { top: 0 !important }`
+ * below cancels that). None of this is in the component's own markup —
+ * Google injects it directly into the page outside React's tree, so it
+ * can only be dealt with here.
+ *
+ * `:not(.scroll-locked)` matters: Header's mobile menu and RugsListing's
+ * mobile filter drawer both lock background scroll by setting this same
+ * `body.style.position = "fixed"` / `top` via inline JS — an earlier,
+ * unscoped version of this rule's `!important` silently broke both of
+ * them sitewide (inline styles always lose to `!important`, regardless
+ * of which component set them). Both now toggle `.scroll-locked` on
+ * body for exactly this reason — see their own comments.
+ */
+#google_translate_element {
+  display: none !important;
+}
+.goog-te-banner-frame,
+iframe.goog-te-banner-frame,
+.skiptranslate iframe {
+  display: none !important;
+  height: 0 !important;
+  visibility: hidden !important;
+}
+body:not(.scroll-locked) {
+  top: 0px !important;
+  position: static !important;
+}
+/*
+ * The "Original text" tap-to-see-source tooltip (with thumbs up/down
+ * rating icons) that Google attaches to individual translated words —
+ * appears on tap/click on mobile especially. Same reasoning as the
+ * banner/dropdown above: native Google behavior, but it doesn't match
+ * this site's design, and there's no equivalent in the component's own
+ * markup to target from React.
+ */
+.goog-te-balloon-frame,
+iframe.goog-te-balloon-frame,
+#goog-gt-tt {
+  display: none !important;
+  visibility: hidden !important;
+}
+
+/*
  * Font-family/weight for h1/h2 is deliberately NOT set here — the real
  * source did it via a blanket `h1, h2 {...}` rule, but a plain-element
  * selector loses to any Tailwind utility class on specificity (bit us
