@@ -2,8 +2,7 @@
 // shared-template.ts) — team notification + registrant confirmation,
 // same shape as submitEnquiry. See lib/actions/event-registration.ts for
 // where these get sent.
-import { siteConfig } from "@/data/site";
-import { escapeHtml, serif, sans, ink, body, muted, rule, eyebrow, button, baseTemplate, fieldRow } from "./shared-template";
+import { escapeHtml, serif, sans, ink, body, muted, rule, eyebrow, baseTemplate, fieldRow } from "./shared-template";
 
 export type EventRegistrationEmailData = {
   fullName: string;
@@ -53,6 +52,12 @@ export function buildTeamEventRegistrationEmail(data: EventRegistrationEmailData
   );
 }
 
+// No "View Event Details" button (removed 2026-10-30) — it linked back
+// to the event's own page, which also holds the registration form, so a
+// visitor who'd just confirmed landed back on a page inviting them to
+// register again. The date/time/location are already shown below, so
+// nothing is lost by dropping it rather than building a dedicated
+// read-only page.
 export function buildClientEventRegistrationConfirmationEmail(data: EventRegistrationEmailData): string {
   const firstName = data.fullName.split(" ")[0] || data.fullName;
 
@@ -76,8 +81,6 @@ export function buildClientEventRegistrationConfirmationEmail(data: EventRegistr
       </table>
 
       <div style="margin:36px auto;width:64px;height:1px;background-color:${rule};font-size:0;line-height:0;">&nbsp;</div>
-
-      ${button(`${siteConfig.url}/events/${data.eventSlug}`, "View Event Details")}
 
       <p style="margin:28px 0 0;font-family:${sans};font-size:12px;font-style:italic;color:${muted};">
         If anything changes on our end, we'll reach out to the email address you provided.
