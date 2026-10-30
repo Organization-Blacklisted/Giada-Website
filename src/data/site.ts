@@ -7,7 +7,13 @@ export const siteConfig = {
   // different purpose, confirmed from the real source's Footer.astro.
   footerDescription:
     "For over a century, Giada has woven beauty into the foundations of extraordinary spaces. Each rug is an heirloom in the making, a testament to four generations of textile mastery, where ancestral savoir-faire meets contemporary vision. More than a furnishing, it is the soul of a room.",
-  url: "https://www.giada-studio.com",
+  // Non-www is canonical (decided 2026-10-30, per explicit request —
+  // www.giada-studio.com 301-redirects to this in Vercel's domain
+  // config). This single value feeds sitemap.xml, robots.txt,
+  // metadataBase, and the Organization/WebSite JSON-LD — all of it was
+  // pointing at the www version until this fix, directly contradicting
+  // the canonical-domain decision.
+  url: "https://giada-studio.com",
   locations: [
     {
       city: "Montréal",
