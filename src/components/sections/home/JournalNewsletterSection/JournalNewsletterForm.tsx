@@ -47,9 +47,16 @@ export default function JournalNewsletterForm({
   }
 
   if (status === "success") {
+    // No data-reveal here — this element only exists after a real submit
+    // (replacing the form), well after ScrollReveal's one-time scan for
+    // [data-reveal] elements on mount already ran. It was never
+    // discovered/observed, so it never got .is-visible added and sat
+    // permanently at opacity:0 — looking like the section just vanished
+    // on success. Found 2026-10-30, during real end-to-end form testing.
     return (
-      <p className="mx-auto max-w-[587px] text-center text-[14px] text-stone-600" data-reveal>
-        Thank you for subscribing — check your inbox for a confirmation.
+      <p className="mx-auto max-w-[587px] text-center text-[14px] text-stone-600">
+        Thank you for subscribing — you&apos;ll receive a confirmation email shortly. Welcome to the Giada
+        community.
       </p>
     );
   }
