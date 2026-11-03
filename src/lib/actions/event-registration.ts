@@ -11,6 +11,7 @@ import {
   EVENT_REGISTRATION_TEAM_RECIPIENTS,
 } from "@/lib/email/event-registration-emails";
 import { verifyTurnstile } from "@/lib/turnstile";
+import { appendEventRegistrationToSheet } from "@/lib/google-sheets";
 
 export type EventRegistrationPayload = {
   eventId: number;
@@ -93,6 +94,24 @@ export async function submitEventRegistration(
     });
   } catch (err) {
     console.error("Event registration saved, but sending notification email failed:", err);
+  }
+
+  // Client-requested (2026-11-03): mirror each registration into a
+  // per-event tab of their shared Google Sheet. Same best-effort
+  // reasoning as the email step above — the registration is already
+  // safely in Payload either way, so a Sheets hiccup shouldn't surface
+  // to the registrant.
+  try {
+    await appendEventRegistrationToSheet({
+      eventTitle: event.title,
+      fullName: payload.fullName,
+      companyName: payload.companyName,
+      email: payload.email,
+      mobileNumber: payload.mobileNumber,
+      submittedAt: new Date(),
+    });
+  } catch (err) {
+    console.error("Event registration saved, but appending to Google Sheet failed:", err);
   }
 
   return { success: true };
