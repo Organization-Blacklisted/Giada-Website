@@ -53,6 +53,7 @@ export default function FragmentsPageClient({
         eyebrow={fragments.hero.eyebrow}
         headline={fragments.hero.headline}
         paragraph={fragments.hero.paragraph}
+        unveilingLabel={fragments.hero.unveilingLabel}
         unveilingLines={fragments.hero.unveilingLines}
         backdropImage={fragments.hero.backdropImage}
         cutoutImage={fragments.hero.cutoutImage}

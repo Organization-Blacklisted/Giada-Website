@@ -17,6 +17,7 @@ export type FragmentsPageData = {
     paragraph: string;
     backdropImage: string;
     cutoutImage: string;
+    unveilingLabel: string;
     unveilingLines: string[];
   };
   artist: {
@@ -65,6 +66,7 @@ export function mapFragmentsPage(doc: FragmentsPage): FragmentsPageData {
       paragraph: doc.hero.paragraph,
       backdropImage: mediaUrl(doc.hero.backdropImage),
       cutoutImage: mediaUrl(doc.hero.cutoutImage),
+      unveilingLabel: doc.hero.unveilingLabel,
       unveilingLines: (doc.hero.unveilingLines ?? []).map((item) => item.line),
     },
     artist: {

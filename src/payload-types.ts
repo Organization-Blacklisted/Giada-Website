@@ -1629,7 +1629,11 @@ export interface FragmentsPage {
      */
     cutoutImage: number | Media;
     /**
-     * The "Unveiling at" panel's lines (e.g. venue, then date | city).
+     * Small label above the venue/date lines below — was hardcoded as "Unveiling at" until 2026-11-04.
+     */
+    unveilingLabel: string;
+    /**
+     * The unveiling panel's lines (e.g. venue, then date | city).
      */
     unveilingLines?:
       | {
@@ -2590,6 +2594,7 @@ export interface FragmentsPageSelect<T extends boolean = true> {
         paragraph?: T;
         backdropImage?: T;
         cutoutImage?: T;
+        unveilingLabel?: T;
         unveilingLines?:
           | T
           | {

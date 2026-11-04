@@ -4,6 +4,7 @@ import * as migration_20261022_104325_add_home_journal_newsletter from './202610
 import * as migration_20261024_110306_add_event_popup from './20261024_110306_add_event_popup';
 import * as migration_20261024_110911_add_event_popup_eyebrow from './20261024_110911_add_event_popup_eyebrow';
 import * as migration_20261024_111629_add_event_popup_cooldown from './20261024_111629_add_event_popup_cooldown';
+import * as migration_20261104_131628_add_fragments_unveiling_label from './20261104_131628_add_fragments_unveiling_label';
 
 export const migrations = [
   {
@@ -34,6 +35,11 @@ export const migrations = [
   {
     up: migration_20261024_111629_add_event_popup_cooldown.up,
     down: migration_20261024_111629_add_event_popup_cooldown.down,
-    name: '20261024_111629_add_event_popup_cooldown'
+    name: '20261024_111629_add_event_popup_cooldown',
+  },
+  {
+    up: migration_20261104_131628_add_fragments_unveiling_label.up,
+    down: migration_20261104_131628_add_fragments_unveiling_label.down,
+    name: '20261104_131628_add_fragments_unveiling_label'
   },
 ];

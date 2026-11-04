@@ -49,6 +49,7 @@ export default function FragmentsHeroSection({
   eyebrow,
   headline,
   paragraph,
+  unveilingLabel,
   unveilingLines,
   backdropImage,
   cutoutImage,
@@ -101,7 +102,7 @@ export default function FragmentsHeroSection({
           <div aria-label="GIADA & Ryan Saghian — Interior Design Studio" role="img" className="w-[110px] shrink-0 self-center bg-[#d2b686]" style={logoMaskStyle} />
           <div className="w-px shrink-0 bg-white/30" aria-hidden="true" />
           <div className="flex flex-col justify-center gap-1.5">
-            <p className="text-[11px] font-medium uppercase tracking-[0.1em] text-[#f3deb8]">Unveiling at</p>
+            <p className="text-[11px] font-medium uppercase tracking-[0.1em] text-[#f3deb8]">{unveilingLabel}</p>
             {unveilingLines.map((line) => (
               <p key={line} className="text-sm text-[#fffbf5]">
                 {line}
@@ -155,7 +156,7 @@ export default function FragmentsHeroSection({
             <div className="w-px shrink-0 bg-white/30" aria-hidden="true" />
             <div className="flex flex-col justify-center gap-2">
               <p className="text-[clamp(0.75rem,0.73vw,0.875rem)] font-medium uppercase tracking-[1.4px] text-[#f3deb8]">
-                Unveiling at
+                {unveilingLabel}
               </p>
               {unveilingLines.map((line) => (
                 <p key={line} className="text-[clamp(0.9375rem,0.94vw,1.125rem)] text-[#fffbf5]">
