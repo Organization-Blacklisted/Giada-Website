@@ -9,6 +9,12 @@ export const navItems: NavItem[] = [
   { label: "Products", href: "/products" },
   { label: "Collaborations", href: "/collaborations" },
   { label: "Gallery", href: "/gallery" },
+  // Points directly at the current live event rather than an /events
+  // hub — there's only ever been one event document so far, and no
+  // Figma design exists for a listing page. Revisit as a real hub once
+  // a second event makes this a recurring pattern (discussed explicitly
+  // 2026-11-04, client chose the quick link over building the hub now).
+  { label: "Miami Art Week", href: "/events/miami-art-week" },
   { label: "Our Story", href: "/our-story" },
   { label: "Blog", href: "/blog" },
   { label: "FAQ", href: "/faq" },

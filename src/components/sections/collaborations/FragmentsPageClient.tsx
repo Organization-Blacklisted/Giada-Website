@@ -3,6 +3,7 @@
 import { useLivePreview } from "@payloadcms/live-preview-react";
 import FragmentsHeroSection from "@/components/sections/collaborations/FragmentsHeroSection";
 import FragmentsArtistSection from "@/components/sections/collaborations/FragmentsArtistSection";
+import CollaborationProductsSection from "@/components/sections/collaborations/CollaborationProductsSection";
 import FragmentsInspirationSection from "@/components/sections/collaborations/FragmentsInspirationSection";
 import FragmentsMemoriesSection from "@/components/sections/collaborations/FragmentsMemoriesSection";
 import FragmentsMeetingSection from "@/components/sections/collaborations/FragmentsMeetingSection";
@@ -10,6 +11,7 @@ import FragmentsClosingCtaSection from "@/components/sections/collaborations/Fra
 import { mapFragmentsPage } from "@/lib/api/fragments-page-map";
 import { safeJsonLd } from "@/lib/json-ld";
 import type { FragmentsPage } from "@/payload-types";
+import type { ProductListItemData } from "@/lib/api/products-catalog-map";
 
 // Was missing entirely before — /collaborations/[slug]'s "fragments"
 // branch was a plain Server Component with no useLivePreview anywhere,
@@ -21,9 +23,11 @@ import type { FragmentsPage } from "@/payload-types";
 export default function FragmentsPageClient({
   initialData,
   collaborationName,
+  products,
 }: {
   initialData: FragmentsPage;
   collaborationName: string;
+  products: ProductListItemData[];
 }) {
   const { data: raw } = useLivePreview<FragmentsPage>({
     initialData,
@@ -53,6 +57,7 @@ export default function FragmentsPageClient({
         backdropImage={fragments.hero.backdropImage}
         cutoutImage={fragments.hero.cutoutImage}
       />
+      {products.length > 0 && <CollaborationProductsSection products={products} />}
       <FragmentsArtistSection
         eyebrow={fragments.artist.eyebrow}
         name={fragments.artist.name}

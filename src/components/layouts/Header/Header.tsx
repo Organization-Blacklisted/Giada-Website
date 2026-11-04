@@ -8,8 +8,8 @@ import { navItems } from "@/data/nav.config";
 import GoogleTranslateWidget from "@/components/ui/GoogleTranslateWidget";
 import LanguageSwitcher from "@/components/ui/LanguageSwitcher";
 
-const leftPages = navItems.slice(0, 3);
-const rightPages = navItems.slice(3);
+const leftPages = navItems.slice(0, 4);
+const rightPages = navItems.slice(4);
 
 function isActive(pathname: string, href: string) {
   return href === "/" ? pathname === href : pathname === href || pathname.startsWith(`${href}/`);

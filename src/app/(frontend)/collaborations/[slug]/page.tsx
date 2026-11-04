@@ -62,8 +62,8 @@ export default async function CollaborationDetailPage({ params }: { params: Prom
   if (!collaboration) notFound();
 
   if (slug === "fragments") {
-    const fragmentsRaw = await getFragmentsPageRaw();
-    return <FragmentsPageClient initialData={fragmentsRaw} collaborationName={collaboration.name} />;
+    const [fragmentsRaw, products] = await Promise.all([getFragmentsPageRaw(), getProductsByCollectionSlug(slug)]);
+    return <FragmentsPageClient initialData={fragmentsRaw} collaborationName={collaboration.name} products={products} />;
   }
 
   if (slug === "of-earth-and-light") {
