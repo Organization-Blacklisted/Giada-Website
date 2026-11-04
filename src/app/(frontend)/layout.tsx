@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import Script from "next/script";
 import { GoogleTagManager } from "@next/third-parties/google";
 import { ViewTransitions } from "next-view-transitions";
 import Header from "@/components/layouts/Header";
@@ -84,6 +85,11 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
       <html lang="en" className={`h-full antialiased ${avenir.variable} ${didot.variable}`}>
         <body className="min-h-full flex flex-col">
           {gtmId && <GoogleTagManager gtmId={gtmId} />}
+          {/* Loaded once, globally — `render=explicit` stops it from
+              doing its own implicit page scan; each <Turnstile />
+              (ui/Turnstile) renders its own widget explicitly on mount
+              instead. See that component for why. */}
+          <Script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" async defer />
           <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(organizationSchema) }} />
           <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(websiteSchema) }} />
           {/* Skip-to-content — invisible until focused, first tab stop for keyboard/screen-reader users */}

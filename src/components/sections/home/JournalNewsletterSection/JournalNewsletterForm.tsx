@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import Script from "next/script";
+import Turnstile from "@/components/ui/Turnstile";
 import { subscribeToNewsletter } from "@/lib/actions/newsletter";
 
 // Extracted from JournalNewsletterSection (which stays a server
@@ -108,14 +108,13 @@ export default function JournalNewsletterForm({
           </button>
         </div>
 
-        {/* Same implicit-rendering pattern as EnquiryForm/
-            EventRegistrationForm — added 2026-10-29 pre-launch audit
-            (this form had no bot protection, despite emailing a real
-            subscriber and adding them to the live Brevo list). A
-            separate row below the input/button row rather than a flex
-            item within it — see comment above. */}
-        <div className="cf-turnstile" data-sitekey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY} />
-        <Script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer />
+        {/* Same ui/Turnstile pattern as EnquiryForm/EventRegistrationForm
+            — added 2026-10-29 pre-launch audit (this form had no bot
+            protection, despite emailing a real subscriber and adding
+            them to the live Brevo list). A separate row below the
+            input/button row rather than a flex item within it — see
+            comment above. */}
+        <Turnstile />
       </form>
       {status === "error" && <p className="mt-3 text-center text-[13px] text-red-600">{errorMessage}</p>}
     </div>

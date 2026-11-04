@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import Script from "next/script";
+import Turnstile from "@/components/ui/Turnstile";
 import { submitEventRegistration } from "@/lib/actions/event-registration";
 import type { EventRegistrationFormProps } from "./EventRegistrationForm.types";
 
@@ -119,11 +119,10 @@ export default function EventRegistrationForm({
                 </div>
               </div>
 
-              {/* Same implicit-rendering pattern as EnquiryForm — added
+              {/* Same ui/Turnstile pattern as EnquiryForm — added
                   2026-10-29 pre-launch audit (this form had no bot
                   protection at all, unlike Contact's). */}
-              <div className="cf-turnstile" data-sitekey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY} />
-              <Script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer />
+              <Turnstile />
 
               {serverError && (
                 <p className="rounded bg-red-50 px-4 py-3 text-sm text-red-600">{serverError}</p>

@@ -1,9 +1,9 @@
 "use client";
 
 import { Link, useTransitionRouter } from "next-view-transitions";
-import Script from "next/script";
 import { useEffect, useRef, useState } from "react";
 import { gsap } from "@/lib/gsap-init";
+import Turnstile from "@/components/ui/Turnstile";
 import { submitEnquiry } from "@/lib/actions/enquiry";
 import type { EnquiryPayload, EnquiryType } from "@/types/enquiry";
 
@@ -182,15 +182,13 @@ export default function EnquiryForm() {
           />
         </div>
 
-        {/* Implicit rendering: Cloudflare's script auto-renders the
-            widget into this div and injects a hidden
-            `cf-turnstile-response` input as a sibling, which the
-            existing FormData-based handleSubmit above already picks up
-            — no extra React state/callback needed. Added 2026-10-23;
-            the real Astro source had this gated but never actually
-            wired up live (empty site key). */}
-        <div className="cf-turnstile" data-sitekey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY} />
-        <Script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer />
+        {/* Explicit rendering (ui/Turnstile) — injects a hidden
+            `cf-turnstile-response` input as a sibling of its container,
+            which the existing FormData-based handleSubmit above already
+            picks up — no extra React state/callback needed. Added
+            2026-10-23; switched from implicit to explicit rendering
+            2026-11-04 (see that component for why). */}
+        <Turnstile />
 
         {serverError && (
           <p className="rounded bg-red-50 px-4 py-3 text-sm text-red-600">{serverError}</p>
