@@ -141,14 +141,34 @@ export const OurStory: GlobalConfig = {
                         { name: "quote", type: "textarea", required: true },
                         { name: "attribution", type: "text", required: true },
                         {
+                          name: "sharedImage",
+                          type: "upload",
+                          relationTo: "media",
+                          // Not required — redesigned 2026-11-05 (Figma node
+                          // 1035:606) to replace the old one-photo-per-founder
+                          // layout with a single shared photo of both
+                          // founders together. Left optional so this schema
+                          // change can ship without a value to backfill;
+                          // upload the real photo in admin right after
+                          // deploy — the section renders nothing in its
+                          // place until then.
+                          admin: { description: "One shared photo of both founders together, shown full-width between the quote and their bios." },
+                        },
+                        {
+                          name: "sharedImageAlt",
+                          type: "text",
+                          required: true,
+                          defaultValue: "Julien Hakoun and Nitin Garg, co-founders of Giada",
+                        },
+                        {
                           name: "people",
                           type: "array",
                           minRows: 1,
+                          maxRows: 2,
+                          admin: { description: "Exactly 2 — this layout places the shared photo between them." },
                           fields: [
                             { name: "name", type: "text", required: true },
                             { name: "role", type: "text", required: true },
-                            { name: "image", type: "upload", relationTo: "media", required: true },
-                            { name: "alt", type: "text", required: true },
                             { name: "bio", type: "textarea", required: true },
                           ],
                         },

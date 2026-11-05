@@ -48,7 +48,9 @@ export type OurStoryFoundersData = {
   eyebrow: string;
   quote: string;
   attribution: string;
-  people: { name: string; role: string; image: string; alt: string; bio: string }[];
+  sharedImage: string;
+  sharedImageAlt: string;
+  people: { name: string; role: string; bio: string }[];
 };
 
 export type OurStoryClosingCtaData = {
@@ -118,11 +120,11 @@ export function mapOurStoryData(story: OurStoryPage): OurStoryPageData {
       eyebrow: story.founders.eyebrow,
       quote: story.founders.quote,
       attribution: story.founders.attribution,
+      sharedImage: mediaUrl(story.founders.sharedImage),
+      sharedImageAlt: story.founders.sharedImageAlt,
       people: (story.founders.people ?? []).map((person) => ({
         name: person.name,
         role: person.role,
-        image: mediaUrl(person.image),
-        alt: person.alt,
         bio: person.bio,
       })),
     },

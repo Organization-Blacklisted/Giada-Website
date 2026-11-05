@@ -1392,12 +1392,18 @@ export interface OurStoryPage {
     eyebrow: string;
     quote: string;
     attribution: string;
+    /**
+     * One shared photo of both founders together, shown full-width between the quote and their bios.
+     */
+    sharedImage?: (number | null) | Media;
+    sharedImageAlt: string;
+    /**
+     * Exactly 2 — this layout places the shared photo between them.
+     */
     people?:
       | {
           name: string;
           role: string;
-          image: number | Media;
-          alt: string;
           bio: string;
           id?: string | null;
         }[]
@@ -2369,13 +2375,13 @@ export interface OurStoryPageSelect<T extends boolean = true> {
         eyebrow?: T;
         quote?: T;
         attribution?: T;
+        sharedImage?: T;
+        sharedImageAlt?: T;
         people?:
           | T
           | {
               name?: T;
               role?: T;
-              image?: T;
-              alt?: T;
               bio?: T;
               id?: T;
             };
