@@ -5,10 +5,20 @@ import Image from "next/image";
 import { gsap } from "@/lib/gsap-init";
 import type { GalleryItem, GalleryWallSectionProps } from "./GalleryWallSection.types";
 
+// Every shape now crops into a fixed box via object-cover — "square"
+// used to render at the image's own real size uncropped, which only
+// ever looked right for a genuinely 1:1 photo. Any upload landing in
+// that shape's ratio band (0.75-1.25, not necessarily exact 1:1) left
+// gaps or stretched the whole grid row to its own height, since CSS
+// Grid's default `align-items: stretch` grows the tile's cell to match
+// its row's tallest neighbor regardless of the image's real size —
+// found 2026-11-05 once real, varied interior photography actually hit
+// that band. Cropping it the same as portrait/landscape makes every
+// tile upload-size-agnostic.
 const aspectByShape: Record<GalleryItem["shape"], string> = {
   portrait: "aspect-[4/5]",
   landscape: "aspect-[16/10]",
-  square: "",
+  square: "aspect-square",
 };
 
 const spanByShape: Record<GalleryItem["shape"], string> = {
@@ -229,7 +239,18 @@ export default function GalleryWallSection({ items, className = "" }: GalleryWal
 
       <section className="px-5 pb-32 md:px-10 lg:px-16">
         <div className="mx-auto max-w-7xl">
-          <div className="grid grid-cols-1 gap-5 [grid-auto-flow:dense] sm:grid-cols-2 lg:grid-cols-3">
+          {/* items-start: CSS Grid's default `align-items: stretch`
+              was forcing every tile's container to match its row's
+              tallest neighbor — harmless for a wrapper div, but once
+              combined with an aspect-ratio'd image inside set to
+              h-full/w-full, the explicit stretched height wins over
+              aspect-ratio (both dimensions become explicitly set, so
+              aspect-ratio has nothing left to resolve), silently
+              defeating the crop fix above for whichever tile happens to
+              share a row with a taller one. Each tile now sizes purely
+              from its own aspect ratio + column width, never a
+              neighbor's. */}
+          <div className="grid grid-cols-1 items-start gap-5 [grid-auto-flow:dense] sm:grid-cols-2 lg:grid-cols-3">
             {items.map((item, i) => {
               const visible = activeFilter === "all" || item.category === activeFilter;
               return (
@@ -246,11 +267,11 @@ export default function GalleryWallSection({ items, className = "" }: GalleryWal
                   <Image
                     src={item.image}
                     alt={item.alt}
-                    width={item.shape === "square" ? item.imageWidth : item.shape === "landscape" ? 1600 : 1200}
-                    height={item.shape === "square" ? item.imageHeight : item.shape === "landscape" ? 1000 : 1500}
+                    width={item.shape === "landscape" ? 1600 : 1200}
+                    height={item.shape === "landscape" ? 1000 : item.shape === "square" ? 1200 : 1500}
                     sizes={sizesByShape[item.shape]}
                     loading="lazy"
-                    className={`block w-full transition-transform duration-[900ms] [transition-timing-function:cubic-bezier(0.25,0.46,0.45,0.94)] group-hover:scale-[1.04] group-focus-visible:scale-[1.04] ${aspectByShape[item.shape]} ${item.shape !== "square" ? "h-full object-cover" : ""}`}
+                    className={`block h-full w-full object-cover transition-transform duration-[900ms] [transition-timing-function:cubic-bezier(0.25,0.46,0.45,0.94)] group-hover:scale-[1.04] group-focus-visible:scale-[1.04] ${aspectByShape[item.shape]}`}
                   />
                   <div
                     aria-hidden="true"
