@@ -250,7 +250,7 @@ export default function GalleryWallSection({ items, className = "" }: GalleryWal
                     height={item.shape === "square" ? item.imageHeight : item.shape === "landscape" ? 1000 : 1500}
                     sizes={sizesByShape[item.shape]}
                     loading="lazy"
-                    className={`block w-full transition-transform duration-[900ms] [transition-timing-function:cubic-bezier(0.25,0.46,0.45,0.94)] group-hover:scale-[1.04] group-focus-visible:scale-[1.04] ${aspectByShape[item.shape]} ${item.shape !== "square" ? "h-full object-cover" : ""}`}
+                    className={`block h-full w-full object-cover transition-transform duration-[900ms] [transition-timing-function:cubic-bezier(0.25,0.46,0.45,0.94)] group-hover:scale-[1.04] group-focus-visible:scale-[1.04] ${aspectByShape[item.shape]}`}
                   />
                   <div
                     aria-hidden="true"
